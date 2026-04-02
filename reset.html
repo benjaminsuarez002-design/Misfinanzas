@@ -1,1 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Finanzas — Restablecer contraseña</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --bg: #0a0a0f;
+  --card: #111118;
+  --border: rgba(255,255,255,.08);
+  --accent: #7c6cfa;
+  --accent2: #fa6c9f;
+  --green: #00e5a0;
+  --text: #f0f0f8;
+  --muted: #6b6b8a;
+  --input-bg: rgba(255,255,255,.05);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .25; animation: float 8s ease-in-out infinite; }
+.orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; animation-delay: 0s; }
+.orb2 { width: 300px; height: 300px; background: var(--accent2); bottom: -80px; right: -80px; animation-delay: -3s; }
+.orb3 { width: 200px; height: 200px; background: var(--green); top: 50%; left: 60%; animation-delay: -5s; }
+@keyframes float { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-30px) scale(1.05)} }
+
+.container { position: relative; z-index: 1; width: 100%; max-width: 420px; padding: 20px; }
+
+.logo { text-align: center; margin-bottom: 32px; animation: fadeDown .6s ease both; }
+.logo-icon { font-size: 44px; display: block; margin-bottom: 8px; }
+.logo-title { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; background: linear-gradient(135deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 32px; animation: fadeUp .6s ease .1s both; }
+
+.card-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+.card-sub { font-size: 13px; color: var(--muted); margin-bottom: 24px; line-height: 1.5; }
+
+.field { margin-bottom: 16px; }
+.field label { display: block; font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+.field input { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px; padding: 13px 16px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; outline: none; transition: border-color .2s, box-shadow .2s; }
+.field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,108,250,.15); }
+
+/* Input de código grande */
+.codigo-input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px 16px;
+  color: var(--text);
+  font-family: 'Syne', sans-serif;
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 12px;
+  text-align: center;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.codigo-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(124,108,250,.15); }
+
+.btn-primary { width: 100%; padding: 14px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .2s, transform .15s, box-shadow .2s; margin-top: 8px; box-shadow: 0 4px 20px rgba(124,108,250,.35); }
+.btn-primary:hover { opacity: .92; transform: translateY(-1px); }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.btn-ghost { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; transition: all .2s; margin-top: 8px; }
+.btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+.msg { font-size: 13px; padding: 10px 14px; border-radius: 10px; margin-bottom: 16px; display: none; }
+.msg.err { background: rgba(250,100,100,.1); border: 1px solid rgba(250,100,100,.3); color: #fa8080; display: block; }
+.msg.ok  { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--green); display: block; }
+
+/* Steps */
+.step { display: none; }
+.step.visible { display: block; }
+
+/* Temporizador */
+.timer { text-align: center; font-size: 12px; color: var(--muted); margin-top: 12px; }
+.timer span { color: var(--accent); font-weight: 700; }
+
+/* Éxito */
+.success-box { text-align: center; padding: 20px 0; }
+.success-icon { font-size: 56px; margin-bottom: 16px; display: block; animation: pop .4s ease both; }
+@keyframes pop { from{transform:scale(0)} to{transform:scale(1)} }
+.success-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+
+/* Volver */
+.volver { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+.volver a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.volver a:hover { text-decoration: underline; }
+
+@keyframes fadeDown { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* Puntos de contraseña */
+.pass-strength { height: 3px; border-radius: 2px; background: var(--border); margin-top: 6px; overflow: hidden; }
+.pass-strength-bar { height: 100%; border-radius: 2px; width: 0%; transition: width .3s, background .3s; }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="container">
+  <div class="logo">
+    <span class="logo-icon">🔑</span>
+    <div class="logo-title">Mis Finanzas</div>
+  </div>
+
+  <div class="card">
+
+    <!-- Step 1: ingresar email -->
+    <div class="step visible" id="step1">
+      <div class="card-title">Restablecer contraseña</div>
+      <div class="card-sub">Ingresá tu email y te mandamos un código de verificación.</div>
+      <div class="msg" id="msg1"></div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="emailInput" placeholder="tu@email.com" autocomplete="email" onkeydown="if(event.key==='Enter')pedirCodigo()">
+      </div>
+      <button class="btn-primary" id="btnPedir" onclick="pedirCodigo()">Enviar código</button>
+      <div class="volver"><a href="/">← Volver al inicio</a></div>
+    </div>
+
+    <!-- Step 2: ingresar código -->
+    <div class="step" id="step2">
+      <div class="card-title">Ingresá el código</div>
+      <div class="card-sub" id="subCodigo">Te enviamos un código de 6 dígitos a tu email.</div>
+      <div class="msg" id="msg2"></div>
+      <div class="field">
+        <label>Código de verificación</label>
+        <input type="text" class="codigo-input" id="codigoInput" maxlength="6" inputmode="numeric" placeholder="000000" oninput="this.value=this.value.replace(/\D/g,'')">
+      </div>
+      <div class="timer" id="timer">El código expira en <span id="timerCount">15:00</span></div>
+      <button class="btn-primary" id="btnVerificar" onclick="verificarCodigo()">Verificar código</button>
+      <button class="btn-ghost" onclick="volverStep1()">Cambiar email</button>
+    </div>
+
+    <!-- Step 3: nueva contraseña -->
+    <div class="step" id="step3">
+      <div class="card-title">Nueva contraseña</div>
+      <div class="card-sub">Elegí una contraseña segura para tu cuenta.</div>
+      <div class="msg" id="msg3"></div>
+      <div class="field">
+        <label>Nueva contraseña</label>
+        <input type="password" id="passInput" placeholder="Mínimo 6 caracteres" oninput="checkPass(this.value)">
+        <div class="pass-strength"><div class="pass-strength-bar" id="passBar"></div></div>
+      </div>
+      <div class="field">
+        <label>Repetir contraseña</label>
+        <input type="password" id="pass2Input" placeholder="Repetí la contraseña" onkeydown="if(event.key==='Enter')cambiarPass()">
+      </div>
+      <button class="btn-primary" id="btnCambiar" onclick="cambiarPass()">Cambiar contraseña</button>
+    </div>
+
+    <!-- Step 4: éxito -->
+    <div class="step" id="step4">
+      <div class="success-box">
+        <span class="success-icon">✅</span>
+        <div class="success-title">¡Contraseña cambiada!</div>
+        <div class="success-sub">Tu contraseña fue actualizada correctamente.<br>Ya podés iniciar sesión.</div>
+        <button class="btn-primary" style="margin-top:24px" onclick="window.location.href='/'">Ir al inicio</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
+let emailUsado = '';
+let codigoVerificado = '';
+let timerInterval = null;
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach((s,i) => s.classList.toggle('visible', i+1 === n));
+  if(n === 2) iniciarTimer();
+}
+
+function showMsg(id, txt, tipo) {
+  const el = document.getElementById(id);
+  el.textContent = txt;
+  el.className = 'msg ' + tipo;
+}
+
+function clearMsg(id) {
+  const el = document.getElementById(id);
+  el.className = 'msg';
+}
+
+// ── STEP 1: pedir código ──
+async function pedirCodigo() {
+  const email = document.getElementById('emailInput').value.trim();
+  if(!email) { showMsg('msg1', '⚠️ Ingresá tu email', 'err'); return; }
+
+  const btn = document.getElementById('btnPedir');
+  btn.disabled = true; btn.textContent = 'Enviando...';
+  clearMsg('msg1');
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'solicitarReset', email })
+    });
+    const data = await res.json();
+
+    if(data.ok) {
+      emailUsado = email;
+      document.getElementById('subCodigo').textContent = `Te enviamos un código de 6 dígitos a ${email}.`;
+      goStep(2);
+    } else {
+      showMsg('msg1', '❌ ' + (data.error || 'Error al enviar'), 'err');
+    }
+  } catch(e) {
+    showMsg('msg1', '❌ Error de conexión', 'err');
+  }
+  btn.disabled = false; btn.textContent = 'Enviar código';
+}
+
+// ── Timer 15 minutos ──
+function iniciarTimer() {
+  if(timerInterval) clearInterval(timerInterval);
+  let segundos = 15 * 60;
+  const el = document.getElementById('timerCount');
+  timerInterval = setInterval(() => {
+    segundos--;
+    const m = Math.floor(segundos / 60);
+    const s = segundos % 60;
+    el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if(segundos <= 0) {
+      clearInterval(timerInterval);
+      el.textContent = '0:00';
+      showMsg('msg2', '⏰ El código expiró. Pedí uno nuevo.', 'err');
+      document.getElementById('btnVerificar').disabled = true;
+    }
+  }, 1000);
+}
+
+// ── STEP 2: verificar código (solo frontend, el worker verifica en step 3) ──
+function verificarCodigo() {
+  const codigo = document.getElementById('codigoInput').value.trim();
+  if(codigo.length !== 6) { showMsg('msg2', '⚠️ El código tiene 6 dígitos', 'err'); return; }
+  codigoVerificado = codigo;
+  clearMsg('msg2');
+  if(timerInterval) clearInterval(timerInterval);
+  goStep(3);
+}
+
+// ── STEP 3: cambiar contraseña ──
+async function cambiarPass() {
+  const pass = document.getElementById('passInput').value;
+  const pass2 = document.getElementById('pass2Input').value;
+  if(pass.length < 6) { showMsg('msg3', '⚠️ La contraseña debe tener al menos 6 caracteres', 'err'); return; }
+  if(pass !== pass2) { showMsg('msg3', '⚠️ Las contraseñas no coinciden', 'err'); return; }
+
+  const btn = document.getElementById('btnCambiar');
+  btn.disabled = true; btn.textContent = 'Cambiando...';
+  clearMsg('msg3');
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'confirmarReset', email: emailUsado, codigo: codigoVerificado, nuevaPass: pass })
+    });
+    const data = await res.json();
+
+    if(data.ok) {
+      goStep(4);
+    } else {
+      showMsg('msg3', '❌ ' + (data.error || 'Error al cambiar'), 'err');
+      btn.disabled = false; btn.textContent = 'Cambiar contraseña';
+    }
+  } catch(e) {
+    showMsg('msg3', '❌ Error de conexión', 'err');
+    btn.disabled = false; btn.textContent = 'Cambiar contraseña';
+  }
+}
+
+function volverStep1() {
+  if(timerInterval) clearInterval(timerInterval);
+  goStep(1);
+}
+
+// Indicador de fuerza de contraseña
+function checkPass(val) {
+  const bar = document.getElementById('passBar');
+  let fuerza = 0;
+  if(val.length >= 6) fuerza++;
+  if(val.length >= 10) fuerza++;
+  if(/[A-Z]/.test(val)) fuerza++;
+  if(/[0-9]/.test(val)) fuerza++;
+  if(/[^A-Za-z0-9]/.test(val)) fuerza++;
+  const colores = ['', '#fa8080', '#ffab40', '#ffcc00', '#00e5a0', '#00e5a0'];
+  const anchos  = ['0%', '20%', '40%', '65%', '85%', '100%'];
+  bar.style.width = anchos[fuerza];
+  bar.style.background = colores[fuerza];
+}
+</script>
+
+</body>
+</html>
