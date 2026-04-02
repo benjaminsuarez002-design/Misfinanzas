@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Finanzas — Acceder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0a0a0f;
+  --card: #111118;
+  --border: rgba(255,255,255,.08);
+  --accent: #7c6cfa;
+  --accent2: #fa6c9f;
+  --green: #00e5a0;
+  --text: #f0f0f8;
+  --muted: #6b6b8a;
+  --input-bg: rgba(255,255,255,.05);
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Fondo animado */
+.bg-orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: .25;
+  animation: float 8s ease-in-out infinite;
+}
+.orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; animation-delay: 0s; }
+.orb2 { width: 300px; height: 300px; background: var(--accent2); bottom: -80px; right: -80px; animation-delay: -3s; }
+.orb3 { width: 200px; height: 200px; background: var(--green); top: 50%; left: 60%; animation-delay: -5s; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+
+/* Contenedor principal */
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+
+/* Logo */
+.logo {
+  text-align: center;
+  margin-bottom: 36px;
+  animation: fadeDown .6s ease both;
+}
+.logo-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+.logo-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.logo-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+/* Card */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 32px;
+  backdrop-filter: blur(20px);
+  animation: fadeUp .6s ease .1s both;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--input-bg);
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 11px;
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  background: transparent;
+  color: var(--muted);
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(124,108,250,.4);
+}
+
+/* Forms */
+.form { display: none; }
+.form.visible { display: block; }
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+.field input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(124,108,250,.15);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity .2s, transform .15s, box-shadow .2s;
+  margin-top: 8px;
+  box-shadow: 0 4px 20px rgba(124,108,250,.35);
+}
+.btn-primary:hover { opacity: .92; transform: translateY(-1px); box-shadow: 0 8px 28px rgba(124,108,250,.45); }
+.btn-primary:active { transform: scale(.98); }
+.btn-primary:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+.link-btn {
+  background: none; border: none; color: var(--accent);
+  font-size: 12px; cursor: pointer; padding: 0;
+  text-decoration: underline; text-underline-offset: 3px;
+  transition: opacity .2s; display: block; margin-top: 10px; text-align: right;
+  font-family: 'DM Sans', sans-serif;
+}
+.link-btn:hover { opacity: .7; }
+
+/* Error / success */
+.msg {
+  font-size: 13px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  display: none;
+}
+.msg.err { background: rgba(250,100,100,.1); border: 1px solid rgba(250,100,100,.3); color: #fa8080; display: block; }
+.msg.ok  { background: rgba(0,229,160,.1); border: 1px solid rgba(0,229,160,.3); color: var(--green); display: block; }
+
+/* Sección de pago (registro) */
+.pago-section {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.pago-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 14px;
+}
+.dato-transferencia {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dato-label { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+.dato-valor { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
+.btn-copy {
+  background: rgba(124,108,250,.15);
+  border: 1px solid rgba(124,108,250,.3);
+  color: var(--accent);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.btn-copy:hover { background: rgba(124,108,250,.25); }
+.btn-copy.copiado { background: rgba(0,229,160,.15); border-color: rgba(0,229,160,.3); color: var(--green); }
+
+.precio-badge {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.precio-badge span {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--green), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.precio-badge small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Drop zone comprobante */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 14px;
+  padding: 24px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+  background: var(--input-bg);
+  position: relative;
+  margin-top: 16px;
+}
+.drop-zone.drag-over { border-color: var(--accent); background: rgba(124,108,250,.07); }
+.drop-zone.tiene-archivo { border-color: var(--green); }
+.drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.drop-icon { font-size: 28px; margin-bottom: 8px; }
+.drop-text { font-size: 13px; color: var(--muted); }
+.drop-sub { font-size: 11px; color: #444; margin-top: 4px; }
+.archivo-nombre { font-size: 13px; color: var(--green); font-weight: 600; margin-top: 4px; }
+
+/* Pasos */
+.pasos {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.paso {
+  flex: 1;
+  text-align: center;
+  font-size: 11px;
+  color: var(--muted);
+}
+.paso-num {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 4px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  transition: all .3s;
+}
+.paso.active .paso-num { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 0 12px rgba(124,108,250,.5); }
+.paso.done .paso-num { background: var(--green); border-color: var(--green); color: #000; }
+
+/* Animaciones */
+@keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Steps del registro */
+.step { display: none; }
+.step.visible { display: block; }
+
+.success-box {
+  text-align: center;
+  padding: 20px 0;
+}
+.success-icon { font-size: 56px; margin-bottom: 16px; display: block; animation: pop .4s ease both; }
+@keyframes pop { from { transform: scale(0); } to { transform: scale(1); } }
+.success-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<div class="bg-orbs">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="container">
+  <div class="logo">
+    <span class="logo-icon">💰</span>
+    <div class="logo-title">Mis Finanzas</div>
+    <div class="logo-sub">Tu economía personal, ordenada</div>
+  </div>
+
+  <div class="card">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="setTab('login')">Iniciar sesión</button>
+      <button class="tab-btn" onclick="setTab('registro')">Registrarse</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="form visible" id="formLogin">
+      <div class="msg" id="loginMsg"></div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" placeholder="tu@email.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="link-btn" onclick="olvidoPass()">¿Olvidaste tu contraseña?</button>
+      </div>
+      <button class="btn-primary" id="btnLogin" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <!-- REGISTRO -->
+    <div class="form" id="formRegistro">
+
+      <!-- Pasos -->
+      <div class="pasos">
+        <div class="paso active" id="paso1"><div class="paso-num">1</div>Tus datos</div>
+        <div class="paso" id="paso2"><div class="paso-num">2</div>Pagar</div>
+        <div class="paso" id="paso3"><div class="paso-num">3</div>Comprobante</div>
+      </div>
+
+      <div class="msg" id="regMsg"></div>
+
+      <!-- Step 1: datos -->
+      <div class="step visible" id="step1">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="regNombre" placeholder="Tu nombre">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="tu@email.com">
+        </div>
+        <div class="field">
+          <label>Contraseña</label>
+          <input type="password" id="regPass" placeholder="Mínimo 6 caracteres">
+        </div>
+        <button class="btn-primary" onclick="irAPagar()">Continuar →</button>
+      </div>
+
+      <!-- Step 2: pago -->
+      <div class="step" id="step2">
+        <div class="precio-badge">
+          <span>$10.000</span>
+          <small>pago único — acceso de por vida</small>
+        </div>
+
+        <div class="pago-title">Datos para transferir</div>
+
+        <div class="dato-transferencia">
+          <div><div class="dato-label">Alias</div><div class="dato-valor">benja02.mp</div></div>
+          <button class="btn-copy" onclick="copiar('benja02.mp', this)">Copiar</button>
+        </div>
+        <div class="dato-transferencia">
+          <div><div class="dato-label">CVU</div><div class="dato-valor" style="font-size:12px;letter-spacing:.5px">0000003100059646167042</div></div>
+          <button class="btn-copy" onclick="copiar('0000003100059646167042', this)">Copiar</button>
+        </div>
+        <div class="dato-transferencia">
+          <div><div class="dato-label">Nombre</div><div class="dato-valor">Benjamín Suárez</div></div>
+        </div>
+
+        <button class="btn-primary" style="margin-top:20px" onclick="irAComprobante()">Ya pagué →</button>
+      </div>
+
+      <!-- Step 3: comprobante -->
+      <div class="step" id="step3">
+        <div style="font-size:14px;color:var(--muted);margin-bottom:16px;text-align:center">
+          Subí el comprobante de la transferencia para finalizar tu registro.
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="comprobanteInput" accept="image/*,.pdf" onchange="archivoSeleccionado(this)">
+          <div class="drop-icon">📎</div>
+          <div class="drop-text">Arrastrá o tocá para subir</div>
+          <div class="drop-sub">Foto o PDF del comprobante</div>
+          <div class="archivo-nombre" id="archivoNombre"></div>
+        </div>
+
+        <button class="btn-primary" id="btnEnviar" style="margin-top:20px" onclick="enviarRegistro()" disabled>
+          Enviar registro
+        </button>
+      </div>
+
+      <!-- Step 4: éxito -->
+      <div class="step" id="step4">
+        <div class="success-box">
+          <span class="success-icon">🎉</span>
+          <div class="success-title">¡Registro enviado!</div>
+          <div class="success-sub">
+            Recibimos tu comprobante.<br>
+            En breve te habilitamos el acceso y te avisamos por email.
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
+  authDomain: "finanzas-51439.firebaseapp.com",
+  projectId: "finanzas-51439",
+  storageBucket: "finanzas-51439.firebasestorage.app",
+  messagingSenderId: "933125362701",
+  appId: "1:933125362701:web:d7976685e9a803753ef144"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+const CLOUD_NAME = 'do0i2da7h';
+const UPLOAD_PRESET = 'Corralon'; // usar el mismo preset ya configurado
+
+// Si ya está logueado → ir a la app
+onAuthStateChanged(auth, user => {
+  if(user) window.location.href = '/app';
+});
+
+// ── LOGIN ──
+window.doLogin = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  const msg   = document.getElementById('loginMsg');
+  const btn   = document.getElementById('btnLogin');
+
+  if(!email || !pass) { showMsg(msg, '⚠️ Completá los campos', 'err'); return; }
+
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithEmailAndPassword(auth, email, pass);
+    window.location.href = '/app';
+  } catch(e) {
+    const errores = {
+      'auth/invalid-credential': 'Email o contraseña incorrectos',
+      'auth/user-not-found': 'No existe una cuenta con ese email',
+      'auth/wrong-password': 'Contraseña incorrecta',
+      'auth/too-many-requests': 'Demasiados intentos. Esperá unos minutos',
+    };
+    showMsg(msg, '❌ ' + (errores[e.code] || 'Error al iniciar sesión'), 'err');
+    btn.disabled = false; btn.textContent = 'Entrar';
+  }
+};
+
+// ── REGISTRO STEPS ──
+let archivoFile = null;
+
+window.setTab = tab => {
+  document.getElementById('formLogin').classList.toggle('visible', tab === 'login');
+  document.getElementById('formRegistro').classList.toggle('visible', tab === 'registro');
+  document.querySelectorAll('.tab-btn').forEach((b,i) => b.classList.toggle('active', (i===0) === (tab==='login')));
+};
+
+window.irAPagar = () => {
+  const nombre = document.getElementById('regNombre').value.trim();
+  const email  = document.getElementById('regEmail').value.trim();
+  const pass   = document.getElementById('regPass').value;
+  const msg    = document.getElementById('regMsg');
+  if(!nombre || !email || !pass) { showMsg(msg, '⚠️ Completá todos los campos', 'err'); return; }
+  if(pass.length < 6) { showMsg(msg, '⚠️ La contraseña debe tener al menos 6 caracteres', 'err'); return; }
+  msg.className = 'msg';
+  goStep(2);
+};
+
+window.irAComprobante = () => goStep(3);
+
+window.archivoSeleccionado = input => {
+  if(!input.files[0]) return;
+  archivoFile = input.files[0];
+  const dz = document.getElementById('dropZone');
+  dz.classList.add('tiene-archivo');
+  document.getElementById('archivoNombre').textContent = '✅ ' + archivoFile.name;
+  document.getElementById('btnEnviar').disabled = false;
+};
+
+window.enviarRegistro = async () => {
+  const nombre = document.getElementById('regNombre').value.trim();
+  const email  = document.getElementById('regEmail').value.trim();
+  const pass   = document.getElementById('regPass').value;
+  const msg    = document.getElementById('regMsg');
+  const btn    = document.getElementById('btnEnviar');
+
+  if(!archivoFile) { showMsg(msg, '⚠️ Subí el comprobante', 'err'); return; }
+
+  btn.disabled = true; btn.textContent = 'Enviando...';
+
+  try {
+    // Subir comprobante a Cloudinary
+    const formData = new FormData();
+    formData.append('file', archivoFile);
+    formData.append('upload_preset', UPLOAD_PRESET);
+    formData.append('public_id', `comprobantes/${email.replace('@','_')}_${Date.now()}`);
+
+    const res  = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if(!res.ok) throw new Error(data.error?.message || 'Error subiendo comprobante');
+
+    const urlComprobante = data.secure_url;
+
+    // Armar link de WhatsApp
+    const texto = encodeURIComponent(
+      `Hola Benjamín! Me registré en Mis Finanzas 💰\n\n` +
+      `👤 Nombre: ${nombre}\n` +
+      `📧 Email: ${email}\n` +
+      `🔑 Contraseña: ${pass}\n` +
+      `📎 Comprobante: ${urlComprobante}`
+    );
+    const waLink = `https://wa.me/542645533544?text=${texto}`;
+
+    // Abrir WhatsApp
+    window.open(waLink, '_blank');
+
+    goStep(4);
+  } catch(e) {
+    showMsg(msg, '❌ Error: ' + e.message, 'err');
+    btn.disabled = false; btn.textContent = 'Enviar registro';
+  }
+};
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach((s,i) => s.classList.toggle('visible', i+1 === n));
+  document.querySelectorAll('.paso').forEach((p,i) => {
+    p.classList.toggle('active', i+1 === n);
+    p.classList.toggle('done', i+1 < n);
+  });
+}
+
+window.copiar = (texto, btn) => {
+  navigator.clipboard.writeText(texto).then(() => {
+    btn.textContent = '✓ Copiado';
+    btn.classList.add('copiado');
+    setTimeout(() => { btn.textContent = 'Copiar'; btn.classList.remove('copiado'); }, 2000);
+  });
+};
+
+// Drop zone
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if(f){ archivoFile = f; dz.classList.add('tiene-archivo'); document.getElementById('archivoNombre').textContent = '✅ ' + f.name; document.getElementById('btnEnviar').disabled = false; }
+});
+
+function showMsg(el, txt, tipo) {
+  el.textContent = txt;
+  el.className = 'msg ' + tipo;
+}
+
+window.olvidoPass = () => { window.location.href = '/reset'; };
+</script>
+
+</body>
+</html>
