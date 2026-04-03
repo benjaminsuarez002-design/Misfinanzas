@@ -1725,7 +1725,7 @@ function suscribirPagos(tid,mes,anio){
 function suscribirPagosMesActual(){tarjetas.forEach(t=>suscribirPagos(t.id,mesVista,anioVista));}
 window.guardarPago=async(tid,mes,anio)=>{
   const input=document.getElementById('pagoInput');
-  const monto=parseFloat(input.value);
+  const monto=parseMontoInput(input);
   if(!monto||monto<=0) return showToast('⚠️ Ingresá un monto válido',true);
   const key=getPagosKey(tid,mes,anio);
   try{
@@ -1886,7 +1886,7 @@ window.editarMov = id => {
       </div>
       <div class="modal-group">
         <label>Monto</label>
-        <input id="editMonto" type="text" inputmode="numeric" value="${mov.monto ? parseInt(mov.monto).toLocaleString('es-AR') : ''}" oninput="editMontoInput(this)">
+        <input id="editMonto" type="text" inputmode="numeric" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)">
       </div>
       <div class="modal-group">
         <label>Fecha</label>
@@ -1895,10 +1895,10 @@ window.editarMov = id => {
             <input id="editDpText" type="text" placeholder="Ej: 30 3 o 5/6/25" autocomplete="off"
               value="${fechaVal ? (()=>{ const p=fechaVal.split('-'); return parseInt(p[2])+'/'+(parseInt(p[1]))+'/'+p[0]; })() : ''}"
               style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
-              oninput="editDpParseText(this.value)"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();editDpParseText(this.value,true);}"
+              oninput="dpModParseText('edit',this.value,'editFecha','editDpText','editDpPopup')"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('edit',this.value,'editFecha','editDpText','editDpPopup',true);}"
             >
-            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="editDpToggle()">📅</span>
+            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('edit','editDpPopup','editFecha','editDpText')">📅</span>
           </div>
           <div class="dp-popup" id="editDpPopup" style="display:none"></div>
         </div>
@@ -1921,101 +1921,7 @@ window.editarMov = id => {
       <button onclick="cerrarModal();compartirGasto('${id}')" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #ff8c00;background:rgba(255,140,0,.07);color:#ff8c00;font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🤝 Compartir gasto</button>
     </div>`;
   document.body.appendChild(overlay);
-  // Inicializar el date picker del modal
-  editDpInit(fechaVal);
-};
-
-// Edit date picker — reutiliza exactamente la misma lógica y CSS que el picker principal
-let editDpYear, editDpMonth, editDpSelectedDate = null;
-function editDpInit(dateStr){
-  const d = dateStr ? new Date(dateStr+'T12:00:00') : new Date();
-  editDpYear = d.getFullYear(); editDpMonth = d.getMonth();
-  editDpSelectedDate = dateStr ? new Date(dateStr+'T12:00:00') : null;
-}
-window.editDpToggle = function(){
-  const popup = document.getElementById('editDpPopup');
-  if(!popup) return;
-  if(popup.style.display==='none'){ editDpRender(); dpPositionPopup(popup); }
-  else popup.style.display='none';
-};
-function editDpRender(){
-  const popup = document.getElementById('editDpPopup'); if(!popup) return;
-  const DIAS = ['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
-  const MESES_DP = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const primerDia = new Date(editDpYear, editDpMonth, 1);
-  let startDow = primerDia.getDay() - 1; if(startDow < 0) startDow = 6;
-  const diasEnMes = new Date(editDpYear, editDpMonth+1, 0).getDate();
-  const diasMesAnterior = new Date(editDpYear, editDpMonth, 0).getDate();
-  let days = '';
-  for(let i = startDow-1; i >= 0; i--) days += `<div class="dp-day other-month">${diasMesAnterior-i}</div>`;
-  for(let d = 1; d <= diasEnMes; d++){
-    const fecha = new Date(editDpYear, editDpMonth, d);
-    const isHoy = fecha.getTime() === hoy.getTime();
-    const isSel = editDpSelectedDate && fecha.getTime() === new Date(editDpSelectedDate.getFullYear(), editDpSelectedDate.getMonth(), editDpSelectedDate.getDate()).getTime();
-    days += `<div class="dp-day ${isHoy?'today':''} ${isSel?'selected':''}" onclick="editDpSelect(${editDpYear},${editDpMonth},${d})">${d}</div>`;
-  }
-  const totalCeldas = Math.ceil((startDow + diasEnMes)/7)*7;
-  for(let d=1; d<=totalCeldas-startDow-diasEnMes; d++) days+=`<div class="dp-day other-month">${d}</div>`;
-  popup.innerHTML=`
-    <div class="dp-nav">
-      <button class="dp-nav-btn" onclick="editDpNavMes(-1,event)">‹</button>
-      <span class="dp-nav-title">${MESES_DP[editDpMonth]} ${editDpYear}</span>
-      <button class="dp-nav-btn" onclick="editDpNavMes(1,event)">›</button>
-    </div>
-    <div class="dp-weekdays">${DIAS.map(d=>`<div class="dp-weekday">${d}</div>`).join('')}</div>
-    <div class="dp-days">${days}</div>
-    <div class="dp-footer">
-      <button class="dp-footer-btn clear" onclick="editDpClear()">Borrar</button>
-      <button class="dp-footer-btn today-btn" onclick="editDpHoy()">Hoy</button>
-    </div>`;
-}
-window.editDpNavMes = (d,e) => { if(e) e.stopPropagation(); editDpMonth+=d; if(editDpMonth>11){editDpMonth=0;editDpYear++;} if(editDpMonth<0){editDpMonth=11;editDpYear--;} editDpRender(); };
-window.editDpSelect = (y,m,d) => {
-  editDpSelectedDate = new Date(y,m,d);
-  const val = y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  const ti = document.getElementById('editDpText'); if(ti) ti.value = d+'/'+(m+1)+'/'+y;
-  const hidden = document.getElementById('editFecha'); if(hidden) hidden.value = val;
-  const popup = document.getElementById('editDpPopup'); if(popup) popup.style.display='none';
-};
-window.editDpClear = () => { editDpSelectedDate=null; const ti=document.getElementById('editDpText'); if(ti) ti.value=''; const h=document.getElementById('editFecha'); if(h) h.value=''; const p=document.getElementById('editDpPopup'); if(p) p.style.display='none'; };
-window.editDpHoy = () => { const t=new Date(); editDpYear=t.getFullYear(); editDpMonth=t.getMonth(); editDpSelect(t.getFullYear(),t.getMonth(),t.getDate()); };
-window.editDpParseText = (val, confirm=false) => {
-  val = val.trim();
-  // Si está vacío, no hacer nada
-  if(!val) return;
-  // Separadores: / - o espacio
-  const parts = val.split(/[\/\-\s]/).map(p=>p.trim()).filter(Boolean);
-  const hoy = new Date();
-  let d, m, y;
-  if(parts.length === 1){
-    // Solo día → mes y año actuales
-    d = parseInt(parts[0]);
-    m = hoy.getMonth() + 1;
-    y = hoy.getFullYear();
-  } else if(parts.length === 2){
-    d = parseInt(parts[0]);
-    m = parseInt(parts[1]);
-    y = hoy.getFullYear();
-  } else {
-    d = parseInt(parts[0]);
-    m = parseInt(parts[1]);
-    y = parseInt(parts[2]);
-    if(y < 100) y = 2000 + y;
-  }
-  if(!d || d < 1 || d > 31) return;
-  if(!m || m < 1 || m > 12) return;
-  if(!y) y = hoy.getFullYear();
-  const fecha = new Date(y, m-1, d);
-  if(isNaN(fecha.getTime())) return;
-  editDpYear = y; editDpMonth = m-1;
-  editDpSelectedDate = fecha;
-  const val2 = y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  document.getElementById('editFecha').value = val2;
-  if(confirm){
-    const ti = document.getElementById('editDpText'); if(ti) ti.value = d+'/'+m+'/'+y;
-    const popup = document.getElementById('editDpPopup'); if(popup) popup.style.display='none';
-  }
+  dpModInit('edit', fechaVal);
 };
 window.cerrarModal = () => {
   const o = document.querySelector('.modal-overlay');
@@ -2023,7 +1929,7 @@ window.cerrarModal = () => {
 };
 window.guardarEdicion = async id => {
   const desc  = document.getElementById('editDesc').value.trim();
-  const monto = parseFloat(document.getElementById('editMonto').value.replace(/\./g,'').replace(',','.')) || 0;
+  const monto = parseMontoInput(document.getElementById('editMonto'));
   const fecha = document.getElementById('editFecha').value || null;
   const recordatorio = !!document.getElementById('editRecordatorio')?.checked;
   console.log('guardando recordatorio:', recordatorio, 'checkbox:', document.getElementById('editRecordatorio'));
@@ -2042,6 +1948,126 @@ window.guardarEdicion = async id => {
     showToast('✅ Editado!');
   }catch(e){ showToast('❌ Error al editar',true); }
 };
+
+// ══════════════════════════════════════════════════════════════════════════
+// MÓDULOS GENERALES — Fecha · Monto · Calendario
+//
+// dpModInit(ns, fechaStr)              — inicializar estado de un picker
+// dpModToggle(ns, popupId, hiddenId, textId) — abrir/cerrar calendario
+// dpModParseText(ns, val, hiddenId, textId, popupId, confirm?) — parsear texto
+// dpModSelect(ns, y, m, d, hiddenId, textId, popupId) — seleccionar día
+// dpModNav(ns, dir, e, popupId, hiddenId, textId) — navegar mes
+// dpModHoy(ns, hiddenId, textId, popupId) — ir a hoy
+// dpModClear(ns, hiddenId, textId, popupId) — limpiar fecha
+//
+// formatMontoInput(el)  — formatear input monto (1234 → 1.234)
+// parseMontoInput(el)   — leer valor numérico de un input monto
+// ══════════════════════════════════════════════════════════════════════════
+
+// ── Estado por namespace (edit, dup, super, etc.) ──
+const _dpNs = {};
+function _dpS(ns){ if(!_dpNs[ns]) _dpNs[ns]={year:new Date().getFullYear(),month:new Date().getMonth(),selected:null}; return _dpNs[ns]; }
+
+// ── Render del calendario en cualquier popup ──
+function _dpRender(ns, popupId, hiddenId, textId){
+  const s = _dpS(ns);
+  const popup = document.getElementById(popupId); if(!popup) return;
+  const DIAS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+  const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const primerDia=new Date(s.year,s.month,1);
+  let sd=primerDia.getDay()-1; if(sd<0) sd=6;
+  const dim=new Date(s.year,s.month+1,0).getDate();
+  const dma=new Date(s.year,s.month,0).getDate();
+  let days='';
+  for(let i=sd-1;i>=0;i--) days+=`<div class="dp-day other-month">${dma-i}</div>`;
+  for(let d=1;d<=dim;d++){
+    const f=new Date(s.year,s.month,d);
+    const isH=f.getTime()===hoy.getTime();
+    const isS=s.selected&&f.getTime()===new Date(s.selected.getFullYear(),s.selected.getMonth(),s.selected.getDate()).getTime();
+    days+=`<div class="dp-day ${isH?'today':''} ${isS?'selected':''}" onclick="dpModSelect('${ns}',${s.year},${s.month},${d},'${hiddenId}','${textId}','${popupId}')">${d}</div>`;
+  }
+  const tot=Math.ceil((sd+dim)/7)*7;
+  for(let d=1;d<=tot-sd-dim;d++) days+=`<div class="dp-day other-month">${d}</div>`;
+  popup.innerHTML=`
+    <div class="dp-nav">
+      <button class="dp-nav-btn" onclick="dpModNav('${ns}',-1,event,'${popupId}','${hiddenId}','${textId}')">‹</button>
+      <span class="dp-nav-title">${MESES[s.month]} ${s.year}</span>
+      <button class="dp-nav-btn" onclick="dpModNav('${ns}',1,event,'${popupId}','${hiddenId}','${textId}')">›</button>
+    </div>
+    <div class="dp-weekdays">${DIAS.map(d=>`<div class="dp-weekday">${d}</div>`).join('')}</div>
+    <div class="dp-days">${days}</div>
+    <div class="dp-footer">
+      <button class="dp-footer-btn clear" onclick="dpModClear('${ns}','${hiddenId}','${textId}','${popupId}')">Borrar</button>
+      <button class="dp-footer-btn today-btn" onclick="dpModHoy('${ns}','${hiddenId}','${textId}','${popupId}')">Hoy</button>
+    </div>`;
+}
+
+window.dpModInit = (ns, dateStr) => {
+  const s=_dpS(ns);
+  const d=dateStr?new Date(dateStr+'T12:00:00'):new Date();
+  s.year=d.getFullYear(); s.month=d.getMonth(); s.selected=dateStr?d:null;
+};
+window.dpModToggle = (ns, popupId, hiddenId, textId) => {
+  const popup=document.getElementById(popupId); if(!popup) return;
+  if(popup.style.display==='none'){ _dpRender(ns,popupId,hiddenId,textId); dpPositionPopup(popup); }
+  else popup.style.display='none';
+};
+window.dpModNav = (ns, dir, e, popupId, hiddenId, textId) => {
+  if(e) e.stopPropagation();
+  const s=_dpS(ns); s.month+=dir;
+  if(s.month>11){s.month=0;s.year++;} if(s.month<0){s.month=11;s.year--;}
+  _dpRender(ns,popupId,hiddenId,textId);
+};
+window.dpModSelect = (ns, y, m, d, hiddenId, textId, popupId) => {
+  const s=_dpS(ns); s.selected=new Date(y,m,d);
+  const val=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  const h=document.getElementById(hiddenId); if(h) h.value=val;
+  const t=document.getElementById(textId); if(t) t.value=d+'/'+(m+1)+'/'+y;
+  const p=document.getElementById(popupId); if(p) p.style.display='none';
+};
+window.dpModHoy = (ns, hiddenId, textId, popupId) => {
+  const t=new Date(); const s=_dpS(ns); s.year=t.getFullYear(); s.month=t.getMonth();
+  dpModSelect(ns,t.getFullYear(),t.getMonth(),t.getDate(),hiddenId,textId,popupId);
+};
+window.dpModClear = (ns, hiddenId, textId, popupId) => {
+  const s=_dpS(ns); s.selected=null;
+  const h=document.getElementById(hiddenId); if(h) h.value='';
+  const t=document.getElementById(textId); if(t) t.value='';
+  const p=document.getElementById(popupId); if(p) p.style.display='none';
+};
+window.dpModParseText = (ns, val, hiddenId, textId, popupId, confirm=false) => {
+  val=val.trim(); if(!val) return;
+  const parts=val.split(/[\/\-\s]/).map(p=>p.trim()).filter(Boolean);
+  const hoy=new Date(); let d,m,y;
+  if(parts.length===1){d=parseInt(parts[0]);m=hoy.getMonth()+1;y=hoy.getFullYear();}
+  else if(parts.length===2){d=parseInt(parts[0]);m=parseInt(parts[1]);y=hoy.getFullYear();}
+  else{d=parseInt(parts[0]);m=parseInt(parts[1]);y=parseInt(parts[2]);if(y<100)y=2000+y;}
+  if(!d||d<1||d>31||!m||m<1||m>12) return;
+  if(!y) y=hoy.getFullYear();
+  const fecha=new Date(y,m-1,d); if(isNaN(fecha.getTime())) return;
+  const s=_dpS(ns); s.year=y; s.month=m-1; s.selected=fecha;
+  const h=document.getElementById(hiddenId); if(h) h.value=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  if(confirm){
+    const t=document.getElementById(textId); if(t) t.value=d+'/'+m+'/'+y;
+    const p=document.getElementById(popupId); if(p) p.style.display='none';
+  }
+};
+
+// ── Módulo Monto ──
+window.formatMontoInput = el => {
+  const raw=el.value;
+  const enProgreso=raw.endsWith(',')||raw.endsWith(',0')||/,\d$/.test(raw);
+  if(enProgreso) return;
+  const partes=raw.replace(/\./g,'').split(',');
+  const entero=partes[0].replace(/[^0-9]/g,'');
+  const decimal=partes[1]!==undefined?partes[1].replace(/[^0-9]/g,''):null;
+  if(entero===''&&decimal===null){el.value='';return;}
+  let formateado=parseInt(entero||'0').toLocaleString('es-AR');
+  if(decimal!==null) formateado+=','+decimal;
+  el.value=formateado;
+};
+window.parseMontoInput = el => parseFloat((el.value||'').replace(/\./g,'').replace(',','.')) || 0;
 
 window.copiarMov = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
@@ -2068,11 +2094,12 @@ window.copiarMov = id => {
         <div class="date-picker-wrap" id="dupDpWrap">
           <div class="date-picker-display" id="dupDpDisplay" style="padding:0;overflow:hidden;">
             <input id="dupDpText" type="text" inputmode="numeric" placeholder="Ej: 2 6 o 5/6/25" autocomplete="off"
-              value=""
+              value="${fechaSug ? (()=>{ const p=fechaSug.split('-'); return parseInt(p[2])+'/'+(parseInt(p[1]))+'/'+p[0]; })() : ''}"
               style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
-              oninput="dupDpParseText(this.value)"
+              oninput="dpModParseText('dup',this.value,'dupFecha','dupDpText','dupDpPopup')"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('dup',this.value,'dupFecha','dupDpText','dupDpPopup',true);}"
             >
-            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dupDpToggle()">📅</span>
+            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('dup','dupDpPopup','dupFecha','dupDpText')">📅</span>
           </div>
           <div class="dp-popup" id="dupDpPopup" style="display:none"></div>
         </div>
@@ -2084,76 +2111,8 @@ window.copiarMov = id => {
       </div>
     </div>`;
   document.body.appendChild(ov);
-  // init picker
-  dupDpYear = fechaSug ? parseInt(fechaSug.split('-')[0]) : new Date().getFullYear();
-  dupDpMonth = fechaSug ? parseInt(fechaSug.split('-')[1])-1 : new Date().getMonth();
-  dupDpSelectedDate = fechaSug ? new Date(fechaSug+'T12:00:00') : null;
+  dpModInit('dup', fechaSug || null);
 };
-
-let dupDpYear, dupDpMonth, dupDpSelectedDate = null;
-window.dupDpToggle = () => {
-  const popup = document.getElementById('dupDpPopup'); if(!popup) return;
-  if(popup.style.display==='none'){
-    if(popup.parentElement !== document.body) document.body.appendChild(popup);
-    dupDpRender();
-    popup.style.display='block';
-  } else popup.style.display='none';
-};
-window.dupDpParseText = val => {
-  val = val.trim();
-  if(!val) return;
-  // Separadores: / - espacio
-  const parts = val.split(/[\/\-\s]/).map(p=>p.trim()).filter(Boolean);
-  const hoy = new Date();
-  let d, m, y;
-  if(parts.length === 1){ d=parseInt(parts[0]); m=hoy.getMonth()+1; y=hoy.getFullYear(); }
-  else if(parts.length === 2){ d=parseInt(parts[0]); m=parseInt(parts[1]); y=hoy.getFullYear(); }
-  else { d=parseInt(parts[0]); m=parseInt(parts[1]); y=parseInt(parts[2]); if(y<100) y=2000+y; }
-  if(!d||!m||d<1||d>31||m<1||m>12) return;
-  if(!y) y=hoy.getFullYear();
-  dupDpYear=y; dupDpMonth=m-1; dupDpSelectedDate=new Date(y,m-1,d);
-  document.getElementById('dupFecha').value=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-};
-function dupDpRender(){
-  const popup=document.getElementById('dupDpPopup'); if(!popup) return;
-  const DIAS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
-  const MESES_DP=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const hoy=new Date(); hoy.setHours(0,0,0,0);
-  const primerDia=new Date(dupDpYear,dupDpMonth,1);
-  let startDow=primerDia.getDay()-1; if(startDow<0) startDow=6;
-  const diasEnMes=new Date(dupDpYear,dupDpMonth+1,0).getDate();
-  const diasMesAnt=new Date(dupDpYear,dupDpMonth,0).getDate();
-  let days='';
-  for(let i=startDow-1;i>=0;i--) days+=`<div class="dp-day other-month">${diasMesAnt-i}</div>`;
-  for(let d=1;d<=diasEnMes;d++){
-    const f=new Date(dupDpYear,dupDpMonth,d);
-    const isH=f.getTime()===hoy.getTime();
-    const isS=dupDpSelectedDate&&f.getTime()===new Date(dupDpSelectedDate.getFullYear(),dupDpSelectedDate.getMonth(),dupDpSelectedDate.getDate()).getTime();
-    days+=`<div class="dp-day ${isH?'today':''} ${isS?'selected':''}" onclick="dupDpSelect(${dupDpYear},${dupDpMonth},${d})">${d}</div>`;
-  }
-  const tot=Math.ceil((startDow+diasEnMes)/7)*7;
-  for(let d=1;d<=tot-startDow-diasEnMes;d++) days+=`<div class="dp-day other-month">${d}</div>`;
-  popup.innerHTML=`
-    <div class="dp-nav">
-      <button class="dp-nav-btn" onclick="dupDpNavMes(-1,event)">‹</button>
-      <span class="dp-nav-title">${MESES_DP[dupDpMonth]} ${dupDpYear}</span>
-      <button class="dp-nav-btn" onclick="dupDpNavMes(1,event)">›</button>
-    </div>
-    <div class="dp-weekdays">${DIAS.map(d=>`<div class="dp-weekday">${d}</div>`).join('')}</div>
-    <div class="dp-days">${days}</div>
-    <div class="dp-footer">
-      <button class="dp-footer-btn today-btn" onclick="dupDpHoy()">Hoy</button>
-    </div>`;
-}
-window.dupDpNavMes=(d,e)=>{if(e)e.stopPropagation();dupDpMonth+=d;if(dupDpMonth>11){dupDpMonth=0;dupDpYear++;}if(dupDpMonth<0){dupDpMonth=11;dupDpYear--;}dupDpRender();};
-window.dupDpSelect=(y,m,d)=>{
-  dupDpSelectedDate=new Date(y,m,d);
-  const val=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-  document.getElementById('dupFecha').value=val;
-  const ti=document.getElementById('dupDpText'); if(ti) ti.value=d+'/'+(m+1)+'/'+y;
-  const p=document.getElementById('dupDpPopup'); if(p) p.style.display='none';
-};
-window.dupDpHoy=()=>{const t=new Date();dupDpYear=t.getFullYear();dupDpMonth=t.getMonth();dupDpSelect(t.getFullYear(),t.getMonth(),t.getDate());};
 
 window.copiarMovConfirmar = async id => {
   const fecha = document.getElementById('dupFecha')?.value || null;
@@ -2253,7 +2212,7 @@ function renderTarjetaDetail(tid){
     }
   }
   html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Registrar pago</div>
-  <div class="pago-form"><input type="number" id="pagoInput" placeholder="Monto a pagar..."><button onclick="guardarPago('${tid}',${mesVista},${anioVista})">Pagar</button></div>`;
+  <div class="pago-form"><input type="text" inputmode="numeric" id="pagoInput" placeholder="Monto a pagar..." oninput="formatMontoInput(this)"><button onclick="guardarPago('${tid}',${mesVista},${anioVista})">Pagar</button></div>`;
   el.innerHTML=html;
 }
 
@@ -2354,16 +2313,8 @@ window.setMontoCuotasModo = modo => {
   if(label) label.textContent = modo === 'cuota' ? 'Monto por cuota' : 'Monto Total';
   actualizarPreviewCuotas();
 };
-window.editMontoInput = (el) => {
-  const raw = el.value.replace(/\./g,'').replace(/[^0-9,]/g,'');
-  const partes = raw.split(',');
-  const entero = partes[0].replace(/[^0-9]/g,'');
-  const decimal = partes[1] !== undefined ? partes[1] : null;
-  if(!entero){ el.value=''; return; }
-  let formateado = parseInt(entero).toLocaleString('es-AR');
-  if(decimal !== null) formateado += ',' + decimal;
-  el.value = formateado;
-};
+// editMontoInput → usa el módulo general
+window.editMontoInput = el => formatMontoInput(el);
 
 window.fMontoInput = (el) => {
   const raw = el.value;
@@ -2924,7 +2875,7 @@ function renderFijoDetail(){
         html+=`</div>`;
       }
       // Formulario pago
-      html+=`<div class="fijo-pago-form"><input type="number" id="fijoPagoInput_${f.id}" placeholder="Monto cobrado..."><button onclick="guardarPagoFijo('${f.id}')">Cobrar</button></div>`;
+      html+=`<div class="fijo-pago-form"><input type="text" inputmode="numeric" id="fijoPagoInput_${f.id}" placeholder="Monto cobrado..." oninput="formatMontoInput(this)"><button onclick="guardarPagoFijo('${f.id}')">Cobrar</button></div>`;
     }
   } else {
     html+=`<div style="color:var(--muted);font-size:13px;padding:8px 16px">Nadie te debe</div>`;
@@ -3161,9 +3112,10 @@ window.superAgregarAGastos = () => {
             <input id="superDpText" type="text" autocomplete="off"
               value="${hoy.getDate()}/${hoy.getMonth()+1}/${hoy.getFullYear()}"
               style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
-              oninput="superDpParseText(this.value)"
+              oninput="dpModParseText('super',this.value,'superFecha','superDpText','superDpPopup')"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('super',this.value,'superFecha','superDpText','superDpPopup',true);}"
             >
-            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="superDpToggle()">📅</span>
+            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('super','superDpPopup','superFecha','superDpText')">📅</span>
           </div>
           <div class="dp-popup" id="superDpPopup" style="display:none"></div>
         </div>
@@ -3175,16 +3127,8 @@ window.superAgregarAGastos = () => {
       </div>
     </div>`;
   document.body.appendChild(ov);
-  superDpYear=hoy.getFullYear(); superDpMonth=hoy.getMonth(); superDpSelectedDate=hoy;
+  dpModInit('super', fechaHoy);
 };
-
-let superDpYear, superDpMonth, superDpSelectedDate=null;
-window.superDpToggle=()=>{ const p=document.getElementById('superDpPopup'); if(!p) return; if(p.style.display==='none'){superDpRender();dpPositionPopup(p);}else p.style.display='none'; };
-window.superDpParseText=val=>{ val=val.trim(); if(!val) return; const parts=val.split(/[\/\-\s]/).map(p=>p.trim()).filter(Boolean); const hoy=new Date(); let d,m,y; if(parts.length===1){d=parseInt(parts[0]);m=hoy.getMonth()+1;y=hoy.getFullYear();} else if(parts.length===2){d=parseInt(parts[0]);m=parseInt(parts[1]);y=hoy.getFullYear();} else{d=parseInt(parts[0]);m=parseInt(parts[1]);y=parseInt(parts[2]);if(y<100)y=2000+y;} if(!d||!m||d<1||d>31||m<1||m>12) return; if(!y)y=hoy.getFullYear(); superDpYear=y;superDpMonth=m-1;superDpSelectedDate=new Date(y,m-1,d); document.getElementById('superFecha').value=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'); };
-function superDpRender(){ const popup=document.getElementById('superDpPopup'); if(!popup) return; const DIAS=['Lu','Ma','Mi','Ju','Vi','Sa','Do']; const MDP=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']; const hoy=new Date();hoy.setHours(0,0,0,0); const primerDia=new Date(superDpYear,superDpMonth,1); let sd=primerDia.getDay()-1;if(sd<0)sd=6; const dim=new Date(superDpYear,superDpMonth+1,0).getDate(); const dma=new Date(superDpYear,superDpMonth,0).getDate(); let days=''; for(let i=sd-1;i>=0;i--) days+=`<div class="dp-day other-month">${dma-i}</div>`; for(let d=1;d<=dim;d++){ const f=new Date(superDpYear,superDpMonth,d); const isH=f.getTime()===hoy.getTime(); const isS=superDpSelectedDate&&f.getTime()===new Date(superDpSelectedDate.getFullYear(),superDpSelectedDate.getMonth(),superDpSelectedDate.getDate()).getTime(); days+=`<div class="dp-day ${isH?'today':''} ${isS?'selected':''}" onclick="superDpSelect(${superDpYear},${superDpMonth},${d})">${d}</div>`; } const tot=Math.ceil((sd+dim)/7)*7; for(let d=1;d<=tot-sd-dim;d++) days+=`<div class="dp-day other-month">${d}</div>`; popup.innerHTML=`<div class="dp-nav"><button class="dp-nav-btn" onclick="superDpNav(-1,event)">‹</button><span class="dp-nav-title">${MDP[superDpMonth]} ${superDpYear}</span><button class="dp-nav-btn" onclick="superDpNav(1,event)">›</button></div><div class="dp-weekdays">${DIAS.map(d=>`<div class="dp-weekday">${d}</div>`).join('')}</div><div class="dp-days">${days}</div><div class="dp-footer"><button class="dp-footer-btn today-btn" onclick="superDpHoy()">Hoy</button></div>`; }
-window.superDpNav=(d,e)=>{if(e)e.stopPropagation();superDpMonth+=d;if(superDpMonth>11){superDpMonth=0;superDpYear++;}if(superDpMonth<0){superDpMonth=11;superDpYear--;}superDpRender();};
-window.superDpSelect=(y,m,d)=>{ superDpSelectedDate=new Date(y,m,d); const val=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'); document.getElementById('superFecha').value=val; const ti=document.getElementById('superDpText');if(ti) ti.value=d+'/'+(m+1)+'/'+y; const p=document.getElementById('superDpPopup');if(p) p.style.display='none'; };
-window.superDpHoy=()=>{const t=new Date();superDpYear=t.getFullYear();superDpMonth=t.getMonth();superDpSelect(t.getFullYear(),t.getMonth(),t.getDate());};
 
 window.superConfirmarGasto = async (total, nombre) => {
   const fecha = document.getElementById('superFecha')?.value || null;
@@ -3278,7 +3222,7 @@ window.compartirGasto = async id => {
 
       <div class="modal-btns" style="margin-top:16px">
         <button class="modal-btn-cancel" onclick="document.getElementById('modalCompartir').remove()">Cancelar</button>
-        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}', ${mov.monto}, '${mov.desc.replace(/'/g,"\\'")}', '${mov.moneda||'ARS'}', '${mov.tipo||'gasto'}')">Compartir</button>
+        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}', ${mov.monto}, '${mov.desc.replace(/'/g,"\\'")}', '${mov.moneda||'ARS'}', '${mov.tipo||'gasto'}', '${mov.fecha||''}')">Compartir</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -3294,7 +3238,7 @@ window.setMontoCompartir = (monto, fraccion) => {
   if(input) input.value = Math.round(monto * fraccion);
 };
 
-window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen) => {
+window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha) => {
   const email = document.getElementById('compartirEmail')?.value.trim();
   const montoCompartido = parseFloat(document.getElementById('compartirMonto')?.value);
   if(!email) return showToast('⚠️ Ingresá un email',true);
@@ -3318,6 +3262,7 @@ window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen) => {
         montoCompartido,
         gastoId: id,
         tipoOrigen: tipoOrigen || 'gasto',
+        fecha: fecha || '',
       })
     });
     const data = await res.json();
@@ -3486,7 +3431,8 @@ window.responderCompartido = async (id, estado, btn) => {
 async function confirmarAceptarCompartido(docRef, g, tarjetaId) {
   try{
     await updateDoc(docRef, { estado: 'aceptado' });
-    const p = getPeriodo(new Date(), tarjetaId ? 'tarjeta' : 'gasto', tarjetaId);
+    const fechaOriginal = g.fecha ? new Date(g.fecha + 'T12:00:00') : new Date();
+    const p = getPeriodo(fechaOriginal, tarjetaId ? 'tarjeta' : 'gasto', tarjetaId);
     await addDoc(userCol('movimientos'), {
       tipo: tarjetaId ? 'tarjeta' : 'gasto',
       desc: g.desc + ' (compartido)',
@@ -3495,7 +3441,7 @@ async function confirmarAceptarCompartido(docRef, g, tarjetaId) {
       moneda: 'ARS',
       timestamp: Date.now(),
       confirmado: false,
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: g.fecha || new Date().toISOString().split('T')[0],
       recordatorio: false,
       compartidoPor: g.compartidoPor,
       ...(tarjetaId ? { tarjetaId } : {}),
