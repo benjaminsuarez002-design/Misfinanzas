@@ -1175,7 +1175,7 @@ onAuthStateChanged(auth, user => {
     cargarConfig().then(() => iniciarApp());
   } else {
     // Sin sesión → redirigir al login
-    window.location.href = '/';
+    window.location.href = 'index.html';  // ← el nombre de tu archivo de login
   }
 });
 
