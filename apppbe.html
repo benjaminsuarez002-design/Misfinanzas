@@ -305,6 +305,41 @@
   .moneda-btn { flex: 1; padding: 12px 8px; border-radius: 12px; border: 1.5px solid var(--border); background: rgba(243,236,255,.4); color: var(--muted); font-family: 'Arial Black', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all .15s; }
   .moneda-btn.active { border-color: var(--blue); color: var(--blue); background: rgba(108,140,255,.1); }
 
+  .share-cuotas-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 10px;
+    border: 1.5px solid #ffb36b;
+    background: #fff;
+    cursor: pointer;
+    transition: all .18s ease;
+    user-select: none;
+    min-height: 32px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: #1f2438;
+    white-space: nowrap;
+    line-height: 1;
+  }
+  .share-cuotas-tab:hover {
+    border-color: #ff8c00;
+    background: rgba(255, 145, 77, 0.08);
+  }
+  .share-cuotas-tab.active {
+    border-color: #ff8c00;
+    background: rgba(255, 140, 0, 0.12);
+    color: #ff8c00;
+    box-shadow: 0 0 0 1px rgba(255,140,0,.12);
+  }
+  .share-cuotas-hidden {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   /* ── BTN SUBMIT ── */
   .btn-submit {
     width: 100%; padding: 16px;
@@ -1089,6 +1124,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, setDoc, getDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
@@ -1102,6 +1138,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const SUPABASE_URL = 'https://tizyjenayrcdkcodsjnc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpenlqZW5heXJjZGtjb2Rzam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzE4MDYsImV4cCI6MjA4NzgwNzgwNn0.Xue8zgo8QJiKTErtzfUOgpczMngsAaePJZqLvA8Z7oI';
+const SUPABASE_GASTOS_TABLE = 'gastos_compartidos';
+const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('PEGA_TU_'))
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -1175,7 +1217,7 @@ onAuthStateChanged(auth, user => {
     cargarConfig().then(() => iniciarApp());
   } else {
     // Sin sesión → redirigir al login
-    window.location.href = '/';
+    window.location.href = 'index.html';  // ← el nombre de tu archivo de login
   }
 });
 
@@ -1206,6 +1248,8 @@ window.doLogout = async () => { if(!confirm('¿Cerrar sesión?')) return; limpia
 function limpiarApp() {
   if(movListener) { movListener(); movListener = null; }
   if(fijoListener) { fijoListener(); fijoListener = null; }
+  if(notifListener) { try { notifListener(); } catch(_){} notifListener = null; }
+  if(window._notifPollInterval) { clearInterval(window._notifPollInterval); window._notifPollInterval = null; }
   Object.values(pagosListeners).forEach(u => u());
   Object.values(fijoPagosListeners).forEach(u => u());
   pagosListeners = {}; pagosData = {}; data = []; tarjetas = [];
@@ -2443,12 +2487,12 @@ window.guardar=async()=>{
     const fc=document.getElementById('fCuotas'); if(fc) fc.value='';
     document.getElementById('cuotaPreview').classList.remove('visible');
 
-    // Si viene de un gasto compartido, marcar como aceptado y cerrar popup
+    // Si viene de un gasto compartido, marcar como aceptado y limpiar UI
     if(window._compartidoPendiente) {
-      try {
-        await updateDoc(doc(db,'gastosCompartidos',window._compartidoPendiente.docId),{estado:'aceptado'});
-      } catch(e2){}
-      cfCerrarPopup();
+      await cfAceptar(window._compartidoPendiente.docId, {
+        cerrarPopup: true,
+        mostrarToast: false
+      });
     }
   }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
   btn.disabled=false;btn.textContent='Guardar';
@@ -2514,11 +2558,12 @@ window.borrarConfirmar = async (id, modo) => {
     if(modo === 'sola' || !mov.grupoId){
       await deleteDoc(userDoc('movimientos', id));
     } else {
-      // Buscar TODOS los docs del grupoId en Firestore (pueden estar en otros meses)
-      const snap = await getDocs(query(userCol('movimientos'), where('grupoId','==',mov.grupoId)));
-      let docs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      let docs;
       if(modo === 'adelante'){
-        docs = docs.filter(d=>(d.cuotaNum||0) >= (mov.cuotaNum||0));
+        docs = await obtenerCuotasGrupoDesdeActual(mov);
+      } else {
+        const snap = await getDocs(query(userCol('movimientos'), where('grupoId','==',mov.grupoId)));
+        docs = snap.docs.map(d=>({id:d.id,...d.data()}));
       }
       await Promise.all(docs.map(d=>deleteDoc(userDoc('movimientos',d.id))));
     }
@@ -3172,6 +3217,128 @@ window.superBorrarCompra = () => {
 
 // ── GASTOS COMPARTIDOS ──────────────────────────────────────────────────
 const WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
+const CAMPO_FECHA_COMPARTIDA = 'fechaMovimientoCompartido';
+const CAMPO_FECHA_COMPARTIDA_DB = 'fecha_movimiento_compartido';
+
+function usarSupabaseCompartidos() {
+  return !!supabase;
+}
+
+function mapCompartidoSupabase(row) {
+  return {
+    id: row.id,
+    destinatarioEmail: row.destinatario_email,
+    remitenteEmail: row.remitente_email,
+    remitenteUid: row.remitente_uid,
+    compartidoPor: row.compartido_por || (row.remitente_email || '').split('@')[0],
+    desc: row.desc || '',
+    monto: Number(row.monto || 0),
+    montoCompartido: Number(row.monto_compartido || 0),
+    gastoId: row.gasto_id || '',
+    tipoOrigen: row.tipo_origen || 'gasto',
+    fecha: row.fecha || '',
+    [CAMPO_FECHA_COMPARTIDA]: row[CAMPO_FECHA_COMPARTIDA_DB] || row.fecha || '',
+    compartirCuotas: !!row.compartir_cuotas,
+    cuotas: parseInt(row.cuotas || '1', 10) || 1,
+    cuotaNum: parseInt(row.cuota_num || '1', 10) || 1,
+    montoTotal: Number(row.monto_total || row.monto || 0),
+    cuotasPendientesCount: parseInt(row.cuotas_pendientes_count || '0', 10) || 0,
+    cuotasPendientesIds: Array.isArray(row.cuotas_pendientes_ids) ? row.cuotas_pendientes_ids : [],
+    estado: row.estado || 'pendiente',
+    createdAt: row.created_at || null,
+    _tipo: 'compartido'
+  };
+}
+
+function normalizarListaCompartidos(rows = []) {
+  return rows.map(r => r && r._tipo === 'compartido' ? r : ({ ...r, _tipo: 'compartido' }));
+}
+
+function construirPayloadSupabaseCompartido({ id, email, desc, monto, montoCompartido, tipoOrigen, fechaNormalizada, compartirCuotas, cuotas, cuotaNum, montoTotal, cuotasPendientesCount, cuotasPendientesIds }) {
+  return {
+    destinatario_email: email,
+    remitente_email: currentUser.email,
+    remitente_uid: currentUser.uid,
+    compartido_por: (currentUser.email || '').split('@')[0],
+    desc,
+    monto,
+    monto_compartido: montoCompartido,
+    gasto_id: id,
+    tipo_origen: tipoOrigen || 'gasto',
+    fecha: fechaNormalizada,
+    [CAMPO_FECHA_COMPARTIDA_DB]: fechaNormalizada,
+    estado: 'pendiente',
+    compartir_cuotas: !!compartirCuotas,
+    cuotas: cuotas || 1,
+    cuota_num: cuotaNum || 1,
+    monto_total: montoTotal || monto,
+    cuotas_pendientes_count: compartirCuotas ? cuotasPendientesCount : 1,
+    cuotas_pendientes_ids: compartirCuotas ? (cuotasPendientesIds || []) : []
+  };
+}
+
+async function insertarCompartidoSupabase(payload) {
+  if(!supabase) throw new Error('Supabase no configurado');
+  const { data, error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .insert(payload)
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}
+
+async function listarCompartidosSupabase() {
+  if(!supabase || !currentUser?.email) return [];
+  const { data, error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .select('*')
+    .eq('destinatario_email', currentUser.email)
+    .order('created_at', { ascending: false });
+  if(error) throw error;
+  return (data || []).map(mapCompartidoSupabase);
+}
+
+async function actualizarEstadoCompartidoSupabase(id, estado) {
+  if(!supabase) throw new Error('Supabase no configurado');
+  const { error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .update({ estado })
+    .eq('id', id);
+  if(error) throw error;
+}
+
+async function notificarCompartidoWorker(payload) {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: 'gastoCompartido',
+        destinatarioEmail: payload.destinatario_email,
+        remitenteEmail: payload.remitente_email,
+        remitenteUid: payload.remitente_uid,
+        desc: payload.desc,
+        monto: payload.monto,
+        montoCompartido: payload.monto_compartido,
+        gastoId: payload.gasto_id,
+        tipoOrigen: payload.tipo_origen,
+        fecha: payload.fecha,
+        [CAMPO_FECHA_COMPARTIDA]: payload[CAMPO_FECHA_COMPARTIDA_DB],
+        ...(payload.compartir_cuotas ? {
+          compartirCuotas: true,
+          cuotas: payload.cuotas,
+          cuotaNum: payload.cuota_num,
+          montoTotal: payload.monto_total,
+          cuotasPendientesCount: payload.cuotas_pendientes_count,
+          cuotasPendientesIds: payload.cuotas_pendientes_ids
+        } : {})
+      })
+    });
+  } catch(e) {
+    console.warn('worker aviso compartido:', e);
+  }
+}
 
 // Guardar/leer emails recientes en Firestore
 async function getEmailsRecientes() {
@@ -3189,15 +3356,87 @@ async function guardarEmailReciente(email) {
   } catch(e) { console.warn('guardarEmailReciente:', e); }
 }
 
+async function obtenerCuotasGrupoDesdeActual(mov) {
+  if(!mov?.grupoId) return mov?.id ? [{ id: mov.id, ...mov }] : [];
+  const snap = await getDocs(query(userCol('movimientos'), where('grupoId', '==', mov.grupoId)));
+  let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  docs = docs
+    .filter(d => (d.cuotaNum || 0) >= (mov.cuotaNum || 0))
+    .sort((a, b) => {
+      const diff = (a.cuotaNum || 0) - (b.cuotaNum || 0);
+      if(diff !== 0) return diff;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  return docs;
+}
+
+async function getCuotasPendientesInfo(mov) {
+  const fallbackCount = Math.max(1, (mov.cuotas || 1) - (mov.cuotaNum || 1) + 1);
+  if(!mov?.grupoId || !mov?.cuotas || mov.cuotas <= 1){
+    return { count: fallbackCount, ids: mov?.id ? [mov.id] : [] };
+  }
+
+  try {
+    const docs = await obtenerCuotasGrupoDesdeActual(mov);
+
+    if(!docs.length){
+      return { count: fallbackCount, ids: mov.id ? [mov.id] : [] };
+    }
+
+    return {
+      count: docs.length,
+      ids: docs.map(d => d.id)
+    };
+  } catch(e) {
+    console.warn('getCuotasPendientesInfo:', e);
+    return { count: fallbackCount, ids: mov?.id ? [mov.id] : [] };
+  }
+}
+
+function normalizarFechaISOGlobal(valor) {
+  if(!valor) return '';
+
+  if(typeof valor === 'string') {
+    const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(iso) return valor;
+
+    const lat = valor.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    if(lat) {
+      const dd = lat[1].padStart(2, '0');
+      const mm = lat[2].padStart(2, '0');
+      const yy = lat[3].length === 2 ? `20${lat[3]}` : lat[3];
+      return `${yy}-${mm}-${dd}`;
+    }
+  }
+
+  const d = new Date(valor);
+  if(!Number.isNaN(d.getTime())) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  return '';
+}
+
+function getFechaDefaultCompartir(mov) {
+  const normalizada = normalizarFechaISOGlobal(mov?.fecha);
+  if(normalizada) return normalizada;
+  const h = new Date();
+  return h.getFullYear() + '-' + String(h.getMonth()+1).padStart(2,'0') + '-' + String(h.getDate()).padStart(2,'0');
+}
+
 window.compartirGasto = async id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
   const emailsRecientes = await getEmailsRecientes();
+  const cuotasInfo = await getCuotasPendientesInfo(mov);
 
   const tipoLabel = {gasto:'Gasto',ingreso:'Ingreso',tarjeta:'Tarjeta de crédito',credito:'Crédito personal',fijo_medeben:'Cobro fijo',fijo_debo:'Pago fijo'}[mov.tipo||'gasto'] || (mov.tipo||'Gasto');
-  const fechaStr = mov.fecha ? (([y,m,d])=>`${d}/${m}/${y.slice(-2)}`)(mov.fecha.split('-')) : '';
-  const remainingCuotas = (mov.cuotas||1) - (mov.cuotaNum||1) + 1;
+  const fechaDefault = getFechaDefaultCompartir(mov);
+  const fechaStr = (([y,m,d])=>`${d}/${m}/${y.slice(-2)}`)(fechaDefault.split('-'));
+  const remainingCuotas = cuotasInfo.count;
   const montoUnitARS = toARS(mov.monto, mov.moneda);
+  window._compartirCuotasPendientesIds = cuotasInfo.ids || [];
+  window._compartirCuotasPendientesCount = remainingCuotas;
 
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
@@ -3208,21 +3447,27 @@ window.compartirGasto = async id => {
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${mov.desc}</div>
       <div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:10px">-${fmtARS(montoUnitARS)}</div>
 
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${mov.cuotas>1?'10':'18'}px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap">
         <span style="background:rgba(140,100,255,.12);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700">${tipoLabel}</span>
-        ${fechaStr ? `<span style="background:rgba(140,100,255,.08);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700">📅 ${fechaStr}</span>` : ''}
+        <div class="date-picker-wrap" id="compDpWrap" style="min-width:120px;flex:0 0 auto">
+          <div class="date-picker-display" id="compDpDisplay" style="padding:0;overflow:hidden;background:rgba(140,100,255,.08);border:1.5px solid rgba(227,220,255,.7);min-height:30px">
+            <input id="compDpText" type="text" autocomplete="off"
+              value="${fechaStr}"
+              style="flex:1;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:700;padding:6px 6px 6px 12px;outline:none;width:100%;"
+              oninput="dpModParseText('comp',this.value,'compFecha','compDpText','compDpPopup')"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('comp',this.value,'compFecha','compDpText','compDpPopup',true);}"
+            >
+            <span class="dp-icon" style="padding-right:10px;cursor:pointer;font-size:13px;" onclick="dpModToggle('comp','compDpPopup','compFecha','compDpText')">📅</span>
+          </div>
+          <div class="dp-popup" id="compDpPopup" style="display:none"></div>
+        </div>
+        <input type="hidden" id="compFecha" value="${fechaDefault}">
+        ${mov.cuotas > 1 ? `
+        <label class="share-cuotas-tab" id="shareCuotasTab">
+          <input class="share-cuotas-hidden" type="checkbox" id="compartirCuotasCheck" onchange="toggleCompartirCuotas(${montoUnitARS},${remainingCuotas})">
+          <span>Compartir cuotas restantes</span>
+        </label>` : ''}
       </div>
-
-      ${mov.cuotas > 1 ? `
-      <div style="background:rgba(255,107,138,.08);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px">
-        <span style="font-weight:700;color:var(--text)">Cuota ${mov.cuotaNum} de ${mov.cuotas}</span>
-        <span style="color:var(--muted)"> — ${fmtARS(montoUnitARS)} c/u</span>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer">
-          <input type="checkbox" id="compartirCuotasCheck" onchange="toggleCompartirCuotas(${montoUnitARS},${remainingCuotas})">
-          <span style="font-size:12px;color:var(--text);font-weight:700">Compartir las ${remainingCuotas} cuotas restantes</span>
-        </label>
-      </div>` : ''}
-
       <div class="modal-group">
         <label>Email de la persona</label>
         <div style="display:flex;gap:8px;align-items:center">
@@ -3251,10 +3496,11 @@ window.compartirGasto = async id => {
 
       <div class="modal-btns" style="margin-top:16px">
         <button class="modal-btn-cancel" onclick="document.getElementById('modalCompartir').remove()">Cancelar</button>
-        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}',${mov.monto},'${mov.desc.replace(/'/g,"\\'")}','${mov.moneda||'ARS'}','${mov.tipo||'gasto'}','${mov.fecha||''}',${mov.cuotas||1},${mov.cuotaNum||1},${mov.montoTotal||mov.monto})">Compartir</button>
+        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}',${mov.monto},'${mov.desc.replace(/'/g,"\\'")}','${mov.moneda||'ARS'}','${mov.tipo||'gasto'}',document.getElementById('compFecha')?.value||'${fechaDefault}',${mov.cuotas||1},${mov.cuotaNum||1},${mov.montoTotal||mov.monto})">Compartir</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
+  if(typeof dpModInit === 'function') dpModInit('comp', fechaDefault || null);
 };
 
 window.mostrarEmailsRecientes = () => {
@@ -3272,6 +3518,7 @@ window.setMontoCompartir = (montoBase, fraccion) => {
 
 window.toggleCompartirCuotas = (montoUnitARS, remainingCuotas) => {
   const checked = document.getElementById('compartirCuotasCheck')?.checked;
+  document.getElementById('shareCuotasTab')?.classList.toggle('active', !!checked);
   const base = checked ? montoUnitARS * remainingCuotas : montoUnitARS;
   window._baseCompartir = base;
   const input = document.getElementById('compartirMonto');
@@ -3287,43 +3534,50 @@ window.toggleCompartirCuotas = (montoUnitARS, remainingCuotas) => {
 window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha, cuotas, cuotaNum, montoTotal) => {
   const email = document.getElementById('compartirEmail')?.value.trim();
   const montoCompartido = parseFloat(document.getElementById('compartirMonto')?.value);
+  const fechaNormalizada = normalizarFechaISOGlobal(fecha) || '';
   if(!email) return showToast('⚠️ Ingresá un email',true);
   if(!montoCompartido || montoCompartido <= 0) return showToast('⚠️ Ingresá un monto válido',true);
   if(email === currentUser.email) return showToast('⚠️ No podés compartirte un gasto a vos mismo',true);
 
   const compartirCuotas = !!(cuotas > 1 && document.getElementById('compartirCuotasCheck')?.checked);
+  const cuotasPendientesCount = compartirCuotas
+    ? (window._compartirCuotasPendientesCount || Math.max(1, (cuotas || 1) - (cuotaNum || 1) + 1))
+    : 1;
+  const cuotasPendientesIds = compartirCuotas ? (window._compartirCuotasPendientesIds || []) : [];
 
   const btn = document.querySelector('#modalCompartir .modal-btn-ok');
   if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
 
   try{
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tipo: 'gastoCompartido',
-        destinatarioEmail: email,
-        remitenteEmail: currentUser.email,
-        remitenteUid: currentUser.uid,
-        desc,
-        monto,
-        montoCompartido,
-        gastoId: id,
-        tipoOrigen: tipoOrigen || 'gasto',
-        fecha: fecha || '',
-        ...(compartirCuotas ? { compartirCuotas: true, cuotas, cuotaNum, montoTotal: montoTotal || monto } : {}),
-      })
-    });
-    const data = await res.json();
-    if(data.ok){
-      guardarEmailReciente(email);
-      document.getElementById('modalCompartir')?.remove();
-      showToast('✅ Gasto compartido con ' + email);
-    } else {
-      showToast('❌ ' + (data.error || 'Error al compartir'), true);
+    if(!usarSupabaseCompartidos()){
+      showToast('⚠️ Configurá SUPABASE_ANON_KEY para usar gastos compartidos', true);
       if(btn){ btn.disabled=false; btn.textContent='Compartir'; }
+      return;
     }
+
+    const payloadSupabase = construirPayloadSupabaseCompartido({
+      id,
+      email,
+      desc,
+      monto,
+      montoCompartido,
+      tipoOrigen,
+      fechaNormalizada,
+      compartirCuotas,
+      cuotas,
+      cuotaNum,
+      montoTotal,
+      cuotasPendientesCount,
+      cuotasPendientesIds
+    });
+
+    await insertarCompartidoSupabase(payloadSupabase);
+    guardarEmailReciente(email);
+    document.getElementById('modalCompartir')?.remove();
+    showToast('✅ Gasto compartido con ' + email);
+    await notificarCompartidoWorker(payloadSupabase);
   }catch(e){
+    console.error('Error compartiendo gasto en Supabase:', e);
     showToast('❌ Error de conexión',true);
     if(btn){ btn.disabled=false; btn.textContent='Compartir'; }
   }
@@ -3334,44 +3588,475 @@ window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha
 // ── SISTEMA DE NOTIFICACIONES ────────────────────────────────
 let notificaciones = [];
 let notifListener = null;
+let compartidosResueltos = new Set();
+let notifPopupTimer = null;
+
+function construirRecordatorios() {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const en3 = new Date(hoy); en3.setDate(hoy.getDate()+3);
+  const hoyStr = hoy.toISOString().split('T')[0];
+  const en3str = en3.toISOString().split('T')[0];
+  return (window.data||[]).filter(d =>
+    d.recordatorio && d.fecha && d.fecha >= hoyStr && d.fecha <= en3str
+  ).map(d => ({...d, _tipo: 'recordatorio'}));
+}
+
+function aplicarNotificacionesCompartidasLista(rows = []) {
+  const lista = normalizarListaCompartidos(rows);
+
+  lista.forEach(d => {
+    if(d.estado !== 'pendiente') compartidosResueltos.delete(d.id);
+  });
+
+  const gastosComp = lista
+    .filter(d => d.estado === 'pendiente' && !compartidosResueltos.has(d.id));
+
+  const recordatorios = construirRecordatorios();
+
+  notificaciones = [...gastosComp, ...recordatorios];
+  actualizarBadge();
+  renderNotifPanel();
+
+  if(gastosComp.length === 0 && document.getElementById('modalCompartidoForm')){
+    cfCerrarPopup();
+  }
+
+  return gastosComp;
+}
+
+function aplicarNotificacionesCompartidas(snap) {
+  const lista = snap.docs.map(d => ({ id: d.id, ...d.data(), _tipo: 'compartido' }));
+  return aplicarNotificacionesCompartidasLista(lista);
+}
+
+async function recargarNotificacionesCompartidas() {
+  if(!currentUser?.email) return;
+  try {
+    if(usarSupabaseCompartidos()) {
+      const rows = await listarCompartidosSupabase();
+      return aplicarNotificacionesCompartidasLista(rows);
+    }
+    const colRef = collection(db, 'gastosCompartidos');
+    const snap = await getDocs(query(colRef, where('destinatarioEmail','==', currentUser.email)));
+    return aplicarNotificacionesCompartidas(snap);
+  } catch(e) {
+    console.warn('requery notif:', e);
+    return [];
+  }
+}
+
+function limpiarTimerPopupCompartido() {
+  if(notifPopupTimer) {
+    clearTimeout(notifPopupTimer);
+    notifPopupTimer = null;
+  }
+}
+
+function obtenerCompartidosPendientesActuales() {
+  return (notificaciones || []).filter(n => n._tipo === 'compartido');
+}
+
+function intentarMostrarPopupCompartido() {
+  notifPopupTimer = null;
+
+  if(document.getElementById('modalCompartidoForm')) return;
+
+  const actuales = obtenerCompartidosPendientesActuales();
+  if(!actuales.length) return;
+
+  const loader = document.getElementById('loadingOverlay');
+  if(loader && !loader.classList.contains('hidden')){
+    notifPopupTimer = setTimeout(intentarMostrarPopupCompartido, 500);
+    return;
+  }
+
+  mostrarFormularioCompartido(actuales);
+}
+
+function programarPopupCompartido() {
+  limpiarTimerPopupCompartido();
+  if(document.getElementById('modalCompartidoForm')) return;
+  if(!obtenerCompartidosPendientesActuales().length) return;
+  notifPopupTimer = setTimeout(intentarMostrarPopupCompartido, 1500);
+}
+
+function cfResetearApartadoCargar() {
+  limpiarTimerPopupCompartido();
+  cfCerrarPopup();
+}
+
+async function cfReversaCompartido(idResuelto = null) {
+  cfResetearApartadoCargar();
+  renderResumen();
+  const gastosComp = await recargarNotificacionesCompartidas();
+
+  // Si por alguna razón visual todavía queda colgado, replicar el efecto de F5
+  if(idResuelto && (gastosComp || []).some(g => g.id === idResuelto)) {
+    setTimeout(() => window.location.reload(), 150);
+  }
+}
+
+let cfPopupState = null;
+
+function cfFormatMontoValor(valor) {
+  if(valor === null || valor === undefined || valor === '') return '';
+  const num = Number(valor);
+  if(Number.isNaN(num)) return '';
+  return num.toLocaleString('es-AR');
+}
+
+function cfMontoGetValue() {
+  const el = document.getElementById('cfMonto');
+  if(!el) return 0;
+  return parseFloat(el.value.replace(/\./g,'').replace(',','.')) || 0;
+}
+
+window.cfMontoInput = el => {
+  const raw = el.value;
+  const enProgreso = raw.endsWith(',') || raw.endsWith(',0') || /,\d$/.test(raw);
+  if(enProgreso){ cfActualizarPreviewCuotas(); return; }
+  const partes = raw.replace(/\./g,'').split(',');
+  const entero = partes[0].replace(/[^0-9]/g,'');
+  const decimal = partes[1] !== undefined ? partes[1].replace(/[^0-9]/g,'') : null;
+  if(entero === '' && decimal === null){ el.value=''; cfActualizarPreviewCuotas(); return; }
+  const num = parseInt(entero || '0', 10);
+  let formateado = num.toLocaleString('es-AR');
+  if(decimal !== null) formateado += ',' + decimal;
+  el.value = formateado;
+  cfActualizarPreviewCuotas();
+};
+
+window.cfActualizarPreviewCuotas = () => {
+  const prev = document.getElementById('cfCuotaPreview');
+  if(!prev || !cfPopupState) return;
+  const monto = cfMontoGetValue();
+  const cuotas = parseInt(document.getElementById('cfCuotas')?.value || '1', 10) || 1;
+  if(cuotas <= 1 || monto === 0 || !(cfPopupState.tipoActual === 'tarjeta' || cfPopupState.tipoActual === 'credito')){
+    prev.classList.remove('visible');
+    prev.innerHTML = '';
+    return;
+  }
+  const esModoTotal = cfPopupState.montoModo !== 'cuota';
+  const cuota = esModoTotal ? Math.round(monto / cuotas) : monto;
+  const total = esModoTotal ? monto : monto * cuotas;
+  prev.classList.add('visible');
+  prev.innerHTML = `💳 <strong>${fmtARS(cuota)}/mes</strong> × ${cuotas} cuotas = <strong>${fmtARS(total)}</strong> total`;
+};
+
+function cfRenderTarjetaChips() {
+  const el = document.getElementById('cfTarjetaChips');
+  if(!el || !cfPopupState) return;
+  if(!tarjetas.length){
+    el.innerHTML = '<span style="color:var(--muted);font-size:13px">No hay tarjetas.</span>';
+    return;
+  }
+  el.innerHTML = tarjetas.map(t => `<div class="tarjeta-chip ${cfPopupState.tarjetaId===t.id?'active':''}" onclick="cfSelTarjeta('${t.id}')">${t.nombre}</div>`).join('');
+}
+
+function cfAplicarTipoUI() {
+  if(!cfPopupState) return;
+  const tipoBase = cfPopupState.tipoBase;
+  const esCredito = tipoBase === 'credito';
+  const esTarjeta = esCredito && cfPopupState.subtipoActual === 'tarjeta';
+  const esFijo = tipoBase === 'fijo';
+
+  document.querySelectorAll('#modalCompartidoForm .tipo-btn').forEach(b => b.classList.remove('active','act-gas','act-tar','act-cred','act-fijo'));
+  if(tipoBase==='ingreso') document.getElementById('cf-btn-ing')?.classList.add('active');
+  if(tipoBase==='gasto') document.getElementById('cf-btn-gas')?.classList.add('act-gas');
+  if(tipoBase==='credito') document.getElementById('cf-btn-cred')?.classList.add('act-cred');
+  if(tipoBase==='fijo') document.getElementById('cf-btn-fijo')?.classList.add('act-fijo');
+
+  document.getElementById('cfSubtipoWrap')?.classList.toggle('visible', esCredito);
+  document.getElementById('cfSubtipoFijoWrap')?.classList.toggle('visible', esFijo);
+  document.getElementById('cfTarjetaSelWrap')?.classList.toggle('visible', esTarjeta);
+  document.getElementById('cfCuotasWrap')?.classList.toggle('visible', esCredito);
+  document.getElementById('cfMontoModoToggle')?.classList.toggle('visible', esCredito);
+  const recWrap = document.getElementById('cfRecordatorioWrap');
+  if(recWrap) recWrap.style.display = (tipoBase === 'gasto' || esCredito) ? 'block' : 'none';
+
+  document.getElementById('cf-btn-sub-personal')?.classList.toggle('active', cfPopupState.subtipoActual === 'personal');
+  document.getElementById('cf-btn-sub-tarjeta')?.classList.toggle('active', cfPopupState.subtipoActual === 'tarjeta');
+  document.getElementById('cf-btn-fijo-medeben')?.classList.toggle('active', cfPopupState.subtipoFijoActual === 'me_deben');
+  document.getElementById('cf-btn-fijo-debo')?.classList.toggle('active', cfPopupState.subtipoFijoActual === 'debo');
+
+  document.getElementById('cf-mBtn-ars')?.classList.toggle('active', cfPopupState.moneda === 'ARS');
+  document.getElementById('cf-mBtn-usd')?.classList.toggle('active', cfPopupState.moneda === 'USD');
+  document.getElementById('cf-mBtn-usd-tar')?.classList.toggle('active', cfPopupState.moneda === 'USD_TAR');
+  document.getElementById('cf-modoTotal')?.classList.toggle('active', cfPopupState.montoModo === 'total');
+  document.getElementById('cf-modoCuota')?.classList.toggle('active', cfPopupState.montoModo === 'cuota');
+
+  if(!esCredito){
+    const cuotas = document.getElementById('cfCuotas');
+    if(cuotas) cuotas.value = '';
+    cfPopupState.montoModo = 'total';
+    document.getElementById('cf-modoTotal')?.classList.add('active');
+    document.getElementById('cf-modoCuota')?.classList.remove('active');
+  }
+
+  const label = document.getElementById('cfLabelMonto');
+  if(label) label.textContent = cfPopupState.montoModo === 'cuota' ? 'Monto por cuota' : 'Monto Total';
+
+  cfRenderTarjetaChips();
+  cfActualizarPreviewCuotas();
+}
+
+window.cfSetTipo = t => {
+  if(!cfPopupState) return;
+  cfPopupState.tipoBase = t;
+  if(t === 'credito'){
+    cfPopupState.tipoActual = cfPopupState.subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito';
+  } else if(t === 'fijo') {
+    cfPopupState.tipoActual = cfPopupState.subtipoFijoActual === 'me_deben' ? 'fijo_medeben' : 'fijo_debo';
+  } else {
+    cfPopupState.tipoActual = t;
+  }
+  cfAplicarTipoUI();
+};
+
+window.cfSetSubtipo = s => {
+  if(!cfPopupState) return;
+  cfPopupState.subtipoActual = s;
+  cfPopupState.tipoBase = 'credito';
+  cfPopupState.tipoActual = s === 'tarjeta' ? 'tarjeta' : 'credito';
+  cfAplicarTipoUI();
+};
+
+window.cfSetSubtipoFijo = s => {
+  if(!cfPopupState) return;
+  cfPopupState.subtipoFijoActual = s;
+  cfPopupState.tipoBase = 'fijo';
+  cfPopupState.tipoActual = s === 'me_deben' ? 'fijo_medeben' : 'fijo_debo';
+  cfAplicarTipoUI();
+};
+
+window.cfSetMoneda = m => {
+  if(!cfPopupState) return;
+  cfPopupState.moneda = m;
+  cfAplicarTipoUI();
+};
+
+window.cfSetMontoCuotasModo = modo => {
+  if(!cfPopupState) return;
+  cfPopupState.montoModo = modo;
+  cfAplicarTipoUI();
+};
+
+window.cfSelTarjeta = id => {
+  if(!cfPopupState) return;
+  cfPopupState.tarjetaId = id;
+  cfRenderTarjetaChips();
+};
+
+function cfCrearEstadoPopup(g) {
+  const tipoBaseMap = { gasto:'gasto', ingreso:'ingreso', tarjeta:'credito', credito:'credito', fijo_medeben:'fijo', fijo_debo:'fijo' };
+  const tipoBase = tipoBaseMap[g.tipoOrigen] || 'gasto';
+  const subtipoActual = g.tipoOrigen === 'tarjeta' ? 'tarjeta' : 'personal';
+  const subtipoFijoActual = g.tipoOrigen === 'fijo_debo' ? 'debo' : 'me_deben';
+  const tipoActual = tipoBase === 'credito'
+    ? (subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito')
+    : (tipoBase === 'fijo' ? (subtipoFijoActual === 'me_deben' ? 'fijo_medeben' : 'fijo_debo') : tipoBase);
+
+  return {
+    tipoBase,
+    tipoActual,
+    subtipoActual,
+    subtipoFijoActual,
+    moneda: g.moneda || 'ARS',
+    montoModo: 'total',
+    tarjetaId: g.tarjetaId || null
+  };
+}
+
+function cfGetCuotasDefault(g) {
+  const countFromField = parseInt(g?.cuotasPendientesCount, 10);
+  if(countFromField > 0) return countFromField;
+
+  if(Array.isArray(g?.cuotasPendientesIds) && g.cuotasPendientesIds.length > 0) {
+    return g.cuotasPendientesIds.length;
+  }
+
+  const cuotas = parseInt(g?.cuotas, 10);
+  const cuotaNum = parseInt(g?.cuotaNum, 10);
+  if(cuotas > 0 && cuotaNum > 0) {
+    return Math.max(1, cuotas - cuotaNum + 1);
+  }
+
+  const match = String(g?.desc || '').match(/\((\d+)\s*\/\s*(\d+)\)/);
+  if(match) {
+    const actual = parseInt(match[1], 10);
+    const total = parseInt(match[2], 10);
+    if(total > 0 && actual > 0) return Math.max(1, total - actual + 1);
+  }
+
+  return 0;
+}
+
+function cfNormalizarFechaISO(valor) {
+  if(!valor) return '';
+
+  if(typeof valor === 'string') {
+    const iso = valor.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(iso) return valor;
+
+    const lat = valor.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/);
+    if(lat) {
+      const dd = lat[1].padStart(2, '0');
+      const mm = lat[2].padStart(2, '0');
+      const yy = lat[3].length === 2 ? `20${lat[3]}` : lat[3];
+      return `${yy}-${mm}-${dd}`;
+    }
+  }
+
+  const date = new Date(valor);
+  if(!Number.isNaN(date.getTime())) {
+    return date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+  }
+
+  return '';
+}
+
+function cfConstruirPopupHTML(g, resto) {
+  return `
+    <div class="modal-overlay" id="modalCompartidoForm" style="z-index:600">
+      <div style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:0;animation:popIn .25s ease both">
+        <div class="form-card" style="border-radius:24px;padding:18px 18px 20px;margin:0">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+            <div>
+              <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">🤝 De ${(g.compartidoPor||'un amigo').split('@')[0]}</div>
+              ${resto > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button onclick="cfCerrarPopup()" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--muted);font-weight:700">Cerrar</button>
+              <button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Tipo</label>
+            <div class="tipo-btns">
+              <div class="tipo-btn" id="cf-btn-ing" onclick="cfSetTipo('ingreso')">💚 Ingreso</div>
+              <div class="tipo-btn" id="cf-btn-gas" onclick="cfSetTipo('gasto')">🔴 Gasto</div>
+              <div class="tipo-btn" id="cf-btn-cred" onclick="cfSetTipo('credito')">💳 Crédito</div>
+              <div class="tipo-btn" id="cf-btn-fijo" onclick="cfSetTipo('fijo')">📌 Mov. Fijo</div>
+            </div>
+          </div>
+
+          <div class="subtipo-wrap" id="cfSubtipoWrap">
+            <div class="subtipo-btns">
+              <div class="subtipo-btn" id="cf-btn-sub-personal" onclick="cfSetSubtipo('personal')">👤 Crédito personal</div>
+              <div class="subtipo-btn" id="cf-btn-sub-tarjeta" onclick="cfSetSubtipo('tarjeta')">💳 Tarjeta de crédito</div>
+            </div>
+          </div>
+
+          <div class="subtipo-fijo-wrap" id="cfSubtipoFijoWrap">
+            <div class="subtipo-btns">
+              <div class="subtipo-fijo-btn" id="cf-btn-fijo-medeben" onclick="cfSetSubtipoFijo('me_deben')">💰 Me deben</div>
+              <div class="subtipo-fijo-btn" id="cf-btn-fijo-debo" onclick="cfSetSubtipoFijo('debo')">💸 Debo</div>
+            </div>
+          </div>
+
+          <div class="form-group tarjeta-sel-wrap" id="cfTarjetaSelWrap">
+            <label>Tarjeta</label>
+            <div class="tarjeta-chips" id="cfTarjetaChips"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Descripción</label>
+            <input type="text" id="cfDesc" placeholder="Ej: Comida, Luz, Cuota...">
+          </div>
+
+          <div class="form-group">
+            <label id="cfLabelMonto">Monto Total</label>
+            <div class="monto-modo-toggle" id="cfMontoModoToggle">
+              <div class="monto-modo-btn active" id="cf-modoTotal" onclick="cfSetMontoCuotasModo('total')">Total</div>
+              <div class="monto-modo-btn" id="cf-modoCuota" onclick="cfSetMontoCuotasModo('cuota')">Por cuota</div>
+            </div>
+            <div class="monto-cuotas-row">
+              <input type="text" id="cfMonto" inputmode="numeric" placeholder="0" oninput="cfMontoInput(this)" style="text-align:left">
+              <div class="cuotas-input-wrap" id="cfCuotasWrap">
+                <label>Cuotas</label>
+                <input type="number" id="cfCuotas" min="1" max="60" oninput="cfActualizarPreviewCuotas()">
+              </div>
+            </div>
+            <div class="cuota-preview" id="cfCuotaPreview"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Moneda</label>
+            <div class="moneda-toggle">
+              <div class="moneda-btn" id="cf-mBtn-ars" onclick="cfSetMoneda('ARS')">$ ARS</div>
+              <div class="moneda-btn" id="cf-mBtn-usd" onclick="cfSetMoneda('USD')">💵 USD Of.</div>
+              <div class="moneda-btn" id="cf-mBtn-usd-tar" onclick="cfSetMoneda('USD_TAR')">💳 USD Tarj.</div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Fecha</label>
+            <div class="date-picker-wrap" id="cfDpWrap">
+              <div class="date-picker-display" id="cfDpDisplay" style="padding:0;overflow:hidden;">
+                <input id="cfDpText" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
+                  style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
+                  oninput="dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup')"
+                  onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup',true);}"
+                >
+                <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('cf','cfDpPopup','cfFecha','cfDpText')">📅</span>
+              </div>
+              <div class="dp-popup" id="cfDpPopup" style="display:none"></div>
+            </div>
+            <input type="hidden" id="cfFecha">
+          </div>
+
+          <div class="form-group" id="cfRecordatorioWrap" style="display:none">
+            <label onclick="document.getElementById('cfRecordatorio').click()" style="cursor:pointer" class="recordatorio-row">
+              <div>
+                <div class="recordatorio-label">⏰ Avisarme 3 días antes</div>
+                <div class="recordatorio-sub">Te mandamos un email de recordatorio</div>
+              </div>
+              <label class="toggle-switch" onclick="event.stopPropagation()">
+                <input type="checkbox" id="cfRecordatorio" checked>
+                <span class="toggle-slider"></span>
+              </label>
+            </label>
+          </div>
+
+          <button class="btn-submit" id="cfBtnGuardar" onclick="cfGuardarCompartido()">Cargar movimiento</button>
+        </div>
+      </div>
+    </div>`;
+}
 
 function iniciarNotificaciones() {
   if(!currentUser){ setTimeout(iniciarNotificaciones, 1000); return; }
+
+  if(notifListener) {
+    try { notifListener(); } catch(_){}
+    notifListener = null;
+  }
+  if(window._notifPollInterval) {
+    clearInterval(window._notifPollInterval);
+    window._notifPollInterval = null;
+  }
+
+  if(usarSupabaseCompartidos()) {
+    const refrescar = async () => {
+      const gastosComp = await recargarNotificacionesCompartidas();
+      if(gastosComp.length > 0) programarPopupCompartido();
+      else limpiarTimerPopupCompartido();
+    };
+    refrescar();
+    window._notifPollInterval = setInterval(refrescar, 8000);
+    return;
+  }
 
   // Listener en tiempo real para gastos compartidos — solo por email (sin índice compuesto)
   const colRef = collection(db, 'gastosCompartidos');
   notifListener = onSnapshot(
     query(colRef, where('destinatarioEmail','==', currentUser.email)),
     snap => {
-      const gastosComp = snap.docs
-        .map(d => ({ id: d.id, ...d.data(), _tipo: 'compartido' }))
-        .filter(d => d.estado === 'pendiente');
+      const gastosComp = aplicarNotificacionesCompartidas(snap);
 
-      // Recordatorios próximos 3 días
-      const hoy = new Date(); hoy.setHours(0,0,0,0);
-      const en3 = new Date(hoy); en3.setDate(hoy.getDate()+3);
-      const hoyStr = hoy.toISOString().split('T')[0];
-      const en3str = en3.toISOString().split('T')[0];
-      const recordatorios = (window.data||[]).filter(d =>
-        d.recordatorio && d.fecha && d.fecha >= hoyStr && d.fecha <= en3str
-      ).map(d => ({...d, _tipo: 'recordatorio'}));
-
-      notificaciones = [...gastosComp, ...recordatorios];
-      actualizarBadge();
-      renderNotifPanel();
-
-      // Popup al abrir si hay gastos compartidos pendientes
-      if(gastosComp.length > 0){
-        const tryShow = () => {
-          const loader = document.getElementById('loadingOverlay');
-          if(loader && !loader.classList.contains('hidden')){
-            setTimeout(tryShow, 500);
-          } else {
-            mostrarFormularioCompartido(gastosComp);
-          }
-        };
-        setTimeout(tryShow, 1500);
-      }
+      if(gastosComp.length > 0) programarPopupCompartido();
+      else limpiarTimerPopupCompartido();
     },
     e => console.warn('notif listener:', e)
   );
@@ -3436,109 +4121,203 @@ function mostrarFormularioCompartido(gastos) {
   const g = gastos[0];
   const resto = gastos.length - 1;
 
-  const formCard = document.querySelector('#tab-cargar .form-card');
-  if(!formCard) return;
-
-  // Guardar referencia al padre original para devolver después
-  window._compFormOrigParent = formCard.parentElement;
+  if(document.getElementById('modalCompartidoForm')) return;
   window._compartidoPendiente = { docId: g.id, compartidoPor: g.compartidoPor || '' };
+  cfPopupState = cfCrearEstadoPopup(g);
 
-  // Crear overlay
-  const ov = document.createElement('div');
-  ov.className = 'modal-overlay';
-  ov.id = 'modalCompartidoForm';
-  ov.style.zIndex = '600';
+  document.body.insertAdjacentHTML('beforeend', cfConstruirPopupHTML(g, resto));
 
-  const wrapper = document.createElement('div');
-  wrapper.style.cssText = 'max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:0;animation:popIn .25s ease both';
+  const desc = document.getElementById('cfDesc');
+  const monto = document.getElementById('cfMonto');
+  const rec = document.getElementById('cfRecordatorio');
+  const fecha = document.getElementById('cfFecha');
+  const fechaTxt = document.getElementById('cfDpText');
 
-  // Header con info + botón rechazar
-  const header = document.createElement('div');
-  header.className = 'form-card';
-  header.style.cssText = 'border-radius:24px 24px 0 0;padding:16px 18px 10px;margin-bottom:0;border-bottom:none;box-shadow:none';
-  header.innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">🤝 De ${(g.compartidoPor||'un amigo').split('@')[0]}</div>
-      <button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>
-    </div>
-    ${resto > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}`;
+  if(desc) desc.value = (g.desc || '').replace(/\s*\(compartido\)\s*/gi, '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+  if(monto) monto.value = cfFormatMontoValor(g.montoCompartido || g.monto || 0);
+  if(rec) rec.checked = true;
+  if(fecha) fecha.value = '';
+  if(fechaTxt) fechaTxt.value = '';
+  if(typeof dpModInit === 'function') dpModInit('cf', null);
 
-  // Ajustar form-card para que se vea bien en el popup
-  formCard.style.borderRadius = '0 0 24px 24px';
-  formCard.style.marginTop = '0';
-
-  wrapper.appendChild(header);
-  wrapper.appendChild(formCard);
-  ov.appendChild(wrapper);
-  document.body.appendChild(ov);
-
-  // ── PRE-LLENAR todos los campos ──
-  // Tipo
-  const tipoMap = { gasto:'gasto', ingreso:'ingreso', tarjeta:'credito', credito:'credito', fijo_medeben:'fijo', fijo_debo:'fijo' };
-  const tipoForm = tipoMap[g.tipoOrigen] || 'gasto';
-  setTipo(tipoForm);
-
-  // Subtipo crédito
-  if(g.tipoOrigen === 'tarjeta') setSubtipo('tarjeta');
-  else if(g.tipoOrigen === 'credito') setSubtipo('personal');
-
-  // Descripción
-  document.getElementById('fDesc').value = (g.desc || '').replace(/\s*\(compartido\)\s*/gi, '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
-
-  // Monto (montoCompartido es lo que decidió compartir, monto es el original)
-  const montoVal = g.montoCompartido || g.monto || 0;
-  document.getElementById('fMonto').value = montoVal.toLocaleString('es-AR');
-
-  // Moneda
-  setMoneda(g.moneda || 'ARS');
-
-  // Fecha
-  if(g.fecha) {
-    document.getElementById('fFecha').value = g.fecha;
-    const [y,m,d] = g.fecha.split('-');
-    document.getElementById('dpTextInput').value = `${d}/${m}/${y.slice(-2)}`;
-  } else {
-    document.getElementById('fFecha').value = '';
-    document.getElementById('dpTextInput').value = '';
+  const fechaCompartida = cfNormalizarFechaISO(g[CAMPO_FECHA_COMPARTIDA] || g.fecha);
+  if(fechaCompartida && typeof dpModInit === 'function') {
+    setTimeout(() => {
+      const fechaHidden = document.getElementById('cfFecha');
+      const fechaInput = document.getElementById('cfDpText');
+      if(!document.getElementById('modalCompartidoForm')) return;
+      if(fechaHidden) fechaHidden.value = fechaCompartida;
+      if(fechaInput) {
+        const [y, m, d] = fechaCompartida.split('-');
+        fechaInput.value = `${parseInt(d,10)}/${parseInt(m,10)}/${y}`;
+      }
+      dpModInit('cf', fechaCompartida);
+    }, 0);
   }
 
-  // Cuotas (si compartió cuotas, pre-llenar las restantes)
-  if(g.compartirCuotas && g.cuotas > 1) {
-    const remaining = g.cuotas - g.cuotaNum + 1;
-    const fc = document.getElementById('fCuotas');
-    if(fc) {
-      fc.value = remaining;
-      if(typeof actualizarPreviewCuotas === 'function') actualizarPreviewCuotas();
-    }
+  const cuotasDefault = cfGetCuotasDefault(g);
+  if(cuotasDefault > 0) {
+    const fc = document.getElementById('cfCuotas');
+    if(fc) fc.value = cuotasDefault;
   }
 
-  // Cambiar texto del botón Guardar
-  const btnGuardar = document.getElementById('btnGuardar');
-  if(btnGuardar) btnGuardar.textContent = 'Cargar movimiento';
+  cfAplicarTipoUI();
 }
+
+window.cfGuardarCompartido = async () => {
+  if(!cfPopupState || !window._compartidoPendiente) return;
+
+  const desc = document.getElementById('cfDesc')?.value.trim() || '';
+  const montoRaw = cfMontoGetValue();
+  const fechaVal = document.getElementById('cfFecha')?.value || null;
+  const recordatorio = !!document.getElementById('cfRecordatorio')?.checked;
+  const btn = document.getElementById('cfBtnGuardar');
+
+  if(!desc || isNaN(montoRaw) || montoRaw <= 0){
+    showToast('⚠️ Completá todos los campos', true);
+    return;
+  }
+
+  if(cfPopupState.tipoActual === 'tarjeta' && !cfPopupState.tarjetaId){
+    showToast('⚠️ Seleccioná una tarjeta', true);
+    return;
+  }
+
+  const fechaBase = fechaVal ? new Date(fechaVal + 'T12:00:00') : new Date();
+  const p = getPeriodo(fechaBase, cfPopupState.tipoActual, cfPopupState.tarjetaId || null);
+  const monto = Math.abs(montoRaw);
+
+  if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
+  setSyncStatus('loading');
+
+  try {
+    if(cfPopupState.tipoActual === 'fijo_medeben' || cfPopupState.tipoActual === 'fijo_debo'){
+      await addDoc(fijoCol(), {
+        desc,
+        monto,
+        subtipo: cfPopupState.tipoActual === 'fijo_medeben' ? 'me_deben' : 'debo',
+        moneda: cfPopupState.moneda,
+        timestamp: Date.now()
+      });
+      await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+      showToast('✅ Mov. fijo guardado!');
+    } else {
+      const cuotasActual = parseInt(document.getElementById('cfCuotas')?.value || '1', 10) || 1;
+      const esConCuotas = (cfPopupState.tipoActual === 'tarjeta' || cfPopupState.tipoActual === 'credito') && cuotasActual > 1;
+      const esModoTotal = cfPopupState.montoModo !== 'cuota';
+      const cuotaMonto = esConCuotas ? (esModoTotal ? Math.round(monto / cuotasActual) : monto) : monto;
+      const montoTotal = esConCuotas ? (esModoTotal ? monto : monto * cuotasActual) : monto;
+      const grupoId = esConCuotas ? 'gc_' + Date.now() : null;
+
+      if(esConCuotas){
+        const promesas = [];
+        for(let i=0; i<cuotasActual; i++){
+          let mC = p.mes + i, aC = p.anio;
+          while(mC > 11){ mC -= 12; aC++; }
+          const semC = i === 0 ? p.semana : 1;
+          let fechaCuota = null;
+          if(fechaVal){
+            const [_fy,_fm,_fd] = fechaVal.split('-').map(Number);
+            let nm = _fm - 1 + i, ny = _fy;
+            while(nm > 11){ nm -= 12; ny++; }
+            fechaCuota = `${ny}-${String(nm+1).padStart(2,'0')}-${String(_fd).padStart(2,'0')}`;
+          }
+          const docData = {
+            tipo: cfPopupState.tipoActual,
+            tarjetaId: cfPopupState.tipoActual === 'tarjeta' ? cfPopupState.tarjetaId : null,
+            desc: `${desc} (${i+1}/${cuotasActual})`,
+            monto: cuotaMonto,
+            semana: semC,
+            mes: mC,
+            anio: aC,
+            moneda: cfPopupState.moneda,
+            timestamp: Date.now(),
+            cuotas: cuotasActual,
+            cuotaNum: i + 1,
+            montoTotal,
+            grupoId,
+            confirmado: true,
+            fecha: fechaCuota,
+            recordatorio,
+            compartidoPor: window._compartidoPendiente.compartidoPor || ''
+          };
+          promesas.push(addDoc(userCol('movimientos'), docData));
+        }
+        await Promise.all(promesas);
+        await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+        showToast(`✅ ${cuotasActual} cuotas guardadas!`);
+      } else {
+        const docData = {
+          tipo: cfPopupState.tipoActual,
+          desc,
+          monto,
+          semana: p.semana,
+          mes: p.mes,
+          anio: p.anio,
+          moneda: cfPopupState.moneda,
+          timestamp: Date.now(),
+          confirmado: true,
+          fecha: fechaVal || null,
+          recordatorio,
+          compartidoPor: window._compartidoPendiente.compartidoPor || ''
+        };
+        if(cfPopupState.tipoActual === 'tarjeta') docData.tarjetaId = cfPopupState.tarjetaId;
+        await addDoc(userCol('movimientos'), docData);
+        await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+        showToast('✅ Guardado!');
+      }
+    }
+  } catch(e) {
+    console.error('Error al guardar gasto compartido:', e);
+    showToast('❌ Error al guardar', true);
+    setSyncStatus('offline');
+  } finally {
+    if(btn){ btn.disabled = false; btn.textContent = 'Cargar movimiento'; }
+  }
+}
+
+function cfQuitarPendienteLocal(id) {
+  limpiarTimerPopupCompartido();
+  compartidosResueltos.add(id);
+  notificaciones = (notificaciones || []).filter(n => n.id !== id);
+  actualizarBadge();
+  renderNotifPanel();
+}
+
+window.cfAceptar = async (id, opts = {}) => {
+  const { cerrarPopup = true, mostrarToast = true } = opts;
+  try {
+    if(usarSupabaseCompartidos()) await actualizarEstadoCompartidoSupabase(id, 'aceptado');
+    else await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'aceptado' });
+    cfQuitarPendienteLocal(id);
+    await cfReversaCompartido(id);
+    if(mostrarToast) showToast('Gasto aceptado');
+    if(cerrarPopup) cfCerrarPopup();
+  } catch(e) {
+    console.error('Error al aceptar gasto compartido:', e);
+    showToast('❌ Error al aceptar', true);
+  }
+};
 
 window.cfRechazar = async id => {
   try {
-    await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
+    if(usarSupabaseCompartidos()) await actualizarEstadoCompartidoSupabase(id, 'rechazado');
+    else await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
+    cfQuitarPendienteLocal(id);
+    await cfReversaCompartido(id);
     showToast('Gasto rechazado');
-  } catch(e) { showToast('❌ Error', true); }
-  cfCerrarPopup();
+    cfCerrarPopup();
+  } catch(e) {
+    console.error('Error al rechazar gasto compartido:', e);
+    showToast('❌ Error al rechazar', true);
+  }
 };
 
 window.cfCerrarPopup = () => {
-  const formCard = document.querySelector('#modalCompartidoForm .form-card:not([style*="border-radius:24px 24px 0 0"])') || document.querySelector('#modalCompartidoForm .form-card:last-child');
-  if(formCard && window._compFormOrigParent) {
-    formCard.style.borderRadius = '';
-    formCard.style.marginTop = '';
-    window._compFormOrigParent.appendChild(formCard);
-  }
+  limpiarTimerPopupCompartido();
   document.getElementById('modalCompartidoForm')?.remove();
   window._compartidoPendiente = null;
-  window._compFormOrigParent = null;
-
-  // Restaurar texto del botón
-  const btn = document.getElementById('btnGuardar');
-  if(btn) btn.textContent = 'Guardar';
+  cfPopupState = null;
 };
 
 // scroll collapse manejado por CSS sticky
