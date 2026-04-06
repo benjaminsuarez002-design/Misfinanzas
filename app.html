@@ -2558,11 +2558,12 @@ window.borrarConfirmar = async (id, modo) => {
     if(modo === 'sola' || !mov.grupoId){
       await deleteDoc(userDoc('movimientos', id));
     } else {
-      // Buscar TODOS los docs del grupoId en Firestore (pueden estar en otros meses)
-      const snap = await getDocs(query(userCol('movimientos'), where('grupoId','==',mov.grupoId)));
-      let docs = snap.docs.map(d=>({id:d.id,...d.data()}));
+      let docs;
       if(modo === 'adelante'){
-        docs = docs.filter(d=>(d.cuotaNum||0) >= (mov.cuotaNum||0));
+        docs = await obtenerCuotasGrupoDesdeActual(mov);
+      } else {
+        const snap = await getDocs(query(userCol('movimientos'), where('grupoId','==',mov.grupoId)));
+        docs = snap.docs.map(d=>({id:d.id,...d.data()}));
       }
       await Promise.all(docs.map(d=>deleteDoc(userDoc('movimientos',d.id))));
     }
@@ -3355,6 +3356,20 @@ async function guardarEmailReciente(email) {
   } catch(e) { console.warn('guardarEmailReciente:', e); }
 }
 
+async function obtenerCuotasGrupoDesdeActual(mov) {
+  if(!mov?.grupoId) return mov?.id ? [{ id: mov.id, ...mov }] : [];
+  const snap = await getDocs(query(userCol('movimientos'), where('grupoId', '==', mov.grupoId)));
+  let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  docs = docs
+    .filter(d => (d.cuotaNum || 0) >= (mov.cuotaNum || 0))
+    .sort((a, b) => {
+      const diff = (a.cuotaNum || 0) - (b.cuotaNum || 0);
+      if(diff !== 0) return diff;
+      return String(a.id).localeCompare(String(b.id));
+    });
+  return docs;
+}
+
 async function getCuotasPendientesInfo(mov) {
   const fallbackCount = Math.max(1, (mov.cuotas || 1) - (mov.cuotaNum || 1) + 1);
   if(!mov?.grupoId || !mov?.cuotas || mov.cuotas <= 1){
@@ -3362,11 +3377,7 @@ async function getCuotasPendientesInfo(mov) {
   }
 
   try {
-    const snap = await getDocs(query(userCol('movimientos'), where('grupoId', '==', mov.grupoId)));
-    let docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    docs = docs
-      .filter(d => (d.cuotaNum || 0) >= (mov.cuotaNum || 0))
-      .sort((a, b) => (a.cuotaNum || 0) - (b.cuotaNum || 0));
+    const docs = await obtenerCuotasGrupoDesdeActual(mov);
 
     if(!docs.length){
       return { count: fallbackCount, ids: mov.id ? [mov.id] : [] };
