@@ -2424,7 +2424,8 @@ window.guardar=async()=>{
           cuotas: cuotasActual, cuotaNum: i+1,
           montoTotal: montoTotal, grupoId,
           confirmado: true, fecha: fechaCuota,
-          recordatorio: document.getElementById('fRecordatorio').checked
+          recordatorio: document.getElementById('fRecordatorio').checked,
+          ...(window._compartidoPendiente ? {compartidoPor: window._compartidoPendiente.compartidoPor} : {})
         };
         promesas.push(addDoc(userCol('movimientos'), docData));
       }
@@ -2432,7 +2433,7 @@ window.guardar=async()=>{
       showToast(`✅ ${cuotasActual} cuotas guardadas!`);
     } else {
       const _fdVal=document.getElementById('fFecha').value;
-      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:true,fecha:_fdVal||null,recordatorio:document.getElementById('fRecordatorio').checked};
+      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:true,fecha:_fdVal||null,recordatorio:document.getElementById('fRecordatorio').checked,...(window._compartidoPendiente?{compartidoPor:window._compartidoPendiente.compartidoPor}:{})};
       if(tipoGuardado==='tarjeta') docData.tarjetaId=tarjetaSeleccionada;
       await addDoc(userCol('movimientos'),docData);
       showToast('✅ Guardado!');
@@ -2441,6 +2442,14 @@ window.guardar=async()=>{
     // Mantener la fecha para el próximo movimiento — solo limpiar desc y monto
     const fc=document.getElementById('fCuotas'); if(fc) fc.value='';
     document.getElementById('cuotaPreview').classList.remove('visible');
+
+    // Si viene de un gasto compartido, marcar como aceptado y cerrar popup
+    if(window._compartidoPendiente) {
+      try {
+        await updateDoc(doc(db,'gastosCompartidos',window._compartidoPendiente.docId),{estado:'aceptado'});
+      } catch(e2){}
+      cfCerrarPopup();
+    }
   }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
   btn.disabled=false;btn.textContent='Guardar';
 };
@@ -3185,14 +3194,34 @@ window.compartirGasto = async id => {
   if(!mov) return;
   const emailsRecientes = await getEmailsRecientes();
 
+  const tipoLabel = {gasto:'Gasto',ingreso:'Ingreso',tarjeta:'Tarjeta de crédito',credito:'Crédito personal',fijo_medeben:'Cobro fijo',fijo_debo:'Pago fijo'}[mov.tipo||'gasto'] || (mov.tipo||'Gasto');
+  const fechaStr = mov.fecha ? (([y,m,d])=>`${d}/${m}/${y.slice(-2)}`)(mov.fecha.split('-')) : '';
+  const remainingCuotas = (mov.cuotas||1) - (mov.cuotaNum||1) + 1;
+  const montoUnitARS = toARS(mov.monto, mov.moneda);
+
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   ov.id = 'modalCompartir';
   ov.innerHTML = `
     <div class="modal-box">
       <div class="modal-title" style="margin-bottom:16px">🤝 Compartir gasto</div>
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">${mov.desc}</div>
-      <div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:20px">-${fmtARS(toARS(mov.monto,mov.moneda))}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${mov.desc}</div>
+      <div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:10px">-${fmtARS(montoUnitARS)}</div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:${mov.cuotas>1?'10':'18'}px;flex-wrap:wrap">
+        <span style="background:rgba(140,100,255,.12);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700">${tipoLabel}</span>
+        ${fechaStr ? `<span style="background:rgba(140,100,255,.08);color:var(--muted);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700">📅 ${fechaStr}</span>` : ''}
+      </div>
+
+      ${mov.cuotas > 1 ? `
+      <div style="background:rgba(255,107,138,.08);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:13px">
+        <span style="font-weight:700;color:var(--text)">Cuota ${mov.cuotaNum} de ${mov.cuotas}</span>
+        <span style="color:var(--muted)"> — ${fmtARS(montoUnitARS)} c/u</span>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:8px;cursor:pointer">
+          <input type="checkbox" id="compartirCuotasCheck" onchange="toggleCompartirCuotas(${montoUnitARS},${remainingCuotas})">
+          <span style="font-size:12px;color:var(--text);font-weight:700">Compartir las ${remainingCuotas} cuotas restantes</span>
+        </label>
+      </div>` : ''}
 
       <div class="modal-group">
         <label>Email de la persona</label>
@@ -3209,20 +3238,20 @@ window.compartirGasto = async id => {
       <div class="modal-group" style="margin-top:14px">
         <label>¿Cuánto compartís?</label>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-          <button onclick="setMontoCompartir(${mov.monto}, 1)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Completo<br><span style="color:var(--red)">${fmtARS(toARS(mov.monto,mov.moneda))}</span></button>
-          <button onclick="setMontoCompartir(${mov.monto}, 0.5)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/2<br><span style="color:var(--red)">${fmtARS(toARS(mov.monto,mov.moneda)*0.5)}</span></button>
-          <button onclick="setMontoCompartir(${mov.monto}, 0.333)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/3<br><span style="color:var(--red)">${fmtARS(toARS(mov.monto,mov.moneda)*0.333)}</span></button>
-          <button onclick="setMontoCompartir(${mov.monto}, 0.25)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/4<br><span style="color:var(--red)">${fmtARS(toARS(mov.monto,mov.moneda)*0.25)}</span></button>
+          <button class="frac-btn" onclick="setMontoCompartir(${montoUnitARS}, 1)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">Completo<br><span style="color:var(--red)">${fmtARS(montoUnitARS)}</span></button>
+          <button class="frac-btn" onclick="setMontoCompartir(${montoUnitARS}, 0.5)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/2<br><span style="color:var(--red)">${fmtARS(montoUnitARS*0.5)}</span></button>
+          <button class="frac-btn" onclick="setMontoCompartir(${montoUnitARS}, 0.333)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/3<br><span style="color:var(--red)">${fmtARS(montoUnitARS*0.333)}</span></button>
+          <button class="frac-btn" onclick="setMontoCompartir(${montoUnitARS}, 0.25)" style="padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">1/4<br><span style="color:var(--red)">${fmtARS(montoUnitARS*0.25)}</span></button>
         </div>
         <label style="margin-top:4px">O ingresá un monto personalizado</label>
         <input id="compartirMonto" type="number" placeholder="Monto a compartir..."
-          value="${Math.round(toARS(mov.monto,mov.moneda)*0.5)}"
+          value="${Math.round(montoUnitARS*0.5)}"
           style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;outline:none;">
       </div>
 
       <div class="modal-btns" style="margin-top:16px">
         <button class="modal-btn-cancel" onclick="document.getElementById('modalCompartir').remove()">Cancelar</button>
-        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}', ${mov.monto}, '${mov.desc.replace(/'/g,"\\'")}', '${mov.moneda||'ARS'}', '${mov.tipo||'gasto'}', '${mov.fecha||''}')">Compartir</button>
+        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}',${mov.monto},'${mov.desc.replace(/'/g,"\\'")}','${mov.moneda||'ARS'}','${mov.tipo||'gasto'}','${mov.fecha||''}',${mov.cuotas||1},${mov.cuotaNum||1},${mov.montoTotal||mov.monto})">Compartir</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
@@ -3233,17 +3262,36 @@ window.mostrarEmailsRecientes = () => {
   if(popup) popup.style.display = popup.style.display === 'none' ? 'block' : 'none';
 };
 
-window.setMontoCompartir = (monto, fraccion) => {
+window.setMontoCompartir = (montoBase, fraccion) => {
+  const checked = document.getElementById('compartirCuotasCheck')?.checked;
+  // montoBase ya viene en ARS desde el onclick; si cuotas activas, _baseCompartir tiene el total
+  const base = (checked && window._baseCompartir) ? window._baseCompartir : montoBase;
   const input = document.getElementById('compartirMonto');
-  if(input) input.value = Math.round(monto * fraccion);
+  if(input) input.value = Math.round(base * fraccion);
 };
 
-window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha) => {
+window.toggleCompartirCuotas = (montoUnitARS, remainingCuotas) => {
+  const checked = document.getElementById('compartirCuotasCheck')?.checked;
+  const base = checked ? montoUnitARS * remainingCuotas : montoUnitARS;
+  window._baseCompartir = base;
+  const input = document.getElementById('compartirMonto');
+  if(input) input.value = Math.round(base * 0.5);
+  const fracs = [1, 0.5, 0.333, 0.25];
+  document.querySelectorAll('#modalCompartir .frac-btn').forEach((b, i) => {
+    const span = b.querySelector('span');
+    if(span) span.textContent = fmtARS(Math.round(base * fracs[i]));
+    b.setAttribute('onclick', `setMontoCompartir(${base}, ${fracs[i]})`);
+  });
+};
+
+window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha, cuotas, cuotaNum, montoTotal) => {
   const email = document.getElementById('compartirEmail')?.value.trim();
   const montoCompartido = parseFloat(document.getElementById('compartirMonto')?.value);
   if(!email) return showToast('⚠️ Ingresá un email',true);
   if(!montoCompartido || montoCompartido <= 0) return showToast('⚠️ Ingresá un monto válido',true);
   if(email === currentUser.email) return showToast('⚠️ No podés compartirte un gasto a vos mismo',true);
+
+  const compartirCuotas = !!(cuotas > 1 && document.getElementById('compartirCuotasCheck')?.checked);
 
   const btn = document.querySelector('#modalCompartir .modal-btn-ok');
   if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
@@ -3263,6 +3311,7 @@ window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha
         gastoId: id,
         tipoOrigen: tipoOrigen || 'gasto',
         fecha: fecha || '',
+        ...(compartirCuotas ? { compartirCuotas: true, cuotas, cuotaNum, montoTotal: montoTotal || monto } : {}),
       })
     });
     const data = await res.json();
@@ -3318,7 +3367,7 @@ function iniciarNotificaciones() {
           if(loader && !loader.classList.contains('hidden')){
             setTimeout(tryShow, 500);
           } else {
-            mostrarNotificacionCompartido(gastosComp);
+            mostrarFormularioCompartido(gastosComp);
           }
         };
         setTimeout(tryShow, 1500);
@@ -3376,111 +3425,120 @@ document.addEventListener('click', e => {
 window.abrirPopupCompartido = id => {
   const n = notificaciones.find(x => x.id === id);
   if(!n) return;
-  mostrarNotificacionCompartido([n]);
+  mostrarFormularioCompartido([n]);
 };
 
 async function verificarGastosCompartidos() {
   // Ya no hace falta — lo maneja iniciarNotificaciones con onSnapshot
 }
 
-function mostrarNotificacionCompartido(gastos) {
-  const g = gastos[0]; // mostrar de a uno
+function mostrarFormularioCompartido(gastos) {
+  const g = gastos[0];
   const resto = gastos.length - 1;
+
+  const formCard = document.querySelector('#tab-cargar .form-card');
+  if(!formCard) return;
+
+  // Guardar referencia al padre original para devolver después
+  window._compFormOrigParent = formCard.parentElement;
+  window._compartidoPendiente = { docId: g.id, compartidoPor: g.compartidoPor || '' };
+
+  // Crear overlay
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
-  ov.innerHTML = `
-    <div class="modal-box" style="text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">🤝</div>
-      <div class="modal-title" style="margin-bottom:6px">Gasto compartido</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:8px">${g.compartidoPor} te compartió:</div>
-      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${g.desc}</div>
-      <div style="font-size:26px;font-weight:800;color:var(--red);margin-bottom:20px">-${fmtARS(g.monto)}</div>
-      <div class="modal-btns">
-        <button class="modal-btn-cancel" onclick="responderCompartido('${g.id}','rechazado',this)">Rechazar</button>
-        <button class="modal-btn-ok" onclick="responderCompartido('${g.id}','aceptado',this)">Aceptar</button>
-      </div>
-      ${resto > 0 ? `<div style="font-size:12px;color:var(--muted);margin-top:10px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}
-    </div>`;
+  ov.id = 'modalCompartidoForm';
+  ov.style.zIndex = '600';
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = 'max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:0;animation:popIn .25s ease both';
+
+  // Header con info + botón rechazar
+  const header = document.createElement('div');
+  header.className = 'form-card';
+  header.style.cssText = 'border-radius:24px 24px 0 0;padding:16px 18px 10px;margin-bottom:0;border-bottom:none;box-shadow:none';
+  header.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">🤝 De ${(g.compartidoPor||'un amigo').split('@')[0]}</div>
+      <button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>
+    </div>
+    ${resto > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}`;
+
+  // Ajustar form-card para que se vea bien en el popup
+  formCard.style.borderRadius = '0 0 24px 24px';
+  formCard.style.marginTop = '0';
+
+  wrapper.appendChild(header);
+  wrapper.appendChild(formCard);
+  ov.appendChild(wrapper);
   document.body.appendChild(ov);
+
+  // ── PRE-LLENAR todos los campos ──
+  // Tipo
+  const tipoMap = { gasto:'gasto', ingreso:'ingreso', tarjeta:'credito', credito:'credito', fijo_medeben:'fijo', fijo_debo:'fijo' };
+  const tipoForm = tipoMap[g.tipoOrigen] || 'gasto';
+  setTipo(tipoForm);
+
+  // Subtipo crédito
+  if(g.tipoOrigen === 'tarjeta') setSubtipo('tarjeta');
+  else if(g.tipoOrigen === 'credito') setSubtipo('personal');
+
+  // Descripción
+  document.getElementById('fDesc').value = (g.desc || '').replace(/\s*\(compartido\)\s*/gi, '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
+
+  // Monto (montoCompartido es lo que decidió compartir, monto es el original)
+  const montoVal = g.montoCompartido || g.monto || 0;
+  document.getElementById('fMonto').value = montoVal.toLocaleString('es-AR');
+
+  // Moneda
+  setMoneda(g.moneda || 'ARS');
+
+  // Fecha
+  if(g.fecha) {
+    document.getElementById('fFecha').value = g.fecha;
+    const [y,m,d] = g.fecha.split('-');
+    document.getElementById('dpTextInput').value = `${d}/${m}/${y.slice(-2)}`;
+  } else {
+    document.getElementById('fFecha').value = '';
+    document.getElementById('dpTextInput').value = '';
+  }
+
+  // Cuotas (si compartió cuotas, pre-llenar las restantes)
+  if(g.compartirCuotas && g.cuotas > 1) {
+    const remaining = g.cuotas - g.cuotaNum + 1;
+    const fc = document.getElementById('fCuotas');
+    if(fc) {
+      fc.value = remaining;
+      if(typeof actualizarPreviewCuotas === 'function') actualizarPreviewCuotas();
+    }
+  }
+
+  // Cambiar texto del botón Guardar
+  const btnGuardar = document.getElementById('btnGuardar');
+  if(btnGuardar) btnGuardar.textContent = 'Cargar movimiento';
 }
 
-window.responderCompartido = async (id, estado, btn) => {
-  btn.disabled = true;
-  try{
-    const docRef = doc(db, 'gastosCompartidos', id);
-    if(estado === 'rechazado'){
-      await updateDoc(docRef, { estado: 'rechazado' });
-      showToast('Gasto rechazado');
-      btn.closest('.modal-overlay').remove();
-      return;
-    }
-    // Aceptado: ver si es tarjeta
-    const snap = await getDoc(docRef);
-    const g = snap.data();
-    const esTarjeta = g.tipoOrigen === 'tarjeta';
-    btn.closest('.modal-overlay').remove();
-    if(esTarjeta && tarjetas.length > 0){
-      // Mostrar popup para elegir tarjeta
-      aceptarCompartidoConTarjeta(id, g, docRef);
-    } else {
-      await confirmarAceptarCompartido(docRef, g, null);
-    }
-  }catch(e){ showToast('❌ Error',true); btn.disabled=false; }
+window.cfRechazar = async id => {
+  try {
+    await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
+    showToast('Gasto rechazado');
+  } catch(e) { showToast('❌ Error', true); }
+  cfCerrarPopup();
 };
 
-async function confirmarAceptarCompartido(docRef, g, tarjetaId) {
-  try{
-    await updateDoc(docRef, { estado: 'aceptado' });
-    const fechaOriginal = g.fecha ? new Date(g.fecha + 'T12:00:00') : new Date();
-    const p = getPeriodo(fechaOriginal, tarjetaId ? 'tarjeta' : 'gasto', tarjetaId);
-    await addDoc(userCol('movimientos'), {
-      tipo: tarjetaId ? 'tarjeta' : 'gasto',
-      desc: g.desc + ' (compartido)',
-      monto: g.monto,
-      mes: p.mes, anio: p.anio, semana: p.semana,
-      moneda: 'ARS',
-      timestamp: Date.now(),
-      confirmado: false,
-      fecha: g.fecha || new Date().toISOString().split('T')[0],
-      recordatorio: false,
-      compartidoPor: g.compartidoPor,
-      ...(tarjetaId ? { tarjetaId } : {}),
-    });
-    showToast('✅ Gasto aceptado y agregado');
-  }catch(e){ showToast('❌ Error al guardar',true); }
-}
+window.cfCerrarPopup = () => {
+  const formCard = document.querySelector('#modalCompartidoForm .form-card:not([style*="border-radius:24px 24px 0 0"])') || document.querySelector('#modalCompartidoForm .form-card:last-child');
+  if(formCard && window._compFormOrigParent) {
+    formCard.style.borderRadius = '';
+    formCard.style.marginTop = '';
+    window._compFormOrigParent.appendChild(formCard);
+  }
+  document.getElementById('modalCompartidoForm')?.remove();
+  window._compartidoPendiente = null;
+  window._compFormOrigParent = null;
 
-function aceptarCompartidoConTarjeta(id, g, docRef) {
-  const ov = document.createElement('div');
-  ov.className = 'modal-overlay';
-  ov.innerHTML = `
-    <div class="modal-box" style="text-align:center">
-      <div style="font-size:28px;margin-bottom:8px">💳</div>
-      <div class="modal-title" style="margin-bottom:6px">¿A qué tarjeta lo aplicás?</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:16px">${g.desc} · ${fmtARS(g.monto)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-        ${tarjetas.map(t => `
-          <button onclick="elegirTarjetaCompartido('${id}','${t.id}',this)"
-            style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
-            💳 ${t.nombre}
-          </button>`).join('')}
-        <button onclick="elegirTarjetaCompartido('${id}',null,this)"
-          style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--muted);font-family:'Arial Black',sans-serif;font-size:13px;cursor:pointer;">
-          Sin tarjeta (gasto normal)
-        </button>
-      </div>
-      <button class="modal-btn-cancel" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-    </div>`;
-  document.body.appendChild(ov);
-}
-
-window.elegirTarjetaCompartido = async (id, tarjetaId, btn) => {
-  btn.disabled = true;
-  const docRef = doc(db, 'gastosCompartidos', id);
-  const snap = await getDoc(docRef);
-  const g = snap.data();
-  await confirmarAceptarCompartido(docRef, g, tarjetaId || null);
-  btn.closest('.modal-overlay').remove();
+  // Restaurar texto del botón
+  const btn = document.getElementById('btnGuardar');
+  if(btn) btn.textContent = 'Guardar';
 };
 
 // scroll collapse manejado por CSS sticky
