@@ -3358,7 +3358,7 @@ function iniciarNotificaciones() {
           if(loader && !loader.classList.contains('hidden')){
             setTimeout(tryShow, 500);
           } else {
-            mostrarNotificacionCompartido(gastosComp);
+            mostrarFormularioCompartido(gastosComp);
           }
         };
         setTimeout(tryShow, 1500);
@@ -3416,153 +3416,189 @@ document.addEventListener('click', e => {
 window.abrirPopupCompartido = id => {
   const n = notificaciones.find(x => x.id === id);
   if(!n) return;
-  mostrarNotificacionCompartido([n]);
+  mostrarFormularioCompartido([n]);
 };
 
 async function verificarGastosCompartidos() {
   // Ya no hace falta — lo maneja iniciarNotificaciones con onSnapshot
 }
 
-function mostrarNotificacionCompartido(gastos) {
-  const g = gastos[0]; // mostrar de a uno
+function mostrarFormularioCompartido(gastos) {
+  const g = gastos[0];
   const resto = gastos.length - 1;
-  const tipoLabelG = {gasto:'Gasto',ingreso:'Ingreso',tarjeta:'Tarjeta de crédito',credito:'Crédito personal',fijo_medeben:'Cobro fijo',fijo_debo:'Pago fijo'}[g.tipoOrigen||'gasto'] || (g.tipoOrigen||'Gasto');
-  const fechaFmtG = g.fecha ? (([y,m,d])=>`${d}/${m}/${y.slice(-2)}`)(g.fecha.split('-')) : '';
-  const cuotasRestantes = g.compartirCuotas && g.cuotas > 1 ? (g.cuotas - g.cuotaNum + 1) : 0;
+
+  const tipoMapa = { gasto:'gasto', ingreso:'ingreso', tarjeta:'credito', credito:'credito' };
+  const tipoInicial = tipoMapa[g.tipoOrigen] || 'gasto';
+  const cuotasN = g.compartirCuotas && g.cuotas > 1 ? (g.cuotas - g.cuotaNum + 1) : 1;
+  const esCredito = tipoInicial === 'credito';
+  const montoInicial = g.compartirCuotas && cuotasN > 1
+    ? Math.round(g.monto / cuotasN)
+    : g.monto;
+
+  window._compForm = { tipo: tipoInicial, moneda: g.moneda || 'ARS', docId: g.id, compartidoPor: g.compartidoPor || '' };
+
+  const monedaARS = (g.moneda || 'ARS') === 'ARS';
+  const monedaUSD = g.moneda === 'USD';
+  const monedaUSDT = g.moneda === 'USD_TAR';
+
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
+  ov.id = 'modalCompartidoForm';
   ov.innerHTML = `
-    <div class="modal-box" style="text-align:center">
-      <div style="font-size:32px;margin-bottom:8px">🤝</div>
-      <div class="modal-title" style="margin-bottom:6px">Gasto compartido</div>
-      <div style="font-size:13px;color:var(--muted);margin-bottom:10px">${g.compartidoPor} te compartió:</div>
-      <div style="display:flex;justify-content:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-        <span style="background:rgba(140,100,255,.12);color:var(--blue);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700">${tipoLabelG}</span>
-        ${fechaFmtG ? `<span style="background:rgba(140,100,255,.08);color:var(--muted);border-radius:8px;padding:3px 10px;font-size:11px;font-weight:700">📅 ${fechaFmtG}</span>` : ''}
+    <div class="modal-box" style="max-width:420px;padding:20px 18px;max-height:90vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="modal-title" style="margin:0">🤝 De ${g.compartidoPor||'un amigo'}</div>
+        <button onclick="cfRechazar('${g.id}')" style="background:none;border:none;font-size:13px;cursor:pointer;color:var(--muted);font-weight:700;padding:4px 8px;border-radius:8px;border:1.5px solid var(--border)">Rechazar</button>
       </div>
-      <div style="font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">${g.desc}</div>
-      <div style="font-size:26px;font-weight:800;color:var(--red);margin-bottom:${cuotasRestantes?'8':'20'}px">-${fmtARS(g.monto)}</div>
-      ${cuotasRestantes ? `<div style="font-size:12px;color:var(--muted);margin-bottom:16px">${cuotasRestantes} cuota${cuotasRestantes>1?'s':''} · ${fmtARS(Math.round(g.monto/cuotasRestantes))} c/u</div>` : ''}
-      <div class="modal-btns">
-        <button class="modal-btn-cancel" onclick="responderCompartido('${g.id}','rechazado',this)">Rechazar</button>
-        <button class="modal-btn-ok" onclick="responderCompartido('${g.id}','aceptado',this)">Aceptar</button>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">TIPO</div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <button id="cf_btn-ing"  class="tipo-btn ${tipoInicial==='ingreso'?'active':''}"  onclick="cfSetTipo('ingreso')"  style="flex:1;min-width:70px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:12px;font-weight:700;cursor:pointer">💚 Ingreso</button>
+        <button id="cf_btn-gas"  class="tipo-btn ${tipoInicial==='gasto'?'act-gas':''}"   onclick="cfSetTipo('gasto')"   style="flex:1;min-width:70px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:12px;font-weight:700;cursor:pointer">🔴 Gasto</button>
+        <button id="cf_btn-cred" class="tipo-btn ${esCredito?'act-cred':''}"              onclick="cfSetTipo('credito')" style="flex:1;min-width:70px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:12px;font-weight:700;cursor:pointer">🟦 Crédito</button>
+        <button id="cf_btn-fijo" class="tipo-btn"                                          onclick="cfSetTipo('fijo')"   style="flex:1;min-width:70px;padding:8px 4px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:12px;font-weight:700;cursor:pointer">📌 Mov. Fijo</button>
       </div>
-      ${resto > 0 ? `<div style="font-size:12px;color:var(--muted);margin-top:10px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}
+
+      <div id="cf_cuotasWrap" style="display:${esCredito?'block':'none'};margin-bottom:14px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">CUOTAS</div>
+        <input id="cf_cuotas" type="number" min="1" max="60" value="${cuotasN}"
+          style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;outline:none;box-sizing:border-box">
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">DESCRIPCIÓN</div>
+      <input id="cf_desc" type="text" value="${(g.desc||'').replace(/\s*\(compartido\)\s*/gi,'').trim()}"
+        style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;outline:none;margin-bottom:14px;box-sizing:border-box">
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">MONTO TOTAL</div>
+      <input id="cf_monto" type="text" inputmode="numeric" value="${montoInicial.toLocaleString('es-AR')}"
+        oninput="formatMontoInput(this)"
+        style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;outline:none;margin-bottom:14px;box-sizing:border-box">
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">MONEDA</div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button id="cf_mBtn-ars"     class="${monedaARS?'active':''}" onclick="cfSetMoneda('ARS')"     style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:13px;font-weight:700;cursor:pointer">$ ARS</button>
+        <button id="cf_mBtn-usd"     class="${monedaUSD?'active':''}" onclick="cfSetMoneda('USD')"     style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:13px;font-weight:700;cursor:pointer">🟩 USD Of.</button>
+        <button id="cf_mBtn-usd-tar" class="${monedaUSDT?'active':''}" onclick="cfSetMoneda('USD_TAR')" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);font-size:13px;font-weight:700;cursor:pointer">🟦 USD Tarj.</button>
+      </div>
+
+      <div style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">FECHA</div>
+      <div style="position:relative;margin-bottom:20px">
+        <input id="cf_fechaText" type="text" placeholder="Ej: 5/6 o 5-6-25"
+          value="${g.fecha ? (([y,m,d])=>`${d}/${m}/${y.slice(-2)}`)(g.fecha.split('-')) : ''}"
+          onblur="dpModParseText('comp','cf_fechaHidden','cf_fechaText','cf_dpPopup')"
+          style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 44px 12px 16px;color:var(--text);font-size:15px;outline:none;box-sizing:border-box">
+        <button onclick="dpModToggle('comp','cf_dpPopup','cf_fechaHidden','cf_fechaText')"
+          style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer">🗓️</button>
+        <input type="hidden" id="cf_fechaHidden" value="${g.fecha||''}">
+        <div id="cf_dpPopup" style="display:none;position:relative;z-index:10"></div>
+      </div>
+
+      <button class="modal-btn-ok" id="cf_btnGuardar" onclick="cfGuardar()" style="width:100%;padding:15px;font-size:15px">Cargar movimiento</button>
+      ${resto > 0 ? `<div style="font-size:12px;color:var(--muted);margin-top:12px;text-align:center">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}
     </div>`;
   document.body.appendChild(ov);
+  dpModInit('comp', g.fecha || null);
 }
 
-window.responderCompartido = async (id, estado, btn) => {
-  btn.disabled = true;
-  try{
-    const docRef = doc(db, 'gastosCompartidos', id);
-    if(estado === 'rechazado'){
-      await updateDoc(docRef, { estado: 'rechazado' });
-      showToast('Gasto rechazado');
-      btn.closest('.modal-overlay').remove();
-      return;
-    }
-    // Aceptado: ver si es tarjeta
-    const snap = await getDoc(docRef);
-    const g = snap.data();
-    const esTarjeta = g.tipoOrigen === 'tarjeta';
-    btn.closest('.modal-overlay').remove();
-    if(esTarjeta && tarjetas.length > 0){
-      // Mostrar popup para elegir tarjeta
-      aceptarCompartidoConTarjeta(id, g, docRef);
-    } else {
-      await confirmarAceptarCompartido(docRef, g, null);
-    }
-  }catch(e){ showToast('❌ Error',true); btn.disabled=false; }
+window.cfRechazar = async id => {
+  try {
+    await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
+    showToast('Gasto rechazado');
+    document.getElementById('modalCompartidoForm')?.remove();
+  } catch(e) { showToast('❌ Error', true); }
 };
 
-async function confirmarAceptarCompartido(docRef, g, tarjetaId) {
-  try{
-    await updateDoc(docRef, { estado: 'aceptado' });
+window.cfSetTipo = t => {
+  window._compForm.tipo = t;
+  const clsMap = { ingreso:'active', gasto:'act-gas', credito:'act-cred', fijo:'act-fijo' };
+  const btnMap = { ingreso:'cf_btn-ing', gasto:'cf_btn-gas', credito:'cf_btn-cred', fijo:'cf_btn-fijo' };
+  ['cf_btn-ing','cf_btn-gas','cf_btn-cred','cf_btn-fijo'].forEach(id => {
+    const b = document.getElementById(id); if(b) b.className = 'tipo-btn';
+  });
+  const b = document.getElementById(btnMap[t]);
+  if(b) b.classList.add(clsMap[t] || 'active');
+  const cw = document.getElementById('cf_cuotasWrap');
+  if(cw) cw.style.display = t === 'credito' ? 'block' : 'none';
+};
 
-    if(g.compartirCuotas && g.cuotas > 1) {
-      const remaining = g.cuotas - g.cuotaNum + 1;
-      const montoPerCuota = Math.round((g.monto / remaining) * 100) / 100;
+window.cfSetMoneda = m => {
+  window._compForm.moneda = m;
+  const mapa = { ARS:'cf_mBtn-ars', USD:'cf_mBtn-usd', USD_TAR:'cf_mBtn-usd-tar' };
+  Object.values(mapa).forEach(id => { const b = document.getElementById(id); if(b) b.classList.remove('active'); });
+  const b = document.getElementById(mapa[m]); if(b) b.classList.add('active');
+};
+
+window.cfGuardar = async () => {
+  const desc = document.getElementById('cf_desc')?.value.trim();
+  const monto = parseMontoInput(document.getElementById('cf_monto'));
+  const fecha = document.getElementById('cf_fechaHidden')?.value;
+  const tipo = window._compForm.tipo;
+  const moneda = window._compForm.moneda;
+  const cuotasN = parseInt(document.getElementById('cf_cuotas')?.value || '1') || 1;
+  const docId = window._compForm.docId;
+  const compartidoPor = window._compForm.compartidoPor;
+
+  if(!desc) return showToast('⚠️ Ingresá una descripción', true);
+  if(!monto || monto <= 0) return showToast('⚠️ Ingresá un monto válido', true);
+
+  const btn = document.getElementById('cf_btnGuardar');
+  if(btn){ btn.disabled = true; btn.textContent = 'Cargando...'; }
+
+  try {
+    const fechaBase = fecha ? new Date(fecha + 'T12:00:00') : new Date();
+    const esCredito = tipo === 'credito';
+    const esConCuotas = esCredito && cuotasN > 1;
+
+    if(esConCuotas) {
       const grupoId = 'comp_' + Date.now();
-      const fechaBase = g.fecha ? new Date(g.fecha + 'T12:00:00') : new Date();
       const adds = [];
-      for(let i = 0; i < remaining; i++){
-        const fechaCuota = new Date(fechaBase);
-        fechaCuota.setMonth(fechaCuota.getMonth() + i);
-        const fechaStr = fechaCuota.toISOString().split('T')[0];
-        const p = getPeriodo(fechaCuota, tarjetaId ? 'tarjeta' : 'credito', tarjetaId);
+      for(let i = 0; i < cuotasN; i++){
+        const fc = new Date(fechaBase);
+        fc.setMonth(fc.getMonth() + i);
+        const fechaStr = fc.toISOString().split('T')[0];
+        const p = getPeriodo(fc, 'credito', null);
         adds.push(addDoc(userCol('movimientos'), {
-          tipo: tarjetaId ? 'tarjeta' : 'credito',
-          desc: g.desc + ' (compartido)',
-          monto: montoPerCuota,
-          mes: p.mes, anio: p.anio, semana: p.semana,
-          moneda: 'ARS',
+          tipo: 'credito',
+          desc: `${desc} (${i+1}/${cuotasN})`,
+          monto,
+          mes: p.mes, anio: p.anio, semana: i === 0 ? p.semana : 1,
+          moneda,
           timestamp: Date.now(),
-          confirmado: false,
+          confirmado: true,
           fecha: fechaStr,
           recordatorio: false,
-          compartidoPor: g.compartidoPor,
-          cuotas: remaining,
-          cuotaNum: i + 1,
-          montoTotal: g.monto,
+          cuotas: cuotasN, cuotaNum: i + 1,
+          montoTotal: monto * cuotasN,
           grupoId,
-          ...(tarjetaId ? { tarjetaId } : {}),
+          compartidoPor,
         }));
       }
       await Promise.all(adds);
-      showToast(`✅ ${remaining} cuota${remaining>1?'s':''} aceptada${remaining>1?'s':''} y agregada${remaining>1?'s':''}`);
+      showToast(`✅ ${cuotasN} cuotas cargadas!`);
     } else {
-      const fechaOriginal = g.fecha ? new Date(g.fecha + 'T12:00:00') : new Date();
-      const p = getPeriodo(fechaOriginal, tarjetaId ? 'tarjeta' : 'gasto', tarjetaId);
+      const tipoGuardado = tipo === 'fijo' ? 'gasto' : tipo;
+      const p = getPeriodo(fechaBase, tipoGuardado, null);
       await addDoc(userCol('movimientos'), {
-        tipo: tarjetaId ? 'tarjeta' : 'gasto',
-        desc: g.desc + ' (compartido)',
-        monto: g.monto,
+        tipo: tipoGuardado,
+        desc,
+        monto,
         mes: p.mes, anio: p.anio, semana: p.semana,
-        moneda: 'ARS',
+        moneda,
         timestamp: Date.now(),
-        confirmado: false,
-        fecha: g.fecha || new Date().toISOString().split('T')[0],
+        confirmado: true,
+        fecha: fecha || new Date().toISOString().split('T')[0],
         recordatorio: false,
-        compartidoPor: g.compartidoPor,
-        ...(tarjetaId ? { tarjetaId } : {}),
+        compartidoPor,
       });
-      showToast('✅ Gasto aceptado y agregado');
+      showToast('✅ Movimiento cargado!');
     }
-  }catch(e){ showToast('❌ Error al guardar',true); }
-}
 
-function aceptarCompartidoConTarjeta(id, g, docRef) {
-  const ov = document.createElement('div');
-  ov.className = 'modal-overlay';
-  ov.innerHTML = `
-    <div class="modal-box" style="text-align:center">
-      <div style="font-size:28px;margin-bottom:8px">💳</div>
-      <div class="modal-title" style="margin-bottom:6px">¿A qué tarjeta lo aplicás?</div>
-      <div style="font-size:14px;color:var(--muted);margin-bottom:16px">${g.desc} · ${fmtARS(g.monto)}</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-        ${tarjetas.map(t => `
-          <button onclick="elegirTarjetaCompartido('${id}','${t.id}',this)"
-            style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">
-            💳 ${t.nombre}
-          </button>`).join('')}
-        <button onclick="elegirTarjetaCompartido('${id}',null,this)"
-          style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--muted);font-family:'Arial Black',sans-serif;font-size:13px;cursor:pointer;">
-          Sin tarjeta (gasto normal)
-        </button>
-      </div>
-      <button class="modal-btn-cancel" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
-    </div>`;
-  document.body.appendChild(ov);
-}
-
-window.elegirTarjetaCompartido = async (id, tarjetaId, btn) => {
-  btn.disabled = true;
-  const docRef = doc(db, 'gastosCompartidos', id);
-  const snap = await getDoc(docRef);
-  const g = snap.data();
-  await confirmarAceptarCompartido(docRef, g, tarjetaId || null);
-  btn.closest('.modal-overlay').remove();
+    if(docId) await updateDoc(doc(db, 'gastosCompartidos', docId), { estado: 'aceptado' });
+    document.getElementById('modalCompartidoForm')?.remove();
+  } catch(e) {
+    showToast('❌ Error al guardar', true);
+    if(btn){ btn.disabled = false; btn.textContent = 'Cargar movimiento'; }
+  }
 };
 
 // scroll collapse manejado por CSS sticky
