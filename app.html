@@ -1124,6 +1124,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, setDoc, getDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
@@ -1137,6 +1138,12 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
+const SUPABASE_URL = 'https://tizyjenayrcdkcodsjnc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpenlqZW5heXJjZGtjb2Rzam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzE4MDYsImV4cCI6MjA4NzgwNzgwNn0.Xue8zgo8QJiKTErtzfUOgpczMngsAaePJZqLvA8Z7oI';
+const SUPABASE_GASTOS_TABLE = 'gastos_compartidos';
+const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('PEGA_TU_'))
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
@@ -1241,6 +1248,8 @@ window.doLogout = async () => { if(!confirm('¿Cerrar sesión?')) return; limpia
 function limpiarApp() {
   if(movListener) { movListener(); movListener = null; }
   if(fijoListener) { fijoListener(); fijoListener = null; }
+  if(notifListener) { try { notifListener(); } catch(_){} notifListener = null; }
+  if(window._notifPollInterval) { clearInterval(window._notifPollInterval); window._notifPollInterval = null; }
   Object.values(pagosListeners).forEach(u => u());
   Object.values(fijoPagosListeners).forEach(u => u());
   pagosListeners = {}; pagosData = {}; data = []; tarjetas = [];
@@ -3207,6 +3216,128 @@ window.superBorrarCompra = () => {
 
 // ── GASTOS COMPARTIDOS ──────────────────────────────────────────────────
 const WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
+const CAMPO_FECHA_COMPARTIDA = 'fechaMovimientoCompartido';
+const CAMPO_FECHA_COMPARTIDA_DB = 'fecha_movimiento_compartido';
+
+function usarSupabaseCompartidos() {
+  return !!supabase;
+}
+
+function mapCompartidoSupabase(row) {
+  return {
+    id: row.id,
+    destinatarioEmail: row.destinatario_email,
+    remitenteEmail: row.remitente_email,
+    remitenteUid: row.remitente_uid,
+    compartidoPor: row.compartido_por || (row.remitente_email || '').split('@')[0],
+    desc: row.desc || '',
+    monto: Number(row.monto || 0),
+    montoCompartido: Number(row.monto_compartido || 0),
+    gastoId: row.gasto_id || '',
+    tipoOrigen: row.tipo_origen || 'gasto',
+    fecha: row.fecha || '',
+    [CAMPO_FECHA_COMPARTIDA]: row[CAMPO_FECHA_COMPARTIDA_DB] || row.fecha || '',
+    compartirCuotas: !!row.compartir_cuotas,
+    cuotas: parseInt(row.cuotas || '1', 10) || 1,
+    cuotaNum: parseInt(row.cuota_num || '1', 10) || 1,
+    montoTotal: Number(row.monto_total || row.monto || 0),
+    cuotasPendientesCount: parseInt(row.cuotas_pendientes_count || '0', 10) || 0,
+    cuotasPendientesIds: Array.isArray(row.cuotas_pendientes_ids) ? row.cuotas_pendientes_ids : [],
+    estado: row.estado || 'pendiente',
+    createdAt: row.created_at || null,
+    _tipo: 'compartido'
+  };
+}
+
+function normalizarListaCompartidos(rows = []) {
+  return rows.map(r => r && r._tipo === 'compartido' ? r : ({ ...r, _tipo: 'compartido' }));
+}
+
+function construirPayloadSupabaseCompartido({ id, email, desc, monto, montoCompartido, tipoOrigen, fechaNormalizada, compartirCuotas, cuotas, cuotaNum, montoTotal, cuotasPendientesCount, cuotasPendientesIds }) {
+  return {
+    destinatario_email: email,
+    remitente_email: currentUser.email,
+    remitente_uid: currentUser.uid,
+    compartido_por: (currentUser.email || '').split('@')[0],
+    desc,
+    monto,
+    monto_compartido: montoCompartido,
+    gasto_id: id,
+    tipo_origen: tipoOrigen || 'gasto',
+    fecha: fechaNormalizada,
+    [CAMPO_FECHA_COMPARTIDA_DB]: fechaNormalizada,
+    estado: 'pendiente',
+    compartir_cuotas: !!compartirCuotas,
+    cuotas: cuotas || 1,
+    cuota_num: cuotaNum || 1,
+    monto_total: montoTotal || monto,
+    cuotas_pendientes_count: compartirCuotas ? cuotasPendientesCount : 1,
+    cuotas_pendientes_ids: compartirCuotas ? (cuotasPendientesIds || []) : []
+  };
+}
+
+async function insertarCompartidoSupabase(payload) {
+  if(!supabase) throw new Error('Supabase no configurado');
+  const { data, error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .insert(payload)
+    .select()
+    .single();
+  if(error) throw error;
+  return data;
+}
+
+async function listarCompartidosSupabase() {
+  if(!supabase || !currentUser?.email) return [];
+  const { data, error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .select('*')
+    .eq('destinatario_email', currentUser.email)
+    .order('created_at', { ascending: false });
+  if(error) throw error;
+  return (data || []).map(mapCompartidoSupabase);
+}
+
+async function actualizarEstadoCompartidoSupabase(id, estado) {
+  if(!supabase) throw new Error('Supabase no configurado');
+  const { error } = await supabase
+    .from(SUPABASE_GASTOS_TABLE)
+    .update({ estado })
+    .eq('id', id);
+  if(error) throw error;
+}
+
+async function notificarCompartidoWorker(payload) {
+  try {
+    await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tipo: 'gastoCompartido',
+        destinatarioEmail: payload.destinatario_email,
+        remitenteEmail: payload.remitente_email,
+        remitenteUid: payload.remitente_uid,
+        desc: payload.desc,
+        monto: payload.monto,
+        montoCompartido: payload.monto_compartido,
+        gastoId: payload.gasto_id,
+        tipoOrigen: payload.tipo_origen,
+        fecha: payload.fecha,
+        [CAMPO_FECHA_COMPARTIDA]: payload[CAMPO_FECHA_COMPARTIDA_DB],
+        ...(payload.compartir_cuotas ? {
+          compartirCuotas: true,
+          cuotas: payload.cuotas,
+          cuotaNum: payload.cuota_num,
+          montoTotal: payload.monto_total,
+          cuotasPendientesCount: payload.cuotas_pendientes_count,
+          cuotasPendientesIds: payload.cuotas_pendientes_ids
+        } : {})
+      })
+    });
+  } catch(e) {
+    console.warn('worker aviso compartido:', e);
+  }
+}
 
 // Guardar/leer emails recientes en Firestore
 async function getEmailsRecientes() {
@@ -3407,41 +3538,35 @@ window.enviarGastoCompartido = async (id, monto, desc, moneda, tipoOrigen, fecha
   if(btn){ btn.disabled=true; btn.textContent='Enviando...'; }
 
   try{
-    const res = await fetch(WORKER_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tipo: 'gastoCompartido',
-        destinatarioEmail: email,
-        remitenteEmail: currentUser.email,
-        remitenteUid: currentUser.uid,
-        desc,
-        monto,
-        montoCompartido,
-        gastoId: id,
-        tipoOrigen: tipoOrigen || 'gasto',
-        fecha: fechaNormalizada,
-        fechaCompartida: fechaNormalizada,
-        ...(compartirCuotas ? {
-          compartirCuotas: true,
-          cuotas,
-          cuotaNum,
-          montoTotal: montoTotal || monto,
-          cuotasPendientesCount,
-          cuotasPendientesIds
-        } : {}),
-      })
-    });
-    const data = await res.json();
-    if(data.ok){
-      guardarEmailReciente(email);
-      document.getElementById('modalCompartir')?.remove();
-      showToast('✅ Gasto compartido con ' + email);
-    } else {
-      showToast('❌ ' + (data.error || 'Error al compartir'), true);
+    if(!usarSupabaseCompartidos()){
+      showToast('⚠️ Configurá SUPABASE_ANON_KEY para usar gastos compartidos', true);
       if(btn){ btn.disabled=false; btn.textContent='Compartir'; }
+      return;
     }
+
+    const payloadSupabase = construirPayloadSupabaseCompartido({
+      id,
+      email,
+      desc,
+      monto,
+      montoCompartido,
+      tipoOrigen,
+      fechaNormalizada,
+      compartirCuotas,
+      cuotas,
+      cuotaNum,
+      montoTotal,
+      cuotasPendientesCount,
+      cuotasPendientesIds
+    });
+
+    await insertarCompartidoSupabase(payloadSupabase);
+    guardarEmailReciente(email);
+    document.getElementById('modalCompartir')?.remove();
+    showToast('✅ Gasto compartido con ' + email);
+    await notificarCompartidoWorker(payloadSupabase);
   }catch(e){
+    console.error('Error compartiendo gasto en Supabase:', e);
     showToast('❌ Error de conexión',true);
     if(btn){ btn.disabled=false; btn.textContent='Compartir'; }
   }
@@ -3465,14 +3590,14 @@ function construirRecordatorios() {
   ).map(d => ({...d, _tipo: 'recordatorio'}));
 }
 
-function aplicarNotificacionesCompartidas(snap) {
-  snap.docs.forEach(d => {
-    const data = d.data();
-    if(data.estado !== 'pendiente') compartidosResueltos.delete(d.id);
+function aplicarNotificacionesCompartidasLista(rows = []) {
+  const lista = normalizarListaCompartidos(rows);
+
+  lista.forEach(d => {
+    if(d.estado !== 'pendiente') compartidosResueltos.delete(d.id);
   });
 
-  const gastosComp = snap.docs
-    .map(d => ({ id: d.id, ...d.data(), _tipo: 'compartido' }))
+  const gastosComp = lista
     .filter(d => d.estado === 'pendiente' && !compartidosResueltos.has(d.id));
 
   const recordatorios = construirRecordatorios();
@@ -3488,9 +3613,18 @@ function aplicarNotificacionesCompartidas(snap) {
   return gastosComp;
 }
 
+function aplicarNotificacionesCompartidas(snap) {
+  const lista = snap.docs.map(d => ({ id: d.id, ...d.data(), _tipo: 'compartido' }));
+  return aplicarNotificacionesCompartidasLista(lista);
+}
+
 async function recargarNotificacionesCompartidas() {
   if(!currentUser?.email) return;
   try {
+    if(usarSupabaseCompartidos()) {
+      const rows = await listarCompartidosSupabase();
+      return aplicarNotificacionesCompartidasLista(rows);
+    }
     const colRef = collection(db, 'gastosCompartidos');
     const snap = await getDocs(query(colRef, where('destinatarioEmail','==', currentUser.email)));
     return aplicarNotificacionesCompartidas(snap);
@@ -3883,6 +4017,26 @@ function cfConstruirPopupHTML(g, resto) {
 function iniciarNotificaciones() {
   if(!currentUser){ setTimeout(iniciarNotificaciones, 1000); return; }
 
+  if(notifListener) {
+    try { notifListener(); } catch(_){}
+    notifListener = null;
+  }
+  if(window._notifPollInterval) {
+    clearInterval(window._notifPollInterval);
+    window._notifPollInterval = null;
+  }
+
+  if(usarSupabaseCompartidos()) {
+    const refrescar = async () => {
+      const gastosComp = await recargarNotificacionesCompartidas();
+      if(gastosComp.length > 0) programarPopupCompartido();
+      else limpiarTimerPopupCompartido();
+    };
+    refrescar();
+    window._notifPollInterval = setInterval(refrescar, 8000);
+    return;
+  }
+
   // Listener en tiempo real para gastos compartidos — solo por email (sin índice compuesto)
   const colRef = collection(db, 'gastosCompartidos');
   notifListener = onSnapshot(
@@ -3975,7 +4129,7 @@ function mostrarFormularioCompartido(gastos) {
   if(fechaTxt) fechaTxt.value = '';
   if(typeof dpModInit === 'function') dpModInit('cf', null);
 
-  const fechaCompartida = cfNormalizarFechaISO(g.fechaCompartida || g.fecha);
+  const fechaCompartida = cfNormalizarFechaISO(g[CAMPO_FECHA_COMPARTIDA] || g.fecha);
   if(fechaCompartida && typeof dpModInit === 'function') {
     setTimeout(() => {
       const fechaHidden = document.getElementById('cfFecha');
@@ -4122,7 +4276,8 @@ function cfQuitarPendienteLocal(id) {
 window.cfAceptar = async (id, opts = {}) => {
   const { cerrarPopup = true, mostrarToast = true } = opts;
   try {
-    await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'aceptado' });
+    if(usarSupabaseCompartidos()) await actualizarEstadoCompartidoSupabase(id, 'aceptado');
+    else await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'aceptado' });
     cfQuitarPendienteLocal(id);
     await cfReversaCompartido(id);
     if(mostrarToast) showToast('Gasto aceptado');
@@ -4135,7 +4290,8 @@ window.cfAceptar = async (id, opts = {}) => {
 
 window.cfRechazar = async id => {
   try {
-    await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
+    if(usarSupabaseCompartidos()) await actualizarEstadoCompartidoSupabase(id, 'rechazado');
+    else await updateDoc(doc(db, 'gastosCompartidos', id), { estado: 'rechazado' });
     cfQuitarPendienteLocal(id);
     await cfReversaCompartido(id);
     showToast('Gasto rechazado');
