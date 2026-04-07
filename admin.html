@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis Finanzas — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;
+  --card:#111118;
+  --border:rgba(255,255,255,.08);
+  --text:#f0f0f8;
+  --muted:#6b6b8a;
+  --accent:#7c6cfa;
+  --accent2:#fa6c9f;
+  --green:#00e5a0;
+  --red:#ff6b81;
+  --orange:#ffb357;
+  --input-bg:rgba(255,255,255,.05);
+}
+body{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left, rgba(124,108,250,.18), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(250,108,159,.16), transparent 35%),
+    var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  padding:24px;
+}
+.shell{max-width:1180px;margin:0 auto}
+.hero{margin-bottom:22px}
+.eyebrow{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.title{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;line-height:1}
+.sub{margin-top:8px;color:var(--muted);font-size:15px}
+.view{display:none}
+.view.visible{display:block}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:24px;
+  padding:26px;
+  box-shadow:0 20px 50px rgba(0,0,0,.28);
+}
+.card.narrow{max-width:460px;margin:0 auto}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.field input{
+  width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:14px;
+  padding:14px 16px;color:var(--text);font-size:15px;outline:none
+}
+.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,250,.14)}
+.btn{
+  border:none;border-radius:14px;padding:13px 16px;cursor:pointer;
+  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;transition:.2s;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-secondary{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text)}
+.btn-danger{background:rgba(255,107,129,.08);border:1px solid rgba(255,107,129,.24);color:#ff9dad}
+.btn-warn{background:rgba(255,179,87,.08);border:1px solid rgba(255,179,87,.25);color:var(--orange)}
+.msg{display:none;font-size:13px;padding:12px 14px;border-radius:12px;margin-bottom:16px}
+.msg.visible{display:block}
+.msg.ok{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.22);color:var(--green)}
+.msg.err{background:rgba(255,107,129,.08);border:1px solid rgba(255,107,129,.22);color:#ff9dad}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap
+}
+.whoami{display:flex;gap:10px;align-items:center}
+.whoami-badge{
+  padding:9px 12px;border-radius:999px;background:rgba(124,108,250,.12);color:#d6d2ff;font-size:13px;font-weight:700
+}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{
+  padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04);
+  color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700
+}
+.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+.panel{display:none}
+.panel.visible{display:block}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.panel-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.grid{display:grid;gap:14px}
+.pending-card,.user-card,.audit-card{
+  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;padding:16px
+}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.meta{color:var(--muted);font-size:13px;margin-top:6px}
+.pill{
+  display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700
+}
+.pill.pending{background:rgba(255,179,87,.12);color:var(--orange)}
+.pill.approved{background:rgba(0,229,160,.1);color:var(--green)}
+.pill.rejected,.pill.disabled{background:rgba(255,107,129,.1);color:#ff9dad}
+.pill.active{background:rgba(124,108,250,.12);color:#d6d2ff}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.empty{
+  border:1px dashed var(--border);border-radius:18px;padding:22px;color:var(--muted);text-align:center
+}
+.audit-grid{display:grid;gap:10px}
+@media (max-width:760px){
+  body{padding:16px}
+  .card{padding:18px}
+  .title{font-size:30px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="hero">
+    <div class="eyebrow">Panel interno</div>
+    <div class="title">Admin Mis Finanzas</div>
+    <div class="sub">Gestioná altas pendientes, usuarios existentes y auditoría desde un solo lugar.</div>
+  </div>
+
+  <div class="view visible" id="viewLogin">
+    <div class="card narrow">
+      <div class="panel-title" style="margin-bottom:14px">Ingresar</div>
+      <div class="msg" id="loginMsg"></div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="adminLoginEmail" autocomplete="email" placeholder="benjaminsuarez002@gmail.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="adminLoginPass" autocomplete="current-password" placeholder="Tu contraseña">
+      </div>
+      <button class="btn btn-primary" id="btnAdminLogin" style="width:100%" onclick="adminLogin()">Entrar al panel</button>
+    </div>
+  </div>
+
+  <div class="view" id="viewPin">
+    <div class="card narrow">
+      <div class="panel-title" style="margin-bottom:14px">Verificación admin</div>
+      <div class="msg" id="pinMsg"></div>
+      <div class="meta" style="margin-bottom:16px">Estás entrando como <strong id="pinEmailLabel">—</strong>. Ingresá tu PIN para habilitar acciones sensibles.</div>
+      <div class="field">
+        <label>PIN admin</label>
+        <input type="password" id="adminPinInput" inputmode="numeric" placeholder="PIN privado">
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" id="btnVerifyPin" onclick="verificarAdminPin()">Verificar PIN</button>
+        <button class="btn btn-secondary" onclick="adminLogout()">Salir</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="viewBlocked">
+    <div class="card narrow">
+      <div class="panel-title" style="margin-bottom:10px">Acceso denegado</div>
+      <div class="msg visible err">Esta cuenta no tiene permisos para ingresar al panel admin.</div>
+      <button class="btn btn-secondary" onclick="adminLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <div class="view" id="viewPanel">
+    <div class="card">
+      <div class="topbar">
+        <div class="whoami">
+          <div class="whoami-badge" id="adminBadge">Admin</div>
+          <div class="meta" id="adminState">PIN validado</div>
+        </div>
+        <div class="actions" style="margin-top:0">
+          <button class="btn btn-secondary" onclick="refrescarTodo()">Actualizar</button>
+          <button class="btn btn-secondary" onclick="adminLogout()">Salir</button>
+        </div>
+      </div>
+
+      <div class="msg" id="panelMsg"></div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="setAdminTab('pending')">Pendientes</button>
+        <button class="tab" onclick="setAdminTab('users')">Usuarios</button>
+        <button class="tab" onclick="setAdminTab('audit')">Auditoría</button>
+      </div>
+
+      <div class="panel visible" id="panel-pending">
+        <div class="panel-head">
+          <div class="panel-title">Registros pendientes</div>
+          <div class="meta" id="pendingCount">—</div>
+        </div>
+        <div class="grid" id="pendingList"></div>
+      </div>
+
+      <div class="panel" id="panel-users">
+        <div class="panel-head">
+          <div class="panel-title">Usuarios existentes</div>
+          <div class="meta" id="userCount">—</div>
+        </div>
+        <div class="grid" id="userList"></div>
+      </div>
+
+      <div class="panel" id="panel-audit">
+        <div class="panel-head">
+          <div class="panel-title">Auditoría admin</div>
+          <div class="meta" id="auditCount">—</div>
+        </div>
+        <div class="audit-grid" id="auditList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
+  authDomain: "finanzas-51439.firebaseapp.com",
+  projectId: "finanzas-51439",
+  storageBucket: "finanzas-51439.firebasestorage.app",
+  messagingSenderId: "933125362701",
+  appId: "1:933125362701:web:d7976685e9a803753ef144"
+};
+
+const REGISTRO_WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+let adminUser = null;
+let adminPin = '';
+let pendingItems = [];
+let userItems = [];
+let auditItems = [];
+
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('visible', v.id === id));
+}
+
+function showMsg(id, text, type = 'ok') {
+  const el = document.getElementById(id);
+  if(!el) return;
+  if(!text) {
+    el.className = 'msg';
+    el.textContent = '';
+    return;
+  }
+  el.textContent = text;
+  el.className = `msg visible ${type}`;
+}
+
+function panelMessage(text, type='ok') {
+  showMsg('panelMsg', text, type);
+}
+
+function formatDate(value) {
+  if(!value) return '—';
+  const d = new Date(value);
+  if(Number.isNaN(d.getTime())) return value;
+  return d.toLocaleString('es-AR', {
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit'
+  });
+}
+
+async function authHeaders() {
+  if(!adminUser) throw new Error('No hay sesión activa');
+  const idToken = await adminUser.getIdToken(true);
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${idToken}`,
+    'x-admin-pin': adminPin
+  };
+}
+
+async function apiGet(path) {
+  const res = await fetch(`${REGISTRO_WORKER_URL}${path}`, {
+    method: 'GET',
+    headers: await authHeaders()
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok || data.ok === false) throw new Error(data.error || 'Error de servidor');
+  return data;
+}
+
+async function apiPost(path, body = {}) {
+  const res = await fetch(`${REGISTRO_WORKER_URL}${path}`, {
+    method: 'POST',
+    headers: await authHeaders(),
+    body: JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok || data.ok === false) throw new Error(data.error || 'Error de servidor');
+  return data;
+}
+
+function renderPending() {
+  document.getElementById('pendingCount').textContent = `${pendingItems.length} registros`;
+  const wrap = document.getElementById('pendingList');
+  if(!pendingItems.length) {
+    wrap.innerHTML = `<div class="empty">No hay registros pendientes ni históricos para mostrar.</div>`;
+    return;
+  }
+  wrap.innerHTML = pendingItems.map(item => `
+    <div class="pending-card">
+      <div class="row">
+        <div>
+          <div style="font-size:18px;font-weight:800">${item.nombre || 'Sin nombre'}</div>
+          <div class="meta">${item.email || 'Sin email'}</div>
+          <div class="meta">Enviado: ${formatDate(item.createdAt)}</div>
+        </div>
+        <span class="pill ${item.estado === 'pendiente' ? 'pending' : item.estado === 'aprobado' ? 'approved' : 'rejected'}">${item.estado}</span>
+      </div>
+      <div class="actions">
+        <a class="btn btn-secondary" href="${item.comprobanteUrl || '#'}" target="_blank" rel="noopener noreferrer">Ver comprobante</a>
+        ${item.estado === 'pendiente' ? `
+          <button class="btn btn-primary" onclick="aprobarPendiente('${item.id}')">Aprobar</button>
+          <button class="btn btn-danger" onclick="rechazarPendiente('${item.id}')">Rechazar</button>
+        ` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderUsers() {
+  document.getElementById('userCount').textContent = `${userItems.length} usuarios`;
+  const wrap = document.getElementById('userList');
+  if(!userItems.length) {
+    wrap.innerHTML = `<div class="empty">No se pudieron cargar usuarios.</div>`;
+    return;
+  }
+  wrap.innerHTML = userItems.map(item => `
+    <div class="user-card">
+      <div class="row">
+        <div>
+          <div style="font-size:16px;font-weight:800">${item.email || 'Sin email'}</div>
+          <div class="meta">UID: ${item.uid || '—'}</div>
+          <div class="meta">Creado: ${formatDate(item.createdAt)}</div>
+          <div class="meta">Último acceso: ${formatDate(item.lastLoginAt)}</div>
+        </div>
+        <span class="pill ${item.disabled ? 'disabled' : 'active'}">${item.disabled ? 'deshabilitado' : 'activo'}</span>
+      </div>
+      <div class="actions">
+        ${item.disabled
+          ? `<button class="btn btn-primary" onclick="habilitarUsuario('${item.uid}')">Habilitar</button>`
+          : `<button class="btn btn-warn" onclick="deshabilitarUsuario('${item.uid}')">Deshabilitar</button>`
+        }
+        <button class="btn btn-danger" onclick="borrarUsuario('${item.uid}','${(item.email || '').replace(/'/g,"\\'")}')">Borrar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAudit() {
+  document.getElementById('auditCount').textContent = `${auditItems.length} eventos`;
+  const wrap = document.getElementById('auditList');
+  if(!auditItems.length) {
+    wrap.innerHTML = `<div class="empty">Todavía no hay eventos de auditoría.</div>`;
+    return;
+  }
+  wrap.innerHTML = auditItems.map(item => `
+    <div class="audit-card">
+      <div class="row">
+        <div>
+          <div style="font-size:15px;font-weight:800">${item.action}</div>
+          <div class="meta">Admin: ${item.adminEmail || '—'}</div>
+          <div class="meta">Objetivo: ${item.targetEmail || item.targetUid || '—'}</div>
+          <div class="meta">${item.detail || '—'}</div>
+        </div>
+        <div style="text-align:right">
+          <span class="pill ${item.status === 'success' ? 'approved' : 'rejected'}">${item.status || '—'}</span>
+          <div class="meta" style="margin-top:8px">${formatDate(item.createdAt)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.setAdminTab = tab => {
+  document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tab === 'pending' ? 'pendientes' : tab === 'users' ? 'usuarios' : 'auditoría')));
+  document.querySelectorAll('.panel').forEach(panel => panel.classList.toggle('visible', panel.id === `panel-${tab}`));
+};
+
+window.adminLogin = async () => {
+  const email = document.getElementById('adminLoginEmail').value.trim();
+  const pass = document.getElementById('adminLoginPass').value;
+  const btn = document.getElementById('btnAdminLogin');
+  if(!email || !pass) { showMsg('loginMsg', 'Completá email y contraseña', 'err'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch (e) {
+    showMsg('loginMsg', 'No se pudo iniciar sesión', 'err');
+    btn.disabled = false;
+    btn.textContent = 'Entrar al panel';
+  }
+};
+
+window.adminLogout = async () => {
+  adminPin = '';
+  pendingItems = [];
+  userItems = [];
+  auditItems = [];
+  try { await signOut(auth); } catch {}
+  showView('viewLogin');
+  showMsg('panelMsg', '');
+  showMsg('pinMsg', '');
+  const btn = document.getElementById('btnAdminLogin');
+  if(btn){ btn.disabled = false; btn.textContent = 'Entrar al panel'; }
+};
+
+window.verificarAdminPin = async () => {
+  const pin = document.getElementById('adminPinInput').value.trim();
+  const btn = document.getElementById('btnVerifyPin');
+  if(!pin) { showMsg('pinMsg', 'Ingresá tu PIN admin', 'err'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Verificando...';
+  try {
+    adminPin = pin;
+    const data = await apiPost('/admin/auth/verify');
+    if(!data.ok) throw new Error(data.error || 'No se pudo verificar');
+    document.getElementById('adminBadge').textContent = data.adminEmail || ADMIN_EMAIL;
+    document.getElementById('adminState').textContent = 'PIN validado';
+    showView('viewPanel');
+    await refrescarTodo();
+  } catch (e) {
+    adminPin = '';
+    showMsg('pinMsg', e.message || 'PIN incorrecto', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verificar PIN';
+  }
+};
+
+async function cargarPendientes() {
+  const data = await apiGet('/admin/pending');
+  pendingItems = data.items || [];
+  renderPending();
+}
+
+async function cargarUsuarios() {
+  const data = await apiGet('/admin/users');
+  userItems = data.items || [];
+  renderUsers();
+}
+
+async function cargarAudit() {
+  const data = await apiGet('/admin/audit');
+  auditItems = data.items || [];
+  renderAudit();
+}
+
+window.refrescarTodo = async () => {
+  panelMessage('Actualizando panel...', 'ok');
+  try {
+    await Promise.all([cargarPendientes(), cargarUsuarios(), cargarAudit()]);
+    panelMessage('Panel actualizado', 'ok');
+  } catch (e) {
+    panelMessage(e.message || 'Error al actualizar el panel', 'err');
+  }
+};
+
+window.aprobarPendiente = async id => {
+  if(!confirm('¿Aprobar este registro y crear la cuenta?')) return;
+  try {
+    await apiPost('/admin/pending/aprobar', { id });
+    panelMessage('Pendiente aprobado', 'ok');
+    await refrescarTodo();
+  } catch (e) {
+    panelMessage(e.message || 'No se pudo aprobar', 'err');
+  }
+};
+
+window.rechazarPendiente = async id => {
+  if(!confirm('¿Rechazar este registro?')) return;
+  try {
+    await apiPost('/admin/pending/rechazar', { id });
+    panelMessage('Pendiente rechazado', 'ok');
+    await refrescarTodo();
+  } catch (e) {
+    panelMessage(e.message || 'No se pudo rechazar', 'err');
+  }
+};
+
+window.deshabilitarUsuario = async uid => {
+  if(!confirm('¿Deshabilitar esta cuenta?')) return;
+  try {
+    await apiPost('/admin/users/disable', { uid });
+    panelMessage('Usuario deshabilitado', 'ok');
+    await refrescarTodo();
+  } catch (e) {
+    panelMessage(e.message || 'No se pudo deshabilitar', 'err');
+  }
+};
+
+window.habilitarUsuario = async uid => {
+  if(!confirm('¿Habilitar esta cuenta?')) return;
+  try {
+    await apiPost('/admin/users/enable', { uid });
+    panelMessage('Usuario habilitado', 'ok');
+    await refrescarTodo();
+  } catch (e) {
+    panelMessage(e.message || 'No se pudo habilitar', 'err');
+  }
+};
+
+window.borrarUsuario = async (uid, email) => {
+  if(!confirm(`¿Borrar definitivamente la cuenta ${email || uid}?`)) return;
+  try {
+    await apiPost('/admin/users/delete', { uid });
+    panelMessage('Usuario eliminado', 'ok');
+    await refrescarTodo();
+  } catch (e) {
+    panelMessage(e.message || 'No se pudo borrar', 'err');
+  }
+};
+
+onAuthStateChanged(auth, async user => {
+  adminUser = user || null;
+  adminPin = '';
+  if(!user) {
+    showView('viewLogin');
+    return;
+  }
+  document.getElementById('pinEmailLabel').textContent = user.email;
+  showMsg('loginMsg', '');
+  showView('viewPin');
+});
+</script>
+</body>
+</html>
