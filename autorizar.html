@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autorizar cuenta</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --bg:#0a0a0f;
+  --card:#111118;
+  --border:rgba(255,255,255,.08);
+  --text:#f0f0f8;
+  --muted:#6b6b8a;
+  --accent:#7c6cfa;
+  --accent2:#fa6c9f;
+  --green:#00e5a0;
+  --red:#ff6b81;
+  --input-bg:rgba(255,255,255,.05);
+}
+body{
+  min-height:100vh;
+  background:radial-gradient(circle at top left, rgba(124,108,250,.2), transparent 30%), radial-gradient(circle at bottom right, rgba(250,108,159,.18), transparent 35%), var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+.card{
+  width:100%;
+  max-width:520px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:26px;
+  padding:30px;
+  box-shadow:0 20px 50px rgba(0,0,0,.35);
+}
+.eyebrow{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin-bottom:10px;
+}
+.title{
+  font-family:'Syne',sans-serif;
+  font-size:30px;
+  font-weight:800;
+  line-height:1.1;
+  margin-bottom:8px;
+}
+.sub{
+  color:var(--muted);
+  font-size:14px;
+  margin-bottom:24px;
+}
+.status{
+  border-radius:14px;
+  padding:14px 16px;
+  margin-bottom:18px;
+  font-size:14px;
+  display:none;
+}
+.status.visible{ display:block; }
+.status.ok{ background:rgba(0,229,160,.08); border:1px solid rgba(0,229,160,.22); color:var(--green); }
+.status.err{ background:rgba(255,107,129,.08); border:1px solid rgba(255,107,129,.22); color:#ff95a6; }
+.grid{
+  display:grid;
+  gap:12px;
+  margin-bottom:22px;
+}
+.row{
+  background:var(--input-bg);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px 16px;
+}
+.label{
+  color:var(--muted);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  margin-bottom:5px;
+}
+.value{
+  font-size:15px;
+  font-weight:700;
+  word-break:break-word;
+}
+.value.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(124,108,250,.12);
+  color:#c8c2ff;
+}
+.actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+button, .link-btn{
+  border:none;
+  border-radius:14px;
+  padding:14px 18px;
+  font-family:'Syne',sans-serif;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  text-decoration:none;
+  transition:transform .15s, opacity .2s, box-shadow .2s;
+}
+button:hover, .link-btn:hover{ transform:translateY(-1px); }
+button:disabled{ opacity:.5; cursor:not-allowed; transform:none; }
+.btn-primary{
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  color:#fff;
+  box-shadow:0 10px 25px rgba(124,108,250,.25);
+}
+.btn-secondary{
+  background:rgba(255,255,255,.04);
+  color:var(--text);
+  border:1px solid var(--border);
+}
+.btn-danger{
+  background:rgba(255,107,129,.08);
+  color:#ff95a6;
+  border:1px solid rgba(255,107,129,.24);
+}
+.link-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(124,108,250,.08);
+  color:#d8d3ff;
+  border:1px solid rgba(124,108,250,.22);
+}
+.footer-note{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:18px;
+}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="eyebrow">Panel de aprobación</div>
+    <div class="title">Autorizar cuenta</div>
+    <div class="sub">Revisá el comprobante y decidí si querés crear la cuenta del cliente.</div>
+
+    <div class="status" id="statusBox"></div>
+
+    <div class="grid" id="detalleBox" style="display:none">
+      <div class="row">
+        <div class="label">Nombre</div>
+        <div class="value" id="datoNombre">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Email</div>
+        <div class="value" id="datoEmail">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Fecha de envío</div>
+        <div class="value" id="datoFecha">—</div>
+      </div>
+      <div class="row">
+        <div class="label">Estado</div>
+        <div class="value"><span class="value badge" id="datoEstado">—</span></div>
+      </div>
+    </div>
+
+    <div class="actions" id="actionBox" style="display:none">
+      <a class="link-btn" id="verComprobanteBtn" href="#" target="_blank" rel="noopener noreferrer">Ver comprobante</a>
+      <button class="btn-primary" id="aprobarBtn">Aprobar y crear cuenta</button>
+      <button class="btn-danger" id="rechazarBtn">Rechazar</button>
+    </div>
+
+    <div class="footer-note">Este link es de un solo uso y puede vencer automáticamente.</div>
+  </div>
+
+<script>
+const REGISTRO_WORKER_URL = 'https://REEMPLAZAR-CON-TU-WORKER.workers.dev';
+const token = new URLSearchParams(window.location.search).get('token') || '';
+let estadoActual = null;
+
+const statusBox = document.getElementById('statusBox');
+const detalleBox = document.getElementById('detalleBox');
+const actionBox = document.getElementById('actionBox');
+const aprobarBtn = document.getElementById('aprobarBtn');
+const rechazarBtn = document.getElementById('rechazarBtn');
+
+function setStatus(texto, tipo = 'ok') {
+  statusBox.textContent = texto;
+  statusBox.className = `status visible ${tipo}`;
+}
+
+function formatFecha(valor) {
+  if(!valor) return '—';
+  const d = new Date(valor);
+  if(Number.isNaN(d.getTime())) return valor;
+  return d.toLocaleString('es-AR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+function renderPendiente(data) {
+  estadoActual = data.estado;
+  detalleBox.style.display = 'grid';
+  actionBox.style.display = data.estado === 'pendiente' ? 'flex' : 'none';
+  document.getElementById('datoNombre').textContent = data.nombre || '—';
+  document.getElementById('datoEmail').textContent = data.email || '—';
+  document.getElementById('datoFecha').textContent = formatFecha(data.createdAt);
+  document.getElementById('datoEstado').textContent = data.estado || '—';
+  document.getElementById('verComprobanteBtn').href = data.comprobanteUrl || '#';
+
+  if(data.estado === 'pendiente') setStatus('Solicitud pendiente. Podés aprobar o rechazar.', 'ok');
+  else if(data.estado === 'aprobado') setStatus('Esta solicitud ya fue aprobada.', 'ok');
+  else if(data.estado === 'rechazado') setStatus('Esta solicitud fue rechazada.', 'err');
+  else if(data.estado === 'expirado') setStatus('Este link venció y la solicitud quedó expirada.', 'err');
+  else setStatus(`Estado actual: ${data.estado}`, 'ok');
+}
+
+async function cargarSolicitud() {
+  if(!token) {
+    setStatus('Falta el token de autorización en la URL.', 'err');
+    return;
+  }
+  if(!REGISTRO_WORKER_URL || REGISTRO_WORKER_URL.includes('REEMPLAZAR-CON-TU-WORKER')) {
+    setStatus('Falta configurar REGISTRO_WORKER_URL en autorizar.html.', 'err');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${REGISTRO_WORKER_URL}/registro-pendiente?token=${encodeURIComponent(token)}`);
+    const data = await res.json().catch(() => ({}));
+    if(data && data.estado) renderPendiente(data);
+    if(!res.ok || data.ok === false) throw new Error(data.error || 'No se pudo cargar la solicitud');
+    renderPendiente(data);
+  } catch (error) {
+    setStatus(error.message || 'Error al cargar la solicitud.', 'err');
+  }
+}
+
+async function resolverSolicitud(accion) {
+  if(!token) return;
+  aprobarBtn.disabled = true;
+  rechazarBtn.disabled = true;
+  setStatus(accion === 'aprobar' ? 'Creando cuenta...' : 'Rechazando solicitud...', 'ok');
+
+  try {
+    const endpoint = accion === 'aprobar' ? '/registro-pendiente/aprobar' : '/registro-pendiente/rechazar';
+    const res = await fetch(`${REGISTRO_WORKER_URL}${endpoint}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token })
+    });
+    const data = await res.json().catch(() => ({}));
+    if(data && data.estado) renderPendiente(data);
+    if(!res.ok || data.ok === false) throw new Error(data.error || `No se pudo ${accion} la solicitud`);
+    renderPendiente(data);
+  } catch (error) {
+    setStatus(error.message || 'Ocurrió un error.', 'err');
+    aprobarBtn.disabled = estadoActual !== 'pendiente';
+    rechazarBtn.disabled = estadoActual !== 'pendiente';
+  }
+}
+
+aprobarBtn.addEventListener('click', () => resolverSolicitud('aprobar'));
+rechazarBtn.addEventListener('click', () => resolverSolicitud('rechazar'));
+cargarSolicitud();
+</script>
+</body>
+</html>

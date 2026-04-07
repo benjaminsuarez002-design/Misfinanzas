@@ -406,7 +406,7 @@ body {
       <!-- Step 3: comprobante -->
       <div class="step" id="step3">
         <div style="font-size:14px;color:var(--muted);margin-bottom:16px;text-align:center">
-          Subí el comprobante de la transferencia para finalizar tu registro.
+          Subí el comprobante de la transferencia. Cuando lo envíes, tu cuenta quedará pendiente de autorización.
         </div>
 
         <div class="drop-zone" id="dropZone">
@@ -418,7 +418,7 @@ body {
         </div>
 
         <button class="btn-primary" id="btnEnviar" style="margin-top:20px" onclick="enviarRegistro()" disabled>
-          Enviar registro
+          Ya pagué
         </button>
       </div>
 
@@ -426,10 +426,10 @@ body {
       <div class="step" id="step4">
         <div class="success-box">
           <span class="success-icon">🎉</span>
-          <div class="success-title">¡Registro enviado!</div>
+          <div class="success-title">Pago recibido</div>
           <div class="success-sub">
-            Recibimos tu comprobante.<br>
-            En breve te habilitamos el acceso y te avisamos por email.
+            Recibimos tu comprobante y tu solicitud quedó pendiente.<br>
+            Esperá a que tu cuenta sea autorizada para poder ingresar.
           </div>
         </div>
       </div>
@@ -456,6 +456,7 @@ const auth = getAuth(app);
 
 const CLOUD_NAME = 'do0i2da7h';
 const UPLOAD_PRESET = 'Corralon'; // usar el mismo preset ya configurado
+const REGISTRO_WORKER_URL = 'https://REEMPLAZAR-CON-TU-WORKER.workers.dev';
 
 // Si ya está logueado → ir a la app
 onAuthStateChanged(auth, user => {
@@ -526,7 +527,13 @@ window.enviarRegistro = async () => {
   const msg    = document.getElementById('regMsg');
   const btn    = document.getElementById('btnEnviar');
 
+  if(!nombre || !email || !pass) { showMsg(msg, '⚠️ Completá todos los campos', 'err'); return; }
+  if(pass.length < 6) { showMsg(msg, '⚠️ La contraseña debe tener al menos 6 caracteres', 'err'); return; }
   if(!archivoFile) { showMsg(msg, '⚠️ Subí el comprobante', 'err'); return; }
+  if(!REGISTRO_WORKER_URL || REGISTRO_WORKER_URL.includes('REEMPLAZAR-CON-TU-WORKER')) {
+    showMsg(msg, '⚠️ Falta configurar REGISTRO_WORKER_URL', 'err');
+    return;
+  }
 
   btn.disabled = true; btn.textContent = 'Enviando...';
 
@@ -544,23 +551,24 @@ window.enviarRegistro = async () => {
 
     const urlComprobante = data.secure_url;
 
-    // Armar link de WhatsApp
-    const texto = encodeURIComponent(
-      `Hola Benjamín! Me registré en Mis Finanzas 💰\n\n` +
-      `👤 Nombre: ${nombre}\n` +
-      `📧 Email: ${email}\n` +
-      `🔑 Contraseña: ${pass}\n` +
-      `📎 Comprobante: ${urlComprobante}`
-    );
-    const waLink = `https://wa.me/542645533544?text=${texto}`;
-
-    // Abrir WhatsApp
-    window.open(waLink, '_blank');
+    const registroRes = await fetch(`${REGISTRO_WORKER_URL}/registro-pendiente`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nombre,
+        email,
+        password: pass,
+        comprobanteUrl: urlComprobante
+      })
+    });
+    const registroData = await registroRes.json().catch(() => ({}));
+    if(!registroRes.ok || registroData.ok === false) throw new Error(registroData.error || 'No se pudo enviar tu solicitud');
 
     goStep(4);
+    document.getElementById('btnEnviar').textContent = 'Solicitud enviada';
   } catch(e) {
     showMsg(msg, '❌ Error: ' + e.message, 'err');
-    btn.disabled = false; btn.textContent = 'Enviar registro';
+    btn.disabled = false; btn.textContent = 'Ya pagué';
   }
 };
 
