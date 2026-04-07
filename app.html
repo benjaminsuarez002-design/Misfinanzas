@@ -164,6 +164,15 @@
     background-clip: text;
     border-bottom-color: #8f6bff;
   }
+  .app-help-inline-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 18px; height: 18px; margin-left: 6px; padding: 0;
+    border: none; background: transparent; cursor: pointer;
+    font-size: 13px; line-height: 1; opacity: .82; vertical-align: middle;
+    filter: drop-shadow(0 3px 8px rgba(120,80,255,.18));
+    transition: transform .15s ease, opacity .15s ease;
+  }
+  .app-help-inline-btn:hover { transform: translateY(-1px) scale(1.05); opacity: 1; }
   .page { display: none; padding: 20px; width: 100%; max-width: 480px; margin: 0 auto; }
   .page.active { display: block; }
 
@@ -242,6 +251,8 @@
 
   /* ── SEM GROUPS ── */
   .sem-group { margin-bottom: 12px; border: 1px solid rgba(255,255,255,.7); border-radius: 18px; overflow: hidden; box-shadow: 0 4px 18px rgba(120,80,255,.08); animation: fadeSlideIn .35s ease both; background: rgba(255,255,255,.7); backdrop-filter: blur(8px); }
+  .sem-group-row { position: relative; margin-bottom: 12px; }
+  .sem-group-row .sem-group { width: 100%; margin-bottom: 0; }
   .sem-header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(246,242,255,.7); cursor: pointer; user-select: none; transition: background .2s; }
   .sem-header:hover { background: rgba(255,255,255,.9); }
   .sem-header-left { display: flex; align-items: center; gap: 10px; }
@@ -249,7 +260,16 @@
   .sem-group.open .sem-chevron { transform: rotate(180deg); }
   .sem-header .sem-title { font-family: 'Arial Black', sans-serif; font-weight: 700; font-size: 14px; color: var(--blue); }
   .sem-header .sem-fechas { font-size: 11px; color: var(--muted); }
-  .sem-header .sem-saldo { font-family: 'Arial Black', sans-serif; font-weight: 700; font-size: 14px; }
+  .sem-header .sem-saldo { font-family: 'Arial Black', sans-serif; font-weight: 700; font-size: 14px; padding-right: 18px; }
+  .sem-info-side-btn {
+    width: 28px; height: 28px; border: none; background: transparent; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    font-size: 16px; line-height: 1; flex-shrink: 0; opacity: .88;
+    filter: drop-shadow(0 4px 10px rgba(120,80,255,.18));
+    transition: transform .15s ease, opacity .15s ease;
+    position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+  }
+  .sem-info-side-btn:hover { transform: translateY(calc(-50% - 1px)) scale(1.05); opacity: 1; }
   .sem-body { display: none !important; background: rgba(255,255,255,.5); }
   .sem-group.open .sem-body { display: flex !important; flex-direction: column; }
 
@@ -752,8 +772,62 @@
   }
   .cfg-option:hover, .cfg-option.active { border-color: var(--blue); background: rgba(108,140,255,.08); }
   .cfg-option input[type=radio] { accent-color: var(--blue); width: 17px; height: 17px; flex-shrink:0; cursor:pointer; }
+  .cfg-option-main { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cfg-option-copy { flex: 1; min-width: 0; }
   .cfg-option-label { font-family: Arial Black,sans-serif; font-size: 13px; font-weight: 700; color: var(--text); }
   .cfg-option-sub { font-size: 11px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: .5px; }
+  .cfg-help-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .cfg-help-row-copy { flex: 1; min-width: 0; }
+  .cfg-weekly-info-btn {
+    width: 22px; height: 22px; border-radius: 7px;
+    border: 1.5px solid rgba(18,18,28,.9); background: #11121a; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: Arial Black,sans-serif; font-size: 12px; font-weight: 800;
+    cursor: pointer; flex-shrink: 0; box-shadow: 0 8px 18px rgba(17,18,26,.16);
+    transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+  }
+  .cfg-weekly-info-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 20px rgba(17,18,26,.22); }
+  .cfg-weekly-info-overlay {
+    position: fixed; inset: 0; z-index: 5000;
+    background: rgba(16,18,28,.45); backdrop-filter: blur(6px);
+    display: none; align-items: center; justify-content: center; padding: 18px;
+  }
+  .cfg-weekly-info-overlay.visible { display: flex; }
+  .cfg-weekly-info-card {
+    width: min(100%, 430px); background: #fff; border-radius: 24px; padding: 24px 22px 20px;
+    border: 1.5px solid rgba(220,215,255,.88); box-shadow: 0 24px 64px rgba(88,77,180,.24);
+  }
+  .cfg-weekly-info-badge {
+    width: 38px; height: 38px; border-radius: 14px; background: #11121a; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-family: Arial Black,sans-serif; font-size: 18px; font-weight: 800;
+    margin-bottom: 14px;
+  }
+  .cfg-weekly-info-title {
+    font-family: Arial Black,sans-serif; font-size: 20px; font-weight: 800; color: var(--text);
+    margin-bottom: 8px;
+  }
+  .cfg-weekly-info-subtitle {
+    font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px;
+  }
+  .cfg-weekly-info-list { display: grid; gap: 10px; margin-bottom: 18px; }
+  .cfg-weekly-info-item {
+    border: 1.5px solid rgba(220,215,255,.8); border-radius: 16px; background: rgba(243,236,255,.42);
+    padding: 12px 13px;
+  }
+  .cfg-weekly-info-item strong {
+    display: block; font-size: 12px; letter-spacing: .6px; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 4px;
+  }
+  .cfg-weekly-info-item span {
+    display: block; color: var(--text); font-size: 13px; line-height: 1.45;
+  }
+  .cfg-weekly-info-actions { display: flex; justify-content: flex-end; }
+  .cfg-weekly-info-close {
+    padding: 12px 16px; border-radius: 14px; border: none; cursor: pointer;
+    background: linear-gradient(135deg,var(--blue),var(--accent)); color: #fff;
+    font-family: Arial Black,sans-serif; font-size: 13px; font-weight: 800;
+  }
   .cfg-dias { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px; }
   .cfg-dia {
     width: 40px; height: 40px; border-radius: 10px; border: 1.5px solid var(--border);
@@ -1254,13 +1328,13 @@ function limpiarApp() {
   Object.values(fijoPagosListeners).forEach(u => u());
   pagosListeners = {}; pagosData = {}; data = []; tarjetas = [];
   fijoData = []; fijoPagosData = {}; fijoPagosListeners = {};
-  userConfig = { frecuencia: 'semanal', diaCorte: 14, diaCobro: 5 };
+  userConfig = { frecuencia: 'semanal', diaCorte: 14, diaCobro: 5, ayudas: true };
 }
 function iniciarApp() { initMesSelect(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); }
 
 
 // ── CONFIG ──────────────────────────────────────────
-let userConfig = { frecuencia: 'semanal', diaCorte: 14, diaCobro: 5 }; // diaCobro: 0=Lu..6=Do
+let userConfig = { frecuencia: 'semanal', diaCorte: 14, diaCobro: 5, ayudas: true }; // diaCobro: 0=Lu..6=Do
 
 async function cargarConfig() {
   try {
@@ -1522,9 +1596,14 @@ window.abrirConfig = () => {
           <div class="cfg-option-sub">Cobro dos veces por mes</div></div>
         </label>
         <label class="cfg-option ${userConfig.frecuencia==='semanal'?'active':''}" onclick="setCfgFrec('semanal')">
-          <input type="radio" name="cfgFrec" ${userConfig.frecuencia==='semanal'?'checked':''}><div>
-          <div class="cfg-option-label">Semanal</div>
-          <div class="cfg-option-sub">Cobro cada semana</div></div>
+          <input type="radio" name="cfgFrec" ${userConfig.frecuencia==='semanal'?'checked':''}>
+          <div class="cfg-option-main">
+            <div class="cfg-option-copy">
+              <div class="cfg-option-label">Semanal</div>
+              <div class="cfg-option-sub">Cobro cada semana</div>
+            </div>
+            <button type="button" class="cfg-weekly-info-btn" onclick="event.stopPropagation();mostrarInfoSemanal()" aria-label="Ver detalle del modo semanal">i</button>
+          </div>
         </label>
       </div>
 
@@ -1537,6 +1616,22 @@ window.abrirConfig = () => {
         <div class="cfg-section-title">📆 Día de inicio / corte del período</div>
         <div style="font-size:12px;color:var(--muted);margin-bottom:10px">El período empieza en este día del mes</div>
         <div class="cfg-dias" id="cfgDias">${diasHTML}</div>
+      </div>
+
+      <div style="margin-top:18px">
+        <div class="cfg-section-title">Ayudas visuales</div>
+        <label class="cfg-option ${userConfig.ayudas!==false?'active':''}" onclick="setCfgAyudas(${userConfig.ayudas===false?'true':'false'})">
+          <div class="cfg-help-row">
+            <div class="cfg-help-row-copy">
+              <div class="cfg-option-label">Mostrar ayudas</div>
+              <div class="cfg-option-sub">Activa o desactiva todos los foquitos explicativos</div>
+            </div>
+            <label class="toggle-switch" onclick="event.stopPropagation()">
+              <input type="checkbox" id="cfgAyudas" ${userConfig.ayudas!==false?'checked':''} onchange="setCfgAyudas(this.checked)">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </label>
       </div>
 
       <div class="cfg-btns">
@@ -1576,6 +1671,229 @@ window.setCfgDiaCobro = idx => {
   );
 };
 
+window.setCfgAyudas = enabled => {
+  userConfig.ayudas = !!enabled;
+  const check = document.getElementById('cfgAyudas');
+  if(check) check.checked = userConfig.ayudas;
+  const label = check?.closest('.cfg-option');
+  if(label) label.classList.toggle('active', userConfig.ayudas);
+  syncHelpVisibility(document);
+};
+
+function ensureInfoSemanalPopup(){
+  let overlay = document.getElementById('cfgWeeklyInfoOverlay');
+  if(overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'cfgWeeklyInfoOverlay';
+  overlay.className = 'cfg-weekly-info-overlay';
+  overlay.innerHTML = `
+    <div class="cfg-weekly-info-card" onclick="event.stopPropagation()">
+      <div class="cfg-weekly-info-badge">i</div>
+      <div class="cfg-weekly-info-title">¿Cómo funciona el tab semanal?</div>
+      <div class="cfg-weekly-info-subtitle">
+        Este modo hace que la app piense tus períodos como semanas de cobro, no como meses cerrados.
+        Te sirve si cobrás por semana o si preferís controlar la plata en ciclos cortos.
+      </div>
+      <div class="cfg-weekly-info-list">
+        <div class="cfg-weekly-info-item">
+          <strong>Primera semana del período</strong>
+          <span>La primera semana se rige por tu configuración: toma el primer día de cobro elegido después del día de corte. Ejemplo: si el corte es el 10 y elegís sábado, la primera semana empieza en el primer sábado después del 10.</span>
+        </div>
+        <div class="cfg-weekly-info-item">
+          <strong>Bloques semanales reales</strong>
+          <span>Desde ese punto, la app arma cada bloque semanal para que ingresos, gastos y tarjetas caigan dentro de la semana que realmente te corresponde.</span>
+        </div>
+        <div class="cfg-weekly-info-item">
+          <strong>Resumen más claro</strong>
+          <span>El tab semanal te muestra cuánto entró, cuánto salió y cómo quedó tu balance en cada semana puntual, sin mezclarlo con todo el mes.</span>
+        </div>
+        <div class="cfg-weekly-info-item">
+          <strong>Si cambiás la configuración</strong>
+          <span>Cuando cambiás el día de corte o el día de cobro, las semanas se recalculan con esa nueva referencia para mantener el análisis ordenado.</span>
+        </div>
+      </div>
+      <div class="cfg-weekly-info-actions">
+        <button type="button" class="cfg-weekly-info-close" onclick="cerrarInfoSemanal()">Entendido</button>
+      </div>
+    </div>
+  `;
+  overlay.addEventListener('click', window.cerrarInfoSemanal);
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+window.mostrarInfoSemanal = () => {
+  ensureInfoSemanalPopup().classList.add('visible');
+};
+
+window.cerrarInfoSemanal = () => {
+  const overlay = document.getElementById('cfgWeeklyInfoOverlay');
+  if(overlay) overlay.classList.remove('visible');
+};
+
+const HELP_CONTENT = {
+  tab_resumen: { title: 'Resumen', subtitle: 'Te muestra una vista rápida de cómo viene tu período actual.', items: [ { title: 'Qué reúne', text: 'Acá ves ingresos, gastos, tarjetas, saldo, presupuesto estimado y movimientos fijos en un solo pantallazo.' }, { title: 'Para qué sirve', text: 'Te deja entender rápido cómo venís antes de entrar a cada detalle.' } ] },
+  tab_cargar: { title: '+ Cargar', subtitle: 'Es el formulario principal para registrar movimientos.', items: [ { title: 'Qué podés guardar', text: 'Ingresos, gastos, créditos, deudas fijas y consumos con tarjeta con sus datos completos.' }, { title: 'Cuándo usarlo', text: 'Cada vez que querés dejar asentado un movimiento nuevo en la app.' } ] },
+  tab_compras: { title: 'Compras', subtitle: 'Sirve para armar una compra tipo carrito antes de pasarla a gastos.', items: [ { title: 'Cómo trabaja', text: 'Cargás artículos, cantidades y subtotales para formar un total general.' }, { title: 'Resultado', text: 'Después podés convertir esa compra en movimientos reales dentro de la app.' } ] },
+  usd_oficial: { title: 'USD Oficial', subtitle: 'Usa el valor oficial del dólar para cálculos y referencias.', items: [ { title: 'Impacto', text: 'Sirve cuando cargás o analizás movimientos en dólares oficiales.' } ] },
+  usd_tarjeta: { title: 'USD Tarjeta', subtitle: 'Usa una referencia del dólar tarjeta para consumos con recargos.', items: [ { title: 'Impacto', text: 'Te ayuda a estimar mejor cuánto termina costando un gasto en tarjeta cobrado en dólares.' } ] },
+  sum_ingresos: { title: 'Ingresos', subtitle: 'Resume todo lo que entró en el período activo.', items: [ { title: 'Toque rápido', text: 'Si lo tocás, se abre el detalle de ingresos cargados en ese período.' } ] },
+  sum_gastos: { title: 'Gastos', subtitle: 'Resume egresos y consumos del período activo.', items: [ { title: 'Toque rápido', text: 'Si lo tocás, se abre el detalle completo de gastos.' } ] },
+  sum_tarjetas: { title: 'Tarjetas', subtitle: 'Acumula la deuda o el consumo pendiente de tarjetas.', items: [ { title: 'Qué muestra', text: 'Incluye el total consumido en tarjetas y cuántas tienen deuda activa.' }, { title: 'Toque rápido', text: 'Abre el panel por tarjeta con deuda, pagos y movimientos asociados.' } ] },
+  sum_saldo: { title: 'Saldo', subtitle: 'Es la diferencia entre ingresos confirmados y egresos confirmados.', items: [ { title: 'Cómo leerlo', text: 'Si está positivo, te quedó margen; si está negativo, gastaste más de lo confirmado.' } ] },
+  sum_presupuesto: { title: 'Presupuesto estimado', subtitle: 'Calcula un resultado proyectado usando todo lo cargado.', items: [ { title: 'Para qué sirve', text: 'Te deja anticipar cómo cerraría el período si todo lo pendiente realmente ocurre.' } ] },
+  sum_fijos: { title: 'Movimientos fijos', subtitle: 'Agrupa lo que te deben y lo que debés en movimientos de seguimiento.', items: [ { title: 'Toque rápido', text: 'Abre el panel para ver detalle, pagos parciales y saldos pendientes.' } ] },
+  tarjetas_panel: { title: 'Tarjetas del mes', subtitle: 'Panel detallado de consumos y pagos por tarjeta.', items: [ { title: 'Qué podés hacer', text: 'Cambiar entre tarjetas, revisar deuda del período y registrar pagos.' } ] },
+  fijo_panel: { title: 'Movimientos fijos', subtitle: 'Panel para deudas o cobros que se van cancelando en partes.', items: [ { title: 'Cómo funciona', text: 'Cada movimiento fijo puede recibir pagos o cobros parciales hasta quedar saldado.' } ] },
+  semanal_tab: { title: 'Tab semanal', subtitle: 'Divide tus movimientos en semanas reales según tu configuración.', items: [ { title: 'Primera semana del período', text: 'La primera semana se rige por tu configuración: toma el primer día de cobro elegido después del día de corte. Ejemplo: si el corte es el 10 y elegís sábado, la primera semana empieza en el primer sábado después del 10.' }, { title: 'Bloques semanales reales', text: 'Desde ese punto, la app arma cada bloque semanal para que ingresos, gastos y tarjetas caigan dentro de la semana que realmente te corresponde.' }, { title: 'Resumen más claro', text: 'Te muestra cuánto entró, cuánto salió y cómo quedó tu balance en cada semana puntual, sin mezclarlo con todo el mes.' }, { title: 'Si cambiás la configuración', text: 'Cuando cambiás el día de corte o el día de cobro, las semanas se recalculan con esa nueva referencia.' } ] },
+  duplicar_mes: { title: 'Duplicar este mes al siguiente', subtitle: 'Copia una base del mes actual al próximo.', items: [ { title: 'Uso típico', text: 'Sirve cuando el mes siguiente va a ser parecido y después solo querés ajustar diferencias.' } ] },
+  form_tipo: { title: 'Tipo', subtitle: 'Define cómo se comporta el movimiento dentro de la app.', items: [ { title: 'Ingreso', text: 'Suma dinero al período.' }, { title: 'Gasto', text: 'Resta dinero directamente.' }, { title: 'Crédito', text: 'Te permite registrar algo financiado o prestado.' }, { title: 'Mov. fijo', text: 'Sirve para deudas o cobros que seguís en el tiempo.' } ] },
+  form_tarjeta: { title: 'Tarjeta', subtitle: 'Elegís a qué tarjeta pertenece el consumo.', items: [ { title: 'Importancia', text: 'Así la deuda y los pagos quedan asociados a la tarjeta correcta.' } ] },
+  form_descripcion: { title: 'Descripción', subtitle: 'Nombre corto para reconocer el movimiento.', items: [ { title: 'Consejo', text: 'Usá algo claro como sueldo, súper, alquiler o gimnasio.' } ] },
+  form_monto: { title: 'Monto', subtitle: 'Es el valor económico del movimiento.', items: [ { title: 'Total o por cuota', text: 'Si hay cuotas, podés cargar el total completo o el valor de cada cuota.' } ] },
+  form_cuotas: { title: 'Cuotas', subtitle: 'Cantidad de cuotas del movimiento.', items: [ { title: 'Cómo impacta', text: 'La app distribuye ese movimiento en la cantidad de cuotas que definas.' } ] },
+  form_moneda: { title: 'Moneda', subtitle: 'Define en qué moneda se guarda el movimiento.', items: [ { title: 'Opciones', text: 'Podés usar pesos, dólar oficial o dólar tarjeta según el caso.' } ] },
+  form_fecha: { title: 'Fecha', subtitle: 'Indica cuándo ocurrió o corresponde el movimiento.', items: [ { title: 'Por qué importa', text: 'La fecha define a qué semana o período cae el movimiento y también afecta recordatorios y cuotas.' } ] },
+  form_recordatorio: { title: 'Avisarme 3 días antes', subtitle: 'Activa un recordatorio por email antes del vencimiento.', items: [ { title: 'Cuándo conviene', text: 'Es útil para gastos o vencimientos que no querés olvidarte.' } ] },
+  form_guardar: { title: 'Guardar', subtitle: 'Confirma y crea el movimiento en la base.', items: [ { title: 'Qué hace', text: 'Toma los datos del formulario y los guarda en el período correspondiente.' } ] },
+  form_tarjetas_manager: { title: 'Mis tarjetas', subtitle: 'Administrador de tarjetas disponibles en la cuenta.', items: [ { title: 'Qué podés hacer', text: 'Agregar tarjetas nuevas para usarlas después al cargar consumos o pagos.' } ] },
+  compras_nueva: { title: 'Nueva compra', subtitle: 'Arranca una compra vacía en la sección Compras.', items: [ { title: 'Uso típico', text: 'Ideal para armar una compra del súper o una lista grande antes de llevarla a gastos.' } ] },
+  compras_total: { title: 'Total de compra', subtitle: 'Suma todos los subtotales cargados en la tabla.', items: [ { title: 'Para qué sirve', text: 'Te da el total acumulado antes de enviar la compra a gastos.' } ] },
+  compras_add_item: { title: 'Añadir artículo', subtitle: 'Agrega una fila nueva a la tabla de compras.', items: [ { title: 'Qué cargás', text: 'Precio, cantidad y descripción para que el subtotal se calcule solo.' } ] },
+  compras_importar: { title: 'Agregar compra a gastos', subtitle: 'Convierte la compra armada en movimientos reales.', items: [ { title: 'Resultado', text: 'La lista deja de ser una tabla temporal y pasa a guardarse dentro de la app.' } ] },
+  compartido_tipo: { title: 'Tipo del movimiento recibido', subtitle: 'Te deja decidir cómo guardar el gasto compartido.', items: [ { title: 'Flexibilidad', text: 'Podés aceptarlo como gasto, crédito, movimiento fijo o tarjeta según cómo lo manejes vos.' } ] },
+  compartido_monto: { title: 'Monto compartido', subtitle: 'Es el valor que te llegó del gasto compartido.', items: [ { title: 'Revisión', text: 'Se precarga con el valor recibido, pero podés revisarlo antes de guardarlo.' } ] },
+  compartido_fecha: { title: 'Fecha del gasto compartido', subtitle: 'Es la fecha con la que se va a guardar el movimiento si lo aceptás.', items: [ { title: 'Importancia', text: 'Define el período al que cae el gasto dentro de tu cuenta.' } ] },
+  compartido_guardar: { title: 'Cargar movimiento', subtitle: 'Acepta el gasto compartido y lo guarda en tu cuenta.', items: [ { title: 'Qué pasa después', text: 'Se crea el movimiento en tu app y el pendiente deja de figurar como pendiente.' } ] }
+};
+
+function ensureAppHelpPopup(){
+  let overlay = document.getElementById('cfgWeeklyInfoOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'cfgWeeklyInfoOverlay';
+    overlay.className = 'cfg-weekly-info-overlay';
+    document.body.appendChild(overlay);
+  }
+  overlay.innerHTML = `
+    <div class="cfg-weekly-info-card" onclick="event.stopPropagation()">
+      <div class="cfg-weekly-info-badge">💡</div>
+      <div class="cfg-weekly-info-title" id="appHelpTitle"></div>
+      <div class="cfg-weekly-info-subtitle" id="appHelpSubtitle"></div>
+      <div class="cfg-weekly-info-list" id="appHelpList"></div>
+      <div class="cfg-weekly-info-actions">
+        <button type="button" class="cfg-weekly-info-close" onclick="cerrarAyuda()">Entendido</button>
+      </div>
+    </div>
+  `;
+  overlay.onclick = window.cerrarAyuda;
+  return overlay;
+}
+
+function renderHelpItems(items = []){
+  return items.map(item => `<div class="cfg-weekly-info-item"><strong>${item.title}</strong><span>${item.text}</span></div>`).join('');
+}
+
+window.mostrarAyuda = key => {
+  const content = HELP_CONTENT[key] || { title: 'Ayuda', subtitle: '', items: [] };
+  const overlay = ensureAppHelpPopup();
+  document.getElementById('appHelpTitle').textContent = content.title || 'Ayuda';
+  document.getElementById('appHelpSubtitle').textContent = content.subtitle || '';
+  document.getElementById('appHelpList').innerHTML = renderHelpItems(content.items || []);
+  overlay.classList.add('visible');
+};
+
+window.cerrarAyuda = () => {
+  const overlay = document.getElementById('cfgWeeklyInfoOverlay');
+  if(overlay) overlay.classList.remove('visible');
+};
+
+window.mostrarInfoSemanal = () => mostrarAyuda('semanal_tab');
+window.cerrarInfoSemanal = () => cerrarAyuda();
+
+function createHelpButton(key, className = 'app-help-inline-btn', emoji = '💡'){
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = className;
+  btn.dataset.helpKey = key;
+  btn.setAttribute('aria-label', 'Ver ayuda');
+  btn.textContent = emoji;
+  btn.onclick = e => {
+    e.preventDefault();
+    e.stopPropagation();
+    mostrarAyuda(key);
+  };
+  return btn;
+}
+
+function appendInlineHelp(el, key){
+  if(!el || el.querySelector(`button[data-help-key="${key}"]`)) return;
+  el.appendChild(createHelpButton(key));
+}
+
+function syncHelpVisibility(root = document){
+  const hidden = userConfig.ayudas === false;
+  root.querySelectorAll('.app-help-inline-btn, .sem-info-side-btn').forEach(btn => {
+    btn.style.display = hidden ? 'none' : '';
+  });
+}
+
+function attachFieldHelp(inputId, key, root = document){
+  const input = root.getElementById ? root.getElementById(inputId) : root.querySelector(`#${inputId}`);
+  if(!input) return;
+  const group = input.closest('.form-group, .cuotas-input-wrap');
+  const label = group?.querySelector('label');
+  appendInlineHelp(label, key);
+}
+
+function decorateStaticHelp(root = document){
+  appendInlineHelp(root.querySelector('.tabs .tab:nth-child(1)'), 'tab_resumen');
+  appendInlineHelp(root.querySelector('.tabs .tab:nth-child(2)'), 'tab_cargar');
+  appendInlineHelp(root.querySelector('.tabs .tab:nth-child(3)'), 'tab_compras');
+  appendInlineHelp(root.querySelector('#pillOficial .usd-pill-label'), 'usd_oficial');
+  appendInlineHelp(root.querySelector('#pillTarjeta .usd-pill-label'), 'usd_tarjeta');
+  appendInlineHelp(root.querySelector('.sum-card.ing .label'), 'sum_ingresos');
+  appendInlineHelp(root.querySelector('.sum-card.gas .label'), 'sum_gastos');
+  appendInlineHelp(root.querySelector('.sum-card.tar .label'), 'sum_tarjetas');
+  appendInlineHelp(root.querySelector('.sum-card.sal .label'), 'sum_saldo');
+  appendInlineHelp(root.querySelector('.sum-card.pre .label'), 'sum_presupuesto');
+  appendInlineHelp(root.querySelector('.sum-card.fijo .label'), 'sum_fijos');
+  appendInlineHelp(root.querySelector('.tarjetas-panel-title'), 'tarjetas_panel');
+  appendInlineHelp(root.querySelector('.fijo-panel-title'), 'fijo_panel');
+  appendInlineHelp(root.querySelector('.btn-duplicar-mes'), 'duplicar_mes');
+  appendInlineHelp(root.querySelector('#btnGuardar'), 'form_guardar');
+  appendInlineHelp(root.querySelector('.tarjetas-manager-title'), 'form_tarjetas_manager');
+  appendInlineHelp(root.querySelector('.super-nueva-btn'), 'compras_nueva');
+  appendInlineHelp(root.querySelector('.super-total-label'), 'compras_total');
+  appendInlineHelp(root.querySelector('.super-add-btn'), 'compras_add_item');
+  appendInlineHelp(root.querySelector('button[onclick="superAgregarAGastos()"]'), 'compras_importar');
+  attachFieldHelp('btn-ing', 'form_tipo', root);
+  attachFieldHelp('fDesc', 'form_descripcion', root);
+  attachFieldHelp('fMonto', 'form_monto', root);
+  attachFieldHelp('fCuotas', 'form_cuotas', root);
+  attachFieldHelp('fFecha', 'form_fecha', root);
+  attachFieldHelp('cfDesc', 'form_descripcion', root);
+  attachFieldHelp('cfMonto', 'compartido_monto', root);
+  attachFieldHelp('cfFecha', 'compartido_fecha', root);
+  appendInlineHelp(root.querySelector('#tarjetaSelWrap label'), 'form_tarjeta');
+  appendInlineHelp(root.querySelector('#mBtn-ars')?.closest('.form-group')?.querySelector('label'), 'form_moneda');
+  appendInlineHelp(root.querySelector('#recordatorioWrap .recordatorio-label'), 'form_recordatorio');
+  appendInlineHelp(root.querySelector('#modalCompartidoForm .form-group label'), 'compartido_tipo');
+  appendInlineHelp(root.querySelector('#modalCompartidoForm #cf-mBtn-ars')?.closest('.form-group')?.querySelector('label'), 'form_moneda');
+  appendInlineHelp(root.querySelector('#cfRecordatorioWrap .recordatorio-label'), 'form_recordatorio');
+  appendInlineHelp(root.querySelector('#cfBtnGuardar'), 'compartido_guardar');
+  syncHelpVisibility(root);
+}
+
+function initHelpSystem(){
+  decorateStaticHelp(document);
+  const appRoot = document.getElementById('app-wrapper') || document.body;
+  if(appRoot._helpObserverAttached) return;
+  const observer = new MutationObserver(() => decorateStaticHelp(document));
+  observer.observe(appRoot, { childList: true, subtree: true });
+  appRoot._helpObserverAttached = true;
+}
+
 window.cerrarConfig = () => {
   const o = document.getElementById('cfgOverlay'); if(o) o.remove();
 };
@@ -1583,6 +1901,7 @@ window.cerrarConfig = () => {
 window.guardarConfigYCerrar = async () => {
   cerrarConfig();
   await guardarConfig();
+  syncHelpVisibility(document);
   renderResumen();
   showToast('✅ Configuración guardada!');
 };
@@ -2734,6 +3053,23 @@ function renderResumen(){
     </div>`;
   }
   container.innerHTML=html||'<div class="empty">Sin movimientos</div>';
+  container.querySelectorAll('.sem-group').forEach(groupEl => {
+    if(groupEl.parentElement?.classList.contains('sem-group-row')) return;
+    const row = document.createElement('div');
+    row.className = 'sem-group-row';
+    groupEl.parentNode.insertBefore(row, groupEl);
+    row.appendChild(groupEl);
+    const infoBtn = document.createElement('button');
+    infoBtn.type = 'button';
+    infoBtn.className = 'sem-info-side-btn';
+    infoBtn.setAttribute('aria-label', 'Ver detalle del tab semanal');
+    infoBtn.textContent = '💡';
+    infoBtn.onclick = e => {
+      e.stopPropagation();
+      mostrarInfoSemanal();
+    };
+    row.appendChild(infoBtn);
+  });
 }
 
 function renderInforme(){
@@ -4382,6 +4718,7 @@ function formBindNav(){
 
 // Llamar cuando se carga la app
 document.addEventListener('DOMContentLoaded', formBindNav);
+document.addEventListener('DOMContentLoaded', initHelpSystem);
 
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>

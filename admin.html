@@ -329,7 +329,8 @@ function renderUsers() {
     <div class="user-card">
       <div class="row">
         <div>
-          <div style="font-size:16px;font-weight:800">${item.email || 'Sin email'}</div>
+          <div style="font-size:17px;font-weight:800">${item.displayName || item.name || 'Sin nombre'}</div>
+          <div class="meta" style="font-size:14px;color:var(--text)">${item.email || 'Sin email'}</div>
           <div class="meta">UID: ${item.uid || '—'}</div>
           <div class="meta">Creado: ${formatDate(item.createdAt)}</div>
           <div class="meta">Último acceso: ${formatDate(item.lastLoginAt)}</div>
