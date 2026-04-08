@@ -1,4 +1,4 @@
-
+﻿
 
 
 
@@ -696,6 +696,72 @@
   .dup-option:hover { border-color: var(--blue); background: rgba(108,140,255,.08); }
   .dup-option input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--blue); cursor: pointer; flex-shrink:0; }
   .dup-option span { font-family: Arial Black,sans-serif; font-size: 13px; font-weight: 700; color: var(--text); }
+  .dup-days-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0 0 8px;
+    font-family: Arial Black,sans-serif;
+    font-weight: 700;
+    letter-spacing: .6px;
+    text-transform: uppercase;
+  }
+  .dup-days-chips {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    width: 100%;
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+  .dup-day-chip {
+    border: 1.5px solid var(--border);
+    background: rgba(243,236,255,.55);
+    color: var(--text);
+    border-radius: 999px;
+    min-width: 56px;
+    padding: 8px 14px;
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .dup-day-chip:hover { border-color: var(--blue); color: var(--blue); background: rgba(108,140,255,.08); }
+  .dup-day-chip.active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: rgba(108,140,255,.14);
+    box-shadow: 0 3px 10px rgba(108,140,255,.2);
+  }
+  .dup-modal-box {
+    width: 100%;
+    max-width: 420px;
+  }
+  .dup-modal-box .modal-group { margin-bottom: 14px; }
+  .dup-days-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 2px;
+  }
+  .dup-days-head .app-help-inline-btn {
+    width: 26px;
+    height: 26px;
+    margin-left: 0;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: rgba(243,236,255,.65);
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+  }
+  .dup-days-head .app-help-inline-btn:hover {
+    border-color: var(--blue);
+    background: rgba(108,140,255,.1);
+  }
 
 
   /* ── TUERCA ── */
@@ -753,13 +819,19 @@
   .cfg-overlay {
     position: fixed; inset: 0; z-index: 600;
     background: rgba(180,170,255,.25); backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
+    display: flex; align-items: center; justify-content: center;
+    padding: clamp(8px, 2.4vw, 20px);
   }
   .cfg-box {
-    background: #fff; border-radius: 24px; padding: 28px 24px;
-    width: 100%; max-width: 420px;
+    background: #fff; border-radius: 24px;
+    padding: clamp(16px, 3.8vw, 28px) clamp(14px, 3.2vw, 24px);
+    width: min(94vw, 560px);
     box-shadow: 0 20px 60px rgba(108,80,255,.18);
     border: 1.5px solid rgba(220,215,255,.8);
+    max-height: none;
+    overflow: visible;
+    transform-origin: center center;
+    will-change: transform;
   }
   .cfg-title { font-family: Arial Black,sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 22px; display:flex; align-items:center; gap:8px; }
   .cfg-section-title { font-size: 11px; color: var(--blue); font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display:flex; align-items:center; gap:6px; }
@@ -836,7 +908,9 @@
     cursor: pointer; transition: all .15s; display:flex; align-items:center; justify-content:center;
   }
   .cfg-dia.active { border-color: var(--blue); color: var(--blue); background: rgba(108,140,255,.12); }
-  .cfg-btns { display: flex; gap: 10px; margin-top: 24px; }
+  .cfg-btns {
+    display: flex; gap: 10px; margin-top: 18px;
+  }
   .cfg-btn-cancel { flex:1; padding:13px; border-radius:12px; border:1.5px solid var(--border); background:none; color:var(--muted); font-family:Arial Black,sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition: border-color .2s; }
   .cfg-btn-cancel:hover { border-color: var(--red); color: var(--red); }
   .cfg-btn-ok { flex:2; padding:13px; border-radius:12px; border:none; background: linear-gradient(135deg,#00ffd5,#8f6bff); color:#fff; font-family:Arial Black,sans-serif; font-size:13px; font-weight:800; cursor:pointer; }
@@ -1640,11 +1714,30 @@ window.abrirConfig = () => {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  window.removeEventListener('resize', cfgResizeHandler);
+  window.addEventListener('resize', cfgResizeHandler);
   // marcar día de cobro activo
   document.querySelectorAll('.cfg-dia-sem').forEach((b,i) =>
     b.classList.toggle('active', i === (userConfig.diaCobro ?? 5))
   );
+  requestAnimationFrame(window.fitConfigBoxToViewport);
 };
+
+window.fitConfigBoxToViewport = () => {
+  const overlay = document.getElementById('cfgOverlay');
+  const box = overlay?.querySelector('.cfg-box');
+  if(!box) return;
+  box.style.transform = 'scale(1)';
+  const margin = 20;
+  const rect = box.getBoundingClientRect();
+  const maxW = Math.max(200, window.innerWidth - margin);
+  const maxH = Math.max(200, window.innerHeight - margin);
+  const scaleW = maxW / rect.width;
+  const scaleH = maxH / rect.height;
+  const scale = Math.min(1, scaleW, scaleH);
+  box.style.transform = `scale(${scale})`;
+};
+const cfgResizeHandler = () => window.fitConfigBoxToViewport();
 
 window.setCfgFrec = frec => {
   userConfig.frecuencia = frec;
@@ -1656,6 +1749,7 @@ window.setCfgFrec = frec => {
   });
   const wrap = document.getElementById('cfgDiaCobroWrap');
   if(wrap) wrap.classList.toggle('visible', frec !== 'mensual');
+  requestAnimationFrame(window.fitConfigBoxToViewport);
 };
 
 window.setCfgDia = dia => {
@@ -1747,6 +1841,7 @@ const HELP_CONTENT = {
   fijo_panel: { title: 'Movimientos fijos', subtitle: 'Panel para deudas o cobros que se van cancelando en partes.', items: [ { title: 'Cómo funciona', text: 'Cada movimiento fijo puede recibir pagos o cobros parciales hasta quedar saldado.' } ] },
   semanal_tab: { title: 'Tab semanal', subtitle: 'Divide tus movimientos en semanas reales según tu configuración.', items: [ { title: 'Primera semana del período', text: 'La primera semana se rige por tu configuración: toma el primer día de cobro elegido después del día de corte. Ejemplo: si el corte es el 10 y elegís sábado, la primera semana empieza en el primer sábado después del 10.' }, { title: 'Bloques semanales reales', text: 'Desde ese punto, la app arma cada bloque semanal para que ingresos, gastos y tarjetas caigan dentro de la semana que realmente te corresponde.' }, { title: 'Resumen más claro', text: 'Te muestra cuánto entró, cuánto salió y cómo quedó tu balance en cada semana puntual, sin mezclarlo con todo el mes.' }, { title: 'Si cambiás la configuración', text: 'Cuando cambiás el día de corte o el día de cobro, las semanas se recalculan con esa nueva referencia.' } ] },
   duplicar_mes: { title: 'Duplicar este mes al siguiente', subtitle: 'Copia una base del mes actual al próximo.', items: [ { title: 'Uso típico', text: 'Sirve cuando el mes siguiente va a ser parecido y después solo querés ajustar diferencias.' } ] },
+  duplicar_dias: { title: 'Días a duplicar', subtitle: 'Genera copias adicionales del movimiento sumando días desde la fecha original.', items: [ { title: 'Selección múltiple', text: 'Podés marcar más de un chip. Cada chip crea un duplicado independiente.' }, { title: 'Cómo calcula', text: 'Los +7, +14, +21 y +28 se aplican siempre sobre la fecha del movimiento original, no sobre la fecha de hoy.' }, { title: 'Ejemplo', text: 'Si marcás +7 y +14, se crean dos movimientos: uno a 7 días y otro a 14 días desde la fecha base.' } ] },
   form_tipo: { title: 'Tipo', subtitle: 'Define cómo se comporta el movimiento dentro de la app.', items: [ { title: 'Ingreso', text: 'Suma dinero al período.' }, { title: 'Gasto', text: 'Resta dinero directamente.' }, { title: 'Crédito', text: 'Te permite registrar algo financiado o prestado.' }, { title: 'Mov. fijo', text: 'Sirve para deudas o cobros que seguís en el tiempo.' } ] },
   form_tarjeta: { title: 'Tarjeta', subtitle: 'Elegís a qué tarjeta pertenece el consumo.', items: [ { title: 'Importancia', text: 'Así la deuda y los pagos quedan asociados a la tarjeta correcta.' } ] },
   form_descripcion: { title: 'Descripción', subtitle: 'Nombre corto para reconocer el movimiento.', items: [ { title: 'Consejo', text: 'Usá algo claro como sueldo, súper, alquiler o gimnasio.' } ] },
@@ -1895,6 +1990,7 @@ function initHelpSystem(){
 }
 
 window.cerrarConfig = () => {
+  window.removeEventListener('resize', cfgResizeHandler);
   const o = document.getElementById('cfgOverlay'); if(o) o.remove();
 };
 
@@ -2435,20 +2531,11 @@ window.parseMontoInput = el => parseFloat((el.value||'').replace(/\./g,'').repla
 window.copiarMov = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
-  // Calcular fecha sugerida: un mes adelante
-  let fechaSug = '';
-  if(mov.fecha){
-    const [_fy,_fm,_fd] = mov.fecha.split('-').map(Number);
-    let nm = _fm, ny = _fy;
-    if(nm > 11){ nm = 0; ny++; }
-    fechaSug = `${ny}-${String(nm+1).padStart(2,'0')}-${String(_fd).padStart(2,'0')}`;
-  }
-  const MESES_DP=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-  const fechaLabel = fechaSug ? (()=>{ const p=fechaSug.split('-'); return parseInt(p[2])+' de '+MESES_DP[parseInt(p[1])-1]+' '+p[0]; })() : 'Seleccioná una fecha';
+  const fechaMovimiento = mov.fecha || null;
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   ov.innerHTML = `
-    <div class="modal-box" style="text-align:center">
+    <div class="modal-box dup-modal-box" style="text-align:center">
       <div style="font-size:28px;margin-bottom:8px">📋</div>
       <div class="modal-title" style="margin-bottom:4px">Duplicar movimiento</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:16px">${mov.desc}</div>
@@ -2457,7 +2544,7 @@ window.copiarMov = id => {
         <div class="date-picker-wrap" id="dupDpWrap">
           <div class="date-picker-display" id="dupDpDisplay" style="padding:0;overflow:hidden;">
             <input id="dupDpText" type="text" inputmode="numeric" placeholder="Ej: 2 6 o 5/6/25" autocomplete="off"
-              value="${fechaSug ? (()=>{ const p=fechaSug.split('-'); return parseInt(p[2])+'/'+(parseInt(p[1]))+'/'+p[0]; })() : ''}"
+              value=""
               style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
               oninput="dpModParseText('dup',this.value,'dupFecha','dupDpText','dupDpPopup')"
               onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('dup',this.value,'dupFecha','dupDpText','dupDpPopup',true);}"
@@ -2466,7 +2553,18 @@ window.copiarMov = id => {
           </div>
           <div class="dp-popup" id="dupDpPopup" style="display:none"></div>
         </div>
-        <input type="hidden" id="dupFecha" value="${fechaSug}">
+        <input type="hidden" id="dupFecha" value="">
+      </div>
+      <div class="modal-group" style="text-align:left;margin-top:2px">
+        <div class="dup-days-head" id="dupDaysHead">
+          <div class="dup-days-label">Días a duplicar</div>
+        </div>
+        <div class="dup-days-chips" id="dupDiasChips">
+          <button type="button" class="dup-day-chip" data-days="7" onclick="dupToggleChip(this)">+7</button>
+          <button type="button" class="dup-day-chip" data-days="14" onclick="dupToggleChip(this)">+14</button>
+          <button type="button" class="dup-day-chip" data-days="21" onclick="dupToggleChip(this)">+21</button>
+          <button type="button" class="dup-day-chip" data-days="28" onclick="dupToggleChip(this)">+28</button>
+        </div>
       </div>
       <div class="modal-btns" style="margin-top:16px">
         <button class="modal-btn-cancel" onclick="this.closest('.modal-overlay').remove()">Cancelar</button>
@@ -2474,24 +2572,62 @@ window.copiarMov = id => {
       </div>
     </div>`;
   document.body.appendChild(ov);
-  dpModInit('dup', fechaSug || null);
+  if(userConfig?.ayudas !== false){
+    appendInlineHelp(ov.querySelector('#dupDaysHead'), 'duplicar_dias');
+  }
+  syncHelpVisibility(ov);
+  dpModInit('dup', fechaMovimiento);
 };
 
+window.dupToggleChip = el => {
+  if(!el) return;
+  el.classList.toggle('active');
+};
+function dupGetSelectedDays(){
+  return Array.from(document.querySelectorAll('#dupDiasChips .dup-day-chip.active'))
+    .map(el => parseInt(el.dataset.days, 10))
+    .filter(n => !isNaN(n) && n > 0);
+}
+function addDaysToISO(isoDate, days){
+  const [y,m,d] = (isoDate||'').split('-').map(Number);
+  const base = new Date(y, (m||1)-1, d||1);
+  base.setHours(12,0,0,0);
+  base.setDate(base.getDate() + days);
+  return base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
+}
 window.copiarMovConfirmar = async id => {
   const fecha = document.getElementById('dupFecha')?.value || null;
+  const selectedDays = dupGetSelectedDays();
   document.querySelector('.modal-overlay')?.remove();
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
-  const d = {...mov}; delete d.id; delete d.grupoId;
-  d.timestamp = Date.now();
-  if(fecha){
-    d.fecha = fecha;
-    const p = getPeriodo(new Date(fecha+'T12:00:00'), d.tipo, d.tarjetaId||null);
-    d.mes=p.mes; d.anio=p.anio; d.semana=p.semana;
+  const fechasDuplicado = [];
+  if(selectedDays.length){
+    if(!mov.fecha){
+      showToast('Atencion: este movimiento no tiene fecha para aplicar +dias', true);
+      return;
+    }
+    selectedDays.forEach(days => fechasDuplicado.push(addDaysToISO(mov.fecha, days)));
+  }else if(fecha){
+    fechasDuplicado.push(fecha);
+  }else if(mov.fecha){
+    fechasDuplicado.push(mov.fecha);
+  }else{
+    fechasDuplicado.push(null);
   }
   try{
-    await addDoc(userCol('movimientos'), d);
-    showToast('📋 Duplicado!');
+    for(let i=0;i<fechasDuplicado.length;i++){
+      const fechaDup = fechasDuplicado[i];
+      const d = {...mov}; delete d.id; delete d.grupoId;
+      d.timestamp = Date.now() + i;
+      if(fechaDup){
+        d.fecha = fechaDup;
+        const p = getPeriodo(new Date(fechaDup+'T12:00:00'), d.tipo, d.tarjetaId||null);
+        d.mes=p.mes; d.anio=p.anio; d.semana=p.semana;
+      }
+      await addDoc(userCol('movimientos'), d);
+    }
+    showToast(fechasDuplicado.length>1 ? `${fechasDuplicado.length} duplicados!` : 'Duplicado!');
   }catch(e){ showToast('❌ Error al duplicar',true); }
 };
 
@@ -4727,3 +4863,5 @@ document.addEventListener('DOMContentLoaded', initHelpSystem);
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
+
+
