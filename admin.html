@@ -1,532 +1,1233 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mis Finanzas — Admin</title>
-<link rel="icon" type="image/png" href="https://tizyjenayrcdkcodsjnc.supabase.co/storage/v1/object/public/fotos/4c249a09-472e-4634-870d-5a6fd9b00bfd.png">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0f;
-  --card:#111118;
-  --border:rgba(255,255,255,.08);
-  --text:#f0f0f8;
-  --muted:#6b6b8a;
-  --accent:#7c6cfa;
-  --accent2:#fa6c9f;
-  --green:#00e5a0;
-  --red:#ff6b81;
-  --orange:#ffb357;
-  --input-bg:rgba(255,255,255,.05);
-}
-body{
-  min-height:100vh;
-  background:
-    radial-gradient(circle at top left, rgba(124,108,250,.18), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(250,108,159,.16), transparent 35%),
-    var(--bg);
-  color:var(--text);
-  font-family:'DM Sans',sans-serif;
-  padding:24px;
-}
-.shell{max-width:1180px;margin:0 auto}
-.hero{margin-bottom:22px}
-.eyebrow{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.title{font-family:'Syne',sans-serif;font-size:38px;font-weight:800;line-height:1}
-.sub{margin-top:8px;color:var(--muted);font-size:15px}
-.view{display:none}
-.view.visible{display:block}
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:24px;
-  padding:26px;
-  box-shadow:0 20px 50px rgba(0,0,0,.28);
-}
-.card.narrow{max-width:460px;margin:0 auto}
-.field{margin-bottom:16px}
-.field label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-.field input{
-  width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:14px;
-  padding:14px 16px;color:var(--text);font-size:15px;outline:none
-}
-.field input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,108,250,.14)}
-.btn{
-  border:none;border-radius:14px;padding:13px 16px;cursor:pointer;
-  font-family:'Syne',sans-serif;font-size:14px;font-weight:700;transition:.2s;
-}
-.btn:hover{transform:translateY(-1px)}
-.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
-.btn-secondary{background:rgba(255,255,255,.04);border:1px solid var(--border);color:var(--text)}
-.btn-danger{background:rgba(255,107,129,.08);border:1px solid rgba(255,107,129,.24);color:#ff9dad}
-.btn-warn{background:rgba(255,179,87,.08);border:1px solid rgba(255,179,87,.25);color:var(--orange)}
-.msg{display:none;font-size:13px;padding:12px 14px;border-radius:12px;margin-bottom:16px}
-.msg.visible{display:block}
-.msg.ok{background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.22);color:var(--green)}
-.msg.err{background:rgba(255,107,129,.08);border:1px solid rgba(255,107,129,.22);color:#ff9dad}
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap
-}
-.whoami{display:flex;gap:10px;align-items:center}
-.whoami-badge{
-  padding:9px 12px;border-radius:999px;background:rgba(124,108,250,.12);color:#d6d2ff;font-size:13px;font-weight:700
-}
-.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.tab{
-  padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.04);
-  color:var(--muted);cursor:pointer;font-family:'Syne',sans-serif;font-size:13px;font-weight:700
-}
-.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
-.panel{display:none}
-.panel.visible{display:block}
-.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-.panel-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
-.grid{display:grid;gap:14px}
-.pending-card,.user-card,.audit-card{
-  background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:18px;padding:16px
-}
-.row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
-.meta{color:var(--muted);font-size:13px;margin-top:6px}
-.pill{
-  display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700
-}
-.pill.pending{background:rgba(255,179,87,.12);color:var(--orange)}
-.pill.approved{background:rgba(0,229,160,.1);color:var(--green)}
-.pill.rejected,.pill.disabled{background:rgba(255,107,129,.1);color:#ff9dad}
-.pill.active{background:rgba(124,108,250,.12);color:#d6d2ff}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.empty{
-  border:1px dashed var(--border);border-radius:18px;padding:22px;color:var(--muted);text-align:center
-}
-.audit-grid{display:grid;gap:10px}
-@media (max-width:760px){
-  body{padding:16px}
-  .card{padding:18px}
-  .title{font-size:30px}
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin</title>
+  <style>
+    :root {
+      --bg: #f4f2ff;
+      --panel: #ffffff;
+      --line: #dedbf4;
+      --text: #334155;
+      --muted: #7a85a1;
+      --accent: #6d74ff;
+      --accent-soft: #eef0ff;
+      --shadow: 0 12px 30px rgba(97, 83, 182, 0.08);
+      --success: #1f9254;
+      --danger: #c23b52;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      color: var(--text);
+      background: linear-gradient(180deg, #f8f7ff 0, #f2f0ff 140px, var(--bg) 100%);
+    }
+
+    .topbar { padding: 28px 28px 18px; }
+    .topbar h1 { margin: 0; font-size: 30px; color: #2f3c66; }
+    .topbar p { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+
+    .page {
+      padding: 20px 24px 28px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .toolbar,
+    .upload-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: rgba(255,255,255,0.65);
+      border-top: 1px solid #ece9ff;
+      border-bottom: 1px solid #ece9ff;
+    }
+
+    .tab-button {
+      height: 46px;
+      border: 0;
+      border-bottom: 3px solid transparent;
+      background: transparent;
+      color: #697391;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background: linear-gradient(180deg, rgba(255,255,255,0.25), rgba(109,116,255,0.03));
+    }
+
+    .panel-section[hidden] { display: none; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    .section-head h2 { margin: 0; font-size: 24px; color: #36456f; }
+    .section-head p { margin: 6px 0 0; color: var(--muted); }
+
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .toolbar {
+      grid-template-columns: 1fr auto auto;
+      margin-bottom: 16px;
+    }
+
+    .search,
+    .file-label {
+      height: 44px;
+      border: 1px solid #d8dff7;
+      border-radius: 12px;
+      background: #fbfbff;
+      padding: 0 14px;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .file-label {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .button {
+      height: 44px;
+      border: 1px solid #cbd3f8;
+      border-radius: 12px;
+      background: #fff;
+      padding: 0 16px;
+      color: #44506f;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .button.success {
+      border-color: #4bae78;
+      background: var(--success);
+      color: #fff;
+    }
+
+    .button.danger {
+      border-color: var(--danger);
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid #e1e6fb;
+      border-radius: 16px;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid #edf0ff;
+      text-align: left;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f7f8ff;
+      color: #58627d;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tbody tr:hover { background: #fafbff; }
+
+    .actions-cell { width: 92px; text-align: center; }
+    .icon-button {
+      width: 34px;
+      height: 34px;
+      border: 1px solid #d5dbfb;
+      border-radius: 10px;
+      background: #f8f9ff;
+      color: #5966b3;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .row-input {
+      width: 100%;
+      height: 36px;
+      border: 1px solid #d8dff7;
+      border-radius: 10px;
+      background: #fbfbff;
+      padding: 0 10px;
+      font: inherit;
+      color: var(--text);
+    }
+
+    .status {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fbfbff;
+      border: 1px solid #d8ddf8;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .status.success { color: var(--success); border-color: #bfe8ce; background: #f5fff8; }
+    .status.error { color: var(--danger); border-color: #f0c3cc; background: #fff6f8; }
+
+    .empty,
+    .placeholder {
+      padding: 42px 18px;
+      border: 1px dashed #d8ddf8;
+      border-radius: 16px;
+      background: #fbfbff;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .placeholder strong {
+      display: block;
+      margin-bottom: 8px;
+      color: #44506f;
+      font-size: 18px;
+    }
+
+    .note { margin-top: 12px; color: var(--muted); font-size: 13px; }
+
+    .upload-grid { grid-template-columns: 1fr auto auto; margin-bottom: 16px; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(25, 31, 52, 0.52);
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+
+    .modal-card {
+      width: min(720px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .modal-card h3 {
+      margin: 0;
+      font-size: 24px;
+      color: #36456f;
+    }
+
+    .modal-card p {
+      margin: 8px 0 0;
+      color: var(--muted);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .import-results {
+      margin-top: 14px;
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .toolbar,
+      .upload-grid,
+      .tabs { grid-template-columns: 1fr; }
+
+      .page { padding: 0 16px 20px; }
+      .tab-button { font-size: 18px; }
+      .section-head { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
 </head>
 <body>
-<div class="shell">
-  <div class="hero">
-    <div class="eyebrow">Panel interno</div>
-    <div class="title">Admin Mis Finanzas</div>
-    <div class="sub">Gestioná altas pendientes, usuarios existentes y auditoría desde un solo lugar.</div>
-  </div>
+  <header class="topbar">
+    <h1>Administracion</h1>
+    <p>Panel simple para ver proveedores, importar listas de precios y revisar pedidos pendientes.</p>
+  </header>
 
-  <div class="view visible" id="viewLogin">
-    <div class="card narrow">
-      <div class="panel-title" style="margin-bottom:14px">Ingresar</div>
-      <div class="msg" id="loginMsg"></div>
-      <div class="field">
-        <label>Email</label>
-        <input type="email" id="adminLoginEmail" autocomplete="email" placeholder="Tu email admin">
-      </div>
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" id="adminLoginPass" autocomplete="current-password" placeholder="Tu contraseña">
-      </div>
-      <button class="btn btn-primary" id="btnAdminLogin" style="width:100%" onclick="adminLogin()">Entrar al panel</button>
-    </div>
-  </div>
+  <main class="page">
+    <nav class="tabs" aria-label="Secciones de administracion">
+      <button class="tab-button active" type="button" data-tab="proveedores">Proveedores</button>
+      <button class="tab-button" type="button" data-tab="clientes">Clientes</button>
+      <button class="tab-button" type="button" data-tab="listas">Listas de precios</button>
+      <button class="tab-button" type="button" data-tab="pedidos">Pedidos pendientes</button>
+    </nav>
 
-  <div class="view" id="viewPin">
-    <div class="card narrow">
-      <div class="panel-title" style="margin-bottom:14px">Verificación admin</div>
-      <div class="msg" id="pinMsg"></div>
-      <div class="meta" style="margin-bottom:16px">Estás entrando como <strong id="pinEmailLabel">—</strong>. Ingresá tu PIN para habilitar acciones sensibles.</div>
-      <div class="field">
-        <label>PIN admin</label>
-        <input type="password" id="adminPinInput" inputmode="numeric" placeholder="PIN privado">
-      </div>
-      <div class="actions">
-        <button class="btn btn-primary" id="btnVerifyPin" onclick="verificarAdminPin()">Verificar PIN</button>
-        <button class="btn btn-secondary" onclick="adminLogout()">Salir</button>
-      </div>
-    </div>
-  </div>
-
-  <div class="view" id="viewBlocked">
-    <div class="card narrow">
-      <div class="panel-title" style="margin-bottom:10px">Acceso denegado</div>
-      <div class="msg visible err">Esta cuenta no tiene permisos para ingresar al panel admin.</div>
-      <button class="btn btn-secondary" onclick="adminLogout()">Cerrar sesión</button>
-    </div>
-  </div>
-
-  <div class="view" id="viewPanel">
-    <div class="card">
-      <div class="topbar">
-        <div class="whoami">
-          <div class="whoami-badge" id="adminBadge">Admin</div>
-          <div class="meta" id="adminState">PIN validado</div>
-        </div>
-        <div class="actions" style="margin-top:0">
-          <button class="btn btn-secondary" onclick="refrescarTodo()">Actualizar</button>
-          <button class="btn btn-secondary" onclick="adminLogout()">Salir</button>
-        </div>
-      </div>
-
-      <div class="msg" id="panelMsg"></div>
-
-      <div class="tabs">
-        <button class="tab active" onclick="setAdminTab('pending')">Pendientes</button>
-        <button class="tab" onclick="setAdminTab('users')">Usuarios</button>
-        <button class="tab" onclick="setAdminTab('audit')">Auditoría</button>
-      </div>
-
-      <div class="panel visible" id="panel-pending">
-        <div class="panel-head">
-          <div class="panel-title">Registros pendientes</div>
-          <div class="meta" id="pendingCount">—</div>
-        </div>
-        <div class="grid" id="pendingList"></div>
-      </div>
-
-      <div class="panel" id="panel-users">
-        <div class="panel-head">
-          <div class="panel-title">Usuarios existentes</div>
-          <div class="meta" id="userCount">—</div>
-        </div>
-        <div class="grid" id="userList"></div>
-      </div>
-
-      <div class="panel" id="panel-audit">
-        <div class="panel-head">
-          <div class="panel-title">Auditoría admin</div>
-          <div class="meta" id="auditCount">—</div>
-        </div>
-        <div class="audit-grid" id="auditList"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
-  authDomain: "finanzas-51439.firebaseapp.com",
-  projectId: "finanzas-51439",
-  storageBucket: "finanzas-51439.firebasestorage.app",
-  messagingSenderId: "933125362701",
-  appId: "1:933125362701:web:d7976685e9a803753ef144"
-};
-
-const REGISTRO_WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-let adminUser = null;
-let adminPin = '';
-let pendingItems = [];
-let userItems = [];
-let auditItems = [];
-
-function showView(id) {
-  document.querySelectorAll('.view').forEach(v => v.classList.toggle('visible', v.id === id));
-}
-
-function showMsg(id, text, type = 'ok') {
-  const el = document.getElementById(id);
-  if(!el) return;
-  if(!text) {
-    el.className = 'msg';
-    el.textContent = '';
-    return;
-  }
-  el.textContent = text;
-  el.className = `msg visible ${type}`;
-}
-
-function panelMessage(text, type='ok') {
-  showMsg('panelMsg', text, type);
-}
-
-function formatDate(value) {
-  if(!value) return '—';
-  const d = new Date(value);
-  if(Number.isNaN(d.getTime())) return value;
-  return d.toLocaleString('es-AR', {
-    year:'numeric', month:'2-digit', day:'2-digit',
-    hour:'2-digit', minute:'2-digit'
-  });
-}
-
-async function authHeaders() {
-  if(!adminUser) throw new Error('No hay sesión activa');
-  const idToken = await adminUser.getIdToken(true);
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${idToken}`,
-    'x-admin-pin': adminPin
-  };
-}
-
-async function apiGet(path) {
-  const res = await fetch(`${REGISTRO_WORKER_URL}${path}`, {
-    method: 'GET',
-    headers: await authHeaders()
-  });
-  const data = await res.json().catch(() => ({}));
-  if(!res.ok || data.ok === false) throw new Error(data.error || 'Error de servidor');
-  return data;
-}
-
-async function apiPost(path, body = {}) {
-  const res = await fetch(`${REGISTRO_WORKER_URL}${path}`, {
-    method: 'POST',
-    headers: await authHeaders(),
-    body: JSON.stringify(body)
-  });
-  const data = await res.json().catch(() => ({}));
-  if(!res.ok || data.ok === false) throw new Error(data.error || 'Error de servidor');
-  return data;
-}
-
-function renderPending() {
-  document.getElementById('pendingCount').textContent = `${pendingItems.length} registros`;
-  const wrap = document.getElementById('pendingList');
-  if(!pendingItems.length) {
-    wrap.innerHTML = `<div class="empty">No hay registros pendientes ni históricos para mostrar.</div>`;
-    return;
-  }
-  wrap.innerHTML = pendingItems.map(item => `
-    <div class="pending-card">
-      <div class="row">
+    <section class="panel panel-section" data-panel="proveedores">
+      <div class="section-head">
         <div>
-          <div style="font-size:18px;font-weight:800">${item.nombre || 'Sin nombre'}</div>
-          <div class="meta">${item.email || 'Sin email'}</div>
-          <div class="meta">Enviado: ${formatDate(item.createdAt)}</div>
+          <h2>Proveedores</h2>
+          <p>Listado en vivo desde la tabla `proveedores` de Supabase.</p>
         </div>
-        <span class="pill ${item.estado === 'pendiente' ? 'pending' : item.estado === 'aprobado' ? 'approved' : 'rejected'}">${item.estado}</span>
+        <span class="tag">Editable</span>
       </div>
-      <div class="actions">
-        <a class="btn btn-secondary" href="${item.comprobanteUrl || '#'}" target="_blank" rel="noopener noreferrer">Ver comprobante</a>
-        ${item.estado === 'pendiente' ? `
-          <button class="btn btn-primary" onclick="aprobarPendiente('${item.id}')">Aprobar</button>
-          <button class="btn btn-danger" onclick="rechazarPendiente('${item.id}')">Rechazar</button>
-        ` : ''}
-      </div>
-    </div>
-  `).join('');
-}
 
-function renderUsers() {
-  document.getElementById('userCount').textContent = `${userItems.length} usuarios`;
-  const wrap = document.getElementById('userList');
-  if(!userItems.length) {
-    wrap.innerHTML = `<div class="empty">No se pudieron cargar usuarios.</div>`;
-    return;
-  }
-  wrap.innerHTML = userItems.map(item => `
-    <div class="user-card">
-      <div class="row">
-        <div>
-          <div style="font-size:17px;font-weight:800">${item.displayName || item.name || 'Sin nombre'}</div>
-          <div class="meta" style="font-size:14px;color:var(--text)">${item.email || 'Sin email'}</div>
-          <div class="meta">UID: ${item.uid || '—'}</div>
-          <div class="meta">Creado: ${formatDate(item.createdAt)}</div>
-          <div class="meta">Último acceso: ${formatDate(item.lastLoginAt)}</div>
-        </div>
-        <span class="pill ${item.disabled ? 'disabled' : 'active'}">${item.disabled ? 'deshabilitado' : 'activo'}</span>
+      <div class="toolbar">
+        <input id="buscarProveedor" class="search" type="search" placeholder="Buscar proveedor...">
+        <button id="reloadProviders" class="button" type="button">Recargar</button>
+        <button id="addProvider" class="button primary" type="button">Nuevo proveedor</button>
       </div>
-      <div class="actions">
-        ${item.disabled
-          ? `<button class="btn btn-primary" onclick="habilitarUsuario('${item.uid}')">Habilitar</button>`
-          : `<button class="btn btn-warn" onclick="deshabilitarUsuario('${item.uid}')">Deshabilitar</button>`
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45%;">Proveedor</th>
+              <th style="width: 27%;">Descuento</th>
+              <th style="width: 28%;">CUIT</th>
+              <th class="actions-cell">Editar</th>
+            </tr>
+          </thead>
+          <tbody id="tablaProveedores"></tbody>
+        </table>
+      </div>
+
+      <div id="sinResultados" class="empty" hidden>No hay proveedores que coincidan con la busqueda.</div>
+      <p class="note">Los cambios guardados aca impactan directamente en la tabla `proveedores`.</p>
+    </section>
+
+    <section class="panel panel-section" data-panel="clientes" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Clientes</h2>
+          <p>Listado simple para consultar y administrar clientes.</p>
+        </div>
+        <span class="tag">Próximo paso</span>
+      </div>
+
+      <div class="toolbar">
+        <input id="buscarCliente" class="search" type="search" placeholder="Buscar cliente...">
+        <button id="reloadClients" class="button" type="button">Recargar</button>
+        <button id="addClient" class="button primary" type="button">Nuevo cliente</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 45%;">Cliente</th>
+              <th style="width: 27%;">CUIT</th>
+              <th style="width: 28%;">Teléfono</th>
+              <th class="actions-cell">Editar</th>
+            </tr>
+          </thead>
+          <tbody id="tablaClientes"></tbody>
+        </table>
+      </div>
+
+      <div id="sinClientes" class="empty" hidden>No hay clientes que coincidan con la búsqueda.</div>
+      <p class="note">Esta sección está preparada con el mismo estilo que proveedores para conectarla después a Supabase.</p>
+    </section>
+
+    <section class="panel panel-section" data-panel="listas" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Listas de precios</h2>
+          <p>Importa el Excel de articulos, guardalo en Supabase y usalo luego en vendedores.</p>
+        </div>
+        <span class="tag">Articulos</span>
+      </div>
+
+      <div class="upload-grid">
+        <div id="priceFileName" class="file-label">Sin archivo seleccionado</div>
+        <label class="button" for="priceFile">Elegir archivo</label>
+        <button id="uploadPrices" class="button success" type="button">Subir a Supabase</button>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button id="deleteAllArticles" class="button danger" type="button">Borrar todos los artículos</button>
+      </div>
+
+      <input id="priceFile" type="file" accept=".xls,.xlsx,.csv" hidden>
+
+      <div id="uploadStatus" class="status">Esperando archivo. Estructura sugerida: codigo, articulo, proveedor, precio sin IVA, precio con IVA.</div>
+
+      <div class="table-wrap" style="margin-top: 16px;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 120px;">Codigo</th>
+              <th>Articulo</th>
+              <th style="width: 180px;">Proveedor</th>
+              <th style="width: 130px;">s/IVA</th>
+              <th style="width: 130px;">c/IVA</th>
+            </tr>
+          </thead>
+          <tbody id="tablaArticulos"></tbody>
+        </table>
+      </div>
+
+      <p class="note">El archivo se parsea en el navegador y luego se hace `upsert` a la tabla `articulos`.</p>
+    </section>
+
+    <section class="panel panel-section" data-panel="pedidos" hidden>
+      <div class="section-head">
+        <div>
+          <h2>Pedidos pendientes</h2>
+          <p>Pedidos creados desde la pantalla de vendedores y pendientes de gestión.</p>
+        </div>
+        <button id="reloadOrders" class="button" type="button">Recargar</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 18%;">Fecha</th>
+              <th style="width: 22%;">Proveedor</th>
+              <th style="width: 22%;">Cliente</th>
+              <th style="width: 12%;">Items</th>
+              <th style="width: 14%;">Total</th>
+              <th style="width: 12%;">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tablaPedidos"></tbody>
+        </table>
+      </div>
+
+      <div id="sinPedidos" class="empty" hidden>No hay pedidos pendientes.</div>
+    </section>
+  </main>
+
+  <div id="importModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <h3>Importador de lista de precios</h3>
+      <p id="importSummary">Esperando archivo.</p>
+
+      <div class="modal-actions">
+        <button id="btnUpdatePrices" class="button primary" type="button">Actualizar precios</button>
+        <button id="btnImportMissing" class="button" type="button">Importar faltantes</button>
+        <button id="btnFullSync" class="button success" type="button">Sincronizar completa</button>
+        <button id="btnCloseImport" class="button" type="button">Cerrar</button>
+      </div>
+
+      <div id="importResults" class="import-results"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const DEFAULT_SUPABASE_URL = "https://pnkozuyxsrzrotclqiwj.supabase.co";
+    const DEFAULT_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBua296dXl4c3J6cm90Y2xxaXdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDI0NjgsImV4cCI6MjA5MTE3ODQ2OH0.G0daPEmOD3xnEw9M2uLOBX2nzgV30l0JC4tL4x679lk";
+
+    const state = {
+      supabase: null,
+      providers: [],
+      filteredProviders: [],
+      editingProvider: null,
+      clients: [],
+      filteredClients: [],
+      editingClient: null,
+      orders: [],
+      pendingPriceRows: [],
+      loadedArticles: []
+    };
+
+    const tabs = document.querySelectorAll(".tab-button");
+    const panels = document.querySelectorAll(".panel-section");
+    const buscarProveedor = document.getElementById("buscarProveedor");
+    const reloadProvidersButton = document.getElementById("reloadProviders");
+    const addProviderButton = document.getElementById("addProvider");
+    const tablaProveedores = document.getElementById("tablaProveedores");
+    const sinResultados = document.getElementById("sinResultados");
+    const buscarCliente = document.getElementById("buscarCliente");
+    const reloadClientsButton = document.getElementById("reloadClients");
+    const addClientButton = document.getElementById("addClient");
+    const tablaClientes = document.getElementById("tablaClientes");
+    const sinClientes = document.getElementById("sinClientes");
+    const reloadOrdersButton = document.getElementById("reloadOrders");
+    const tablaPedidos = document.getElementById("tablaPedidos");
+    const sinPedidos = document.getElementById("sinPedidos");
+    const priceFileInput = document.getElementById("priceFile");
+    const priceFileName = document.getElementById("priceFileName");
+    const uploadPricesButton = document.getElementById("uploadPrices");
+    const deleteAllArticlesButton = document.getElementById("deleteAllArticles");
+    const uploadStatus = document.getElementById("uploadStatus");
+    const tablaArticulos = document.getElementById("tablaArticulos");
+    const importModal = document.getElementById("importModal");
+    const importSummary = document.getElementById("importSummary");
+    const importResults = document.getElementById("importResults");
+    const btnUpdatePrices = document.getElementById("btnUpdatePrices");
+    const btnImportMissing = document.getElementById("btnImportMissing");
+    const btnFullSync = document.getElementById("btnFullSync");
+    const btnCloseImport = document.getElementById("btnCloseImport");
+
+    function setStatus(element, message, type) {
+      element.textContent = message;
+      element.className = "status";
+      if (type) {
+        element.classList.add(type);
+      }
+    }
+
+    function activateTab(name) {
+      tabs.forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.tab === name);
+      });
+
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== name;
+      });
+    }
+
+    function normalizeHeader(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+    }
+
+    function normalizeKey(value) {
+      return String(value || "")
+        .toLowerCase()
+        .trim()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9_]/g, "_");
+    }
+
+    function pickValue(row, aliases) {
+      const entries = Object.entries(row);
+      for (const [key, value] of entries) {
+        const normalizedKey = normalizeHeader(key);
+        if (aliases.includes(normalizedKey)) {
+          return value;
         }
-        <button class="btn btn-danger" onclick="borrarUsuario('${item.uid}','${(item.email || '').replace(/'/g,"\\'")}')">Borrar</button>
-      </div>
-    </div>
-  `).join('');
-}
+      }
+      return "";
+    }
 
-function renderAudit() {
-  document.getElementById('auditCount').textContent = `${auditItems.length} eventos`;
-  const wrap = document.getElementById('auditList');
-  if(!auditItems.length) {
-    wrap.innerHTML = `<div class="empty">Todavía no hay eventos de auditoría.</div>`;
-    return;
-  }
-  wrap.innerHTML = auditItems.map(item => `
-    <div class="audit-card">
-      <div class="row">
-        <div>
-          <div style="font-size:15px;font-weight:800">${item.action}</div>
-          <div class="meta">Admin: ${item.adminEmail || '—'}</div>
-          <div class="meta">Objetivo: ${item.targetEmail || item.targetUid || '—'}</div>
-          <div class="meta">${item.detail || '—'}</div>
-        </div>
-        <div style="text-align:right">
-          <span class="pill ${item.status === 'success' ? 'approved' : 'rejected'}">${item.status || '—'}</span>
-          <div class="meta" style="margin-top:8px">${formatDate(item.createdAt)}</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
+    function toMoney(value) {
+      if (value === null || value === undefined || value === "") {
+        return null;
+      }
 
-window.setAdminTab = tab => {
-  document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('active', btn.textContent.toLowerCase().includes(tab === 'pending' ? 'pendientes' : tab === 'users' ? 'usuarios' : 'auditoría')));
-  document.querySelectorAll('.panel').forEach(panel => panel.classList.toggle('visible', panel.id === `panel-${tab}`));
-};
+      if (typeof value === "number") {
+        return Number(value.toFixed(2));
+      }
 
-window.adminLogin = async () => {
-  const email = document.getElementById('adminLoginEmail').value.trim();
-  const pass = document.getElementById('adminLoginPass').value;
-  const btn = document.getElementById('btnAdminLogin');
-  if(!email || !pass) { showMsg('loginMsg', 'Completá email y contraseña', 'err'); return; }
+      const cleaned = String(value)
+        .replace(/\$/g, "")
+        .replace(/\./g, "")
+        .replace(/,/g, ".")
+        .replace(/[^\d.-]/g, "");
 
-  btn.disabled = true;
-  btn.textContent = 'Entrando...';
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch (e) {
-    showMsg('loginMsg', 'No se pudo iniciar sesión', 'err');
-    btn.disabled = false;
-    btn.textContent = 'Entrar al panel';
-  }
-};
+      const number = Number(cleaned);
+      return Number.isFinite(number) ? Number(number.toFixed(2)) : null;
+    }
 
-window.adminLogout = async () => {
-  adminPin = '';
-  pendingItems = [];
-  userItems = [];
-  auditItems = [];
-  try { await signOut(auth); } catch {}
-  showView('viewLogin');
-  showMsg('panelMsg', '');
-  showMsg('pinMsg', '');
-  const btn = document.getElementById('btnAdminLogin');
-  if(btn){ btn.disabled = false; btn.textContent = 'Entrar al panel'; }
-};
+    function normalizeImportRow(row) {
+      const normalized = {};
+      Object.keys(row).forEach((key) => {
+        normalized[normalizeKey(key)] = row[key];
+      });
 
-window.verificarAdminPin = async () => {
-  const pin = document.getElementById('adminPinInput').value.trim();
-  const btn = document.getElementById('btnVerifyPin');
-  if(!pin) { showMsg('pinMsg', 'Ingresá tu PIN admin', 'err'); return; }
+      const codigo = String(
+        normalized.codigo ||
+        normalized.cod ||
+        normalized.codproveedor ||
+        normalized.codigo_proveedor ||
+        normalized.codigo_articulo ||
+        normalized.idart ||
+        normalized.id_art ||
+        normalized.id ||
+        ""
+      ).trim();
 
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
-  try {
-    adminPin = pin;
-    const data = await apiPost('/admin/auth/verify');
-    if(!data.ok) throw new Error(data.error || 'No se pudo verificar');
-    document.getElementById('adminBadge').textContent = data.adminEmail || 'Admin';
-    document.getElementById('adminState').textContent = 'PIN validado';
-    showView('viewPanel');
-    await refrescarTodo();
-  } catch (e) {
-    adminPin = '';
-    showMsg('pinMsg', e.message || 'PIN incorrecto', 'err');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Verificar PIN';
-  }
-};
+      const articulo = String(
+        normalized.articulo ||
+        normalized.articulos ||
+        normalized.articulos_descripcion ||
+        normalized.articulo_descripcion ||
+        normalized.descripcion ||
+        normalized.detalle ||
+        normalized.producto ||
+        normalized.nombre ||
+        ""
+      ).trim();
 
-async function cargarPendientes() {
-  const data = await apiGet('/admin/pending');
-  pendingItems = data.items || [];
-  renderPending();
-}
+      const proveedor = String(
+        normalized.proveedor ||
+        normalized.idproveedor ||
+        normalized.id_cliente ||
+        normalized.idcliente ||
+        normalized.marca ||
+        ""
+      ).trim();
 
-async function cargarUsuarios() {
-  const data = await apiGet('/admin/users');
-  userItems = data.items || [];
-  renderUsers();
-}
+      const precioBase = pickValue(row, [
+        "precio costo",
+        "preciocosto",
+        "precio",
+        "precio vta",
+        "precio vta 1",
+        "precio vta1",
+        "precio vta 2",
+        "precio vta2",
+        "precio vta 3",
+        "precio vta3",
+        "importe",
+        "valor",
+        "price",
+        "neto",
+        "s iva",
+        "sin iva"
+      ]);
 
-async function cargarAudit() {
-  const data = await apiGet('/admin/audit');
-  auditItems = data.items || [];
-  renderAudit();
-}
+      const precioSiva = toMoney(precioBase);
+      const precioCiva = toMoney(pickValue(row, [
+        "c iva",
+        "con iva",
+        "precio con iva",
+        "precio c iva",
+        "final"
+      ])) ?? precioSiva;
 
-window.refrescarTodo = async () => {
-  panelMessage('Actualizando panel...', 'ok');
-  try {
-    await Promise.all([cargarPendientes(), cargarUsuarios(), cargarAudit()]);
-    panelMessage('Panel actualizado', 'ok');
-  } catch (e) {
-    panelMessage(e.message || 'Error al actualizar el panel', 'err');
-  }
-};
+      if (!codigo || !articulo || !proveedor) {
+        return null;
+      }
 
-window.aprobarPendiente = async id => {
-  if(!confirm('¿Aprobar este registro y crear la cuenta?')) return;
-  try {
-    await apiPost('/admin/pending/aprobar', { id });
-    panelMessage('Pendiente aprobado', 'ok');
-    await refrescarTodo();
-  } catch (e) {
-    panelMessage(e.message || 'No se pudo aprobar', 'err');
-  }
-};
+      return {
+        codigo,
+        articulo,
+        proveedor,
+        precio_siva: precioSiva,
+        precio_civa: precioCiva
+      };
+    }
 
-window.rechazarPendiente = async id => {
-  if(!confirm('¿Rechazar este registro?')) return;
-  try {
-    await apiPost('/admin/pending/rechazar', { id });
-    panelMessage('Pendiente rechazado', 'ok');
-    await refrescarTodo();
-  } catch (e) {
-    panelMessage(e.message || 'No se pudo rechazar', 'err');
-  }
-};
+    function openImportModal(rows) {
+      importSummary.textContent = `${rows.length} articulos encontrados en el archivo. Elegi como queres importarlos.`;
+      importResults.textContent = "";
+      importModal.classList.add("visible");
+      importModal.setAttribute("aria-hidden", "false");
+    }
 
-window.deshabilitarUsuario = async uid => {
-  if(!confirm('¿Deshabilitar esta cuenta?')) return;
-  try {
-    await apiPost('/admin/users/disable', { uid });
-    panelMessage('Usuario deshabilitado', 'ok');
-    await refrescarTodo();
-  } catch (e) {
-    panelMessage(e.message || 'No se pudo deshabilitar', 'err');
-  }
-};
+    function closeImportModal() {
+      importModal.classList.remove("visible");
+      importModal.setAttribute("aria-hidden", "true");
+    }
 
-window.habilitarUsuario = async uid => {
-  if(!confirm('¿Habilitar esta cuenta?')) return;
-  try {
-    await apiPost('/admin/users/enable', { uid });
-    panelMessage('Usuario habilitado', 'ok');
-    await refrescarTodo();
-  } catch (e) {
-    panelMessage(e.message || 'No se pudo habilitar', 'err');
-  }
-};
+    function formatCurrency(value) {
+      if (value === null || value === undefined) {
+        return "-";
+      }
+      return new Intl.NumberFormat("es-AR", {
+        style: "currency",
+        currency: "ARS",
+        minimumFractionDigits: 2
+      }).format(value);
+    }
 
-window.borrarUsuario = async (uid, email) => {
-  if(!confirm(`¿Borrar definitivamente la cuenta ${email || uid}?`)) return;
-  try {
-    await apiPost('/admin/users/delete', { uid });
-    panelMessage('Usuario eliminado', 'ok');
-    await refrescarTodo();
-  } catch (e) {
-    panelMessage(e.message || 'No se pudo borrar', 'err');
-  }
-};
+    function createSupabaseClient() {
+      const url = DEFAULT_SUPABASE_URL;
+      const key = DEFAULT_SUPABASE_KEY;
+      if (!url || !key) {
+        state.supabase = null;
+        return false;
+      }
 
-onAuthStateChanged(auth, async user => {
-  adminUser = user || null;
-  adminPin = '';
-  if(!user) {
-    showView('viewLogin');
-    return;
-  }
-  document.getElementById('pinEmailLabel').textContent = user.email;
-  showMsg('loginMsg', '');
-  showView('viewPin');
-});
-</script>
+      state.supabase = window.supabase.createClient(url, key);
+      return true;
+    }
+
+    async function loadProviders() {
+      if (!state.supabase) {
+        renderProviders([]);
+        return;
+      }
+
+      const { data, error } = await state.supabase
+        .from("proveedores")
+        .select("proveedor, descuento, cuit")
+        .order("proveedor", { ascending: true });
+
+      if (error) {
+        setStatus(uploadStatus, "No pude leer proveedores: " + error.message, "error");
+        return;
+      }
+
+      state.providers = data || [];
+      filterProviders();
+    }
+
+    async function loadClients() {
+      if (!state.supabase) {
+        renderClients([]);
+        return;
+      }
+
+      const { data, error } = await state.supabase
+        .from("clientes")
+        .select("cliente, cuit, telefono")
+        .order("cliente", { ascending: true });
+
+      if (error) {
+        setStatus(uploadStatus, "No pude leer clientes: " + error.message, "error");
+        return;
+      }
+
+      state.clients = data || [];
+      filterClients();
+    }
+
+    async function loadOrders() {
+      if (!state.supabase) {
+        renderOrders([]);
+        return;
+      }
+
+      const { data, error } = await state.supabase
+        .from("pedidos")
+        .select("id, proveedor, cliente, estado, total, items, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        setStatus(uploadStatus, "No pude leer pedidos: " + error.message, "error");
+        return;
+      }
+
+      state.orders = (data || []).filter((row) => row.estado === "pendiente");
+      renderOrders(state.orders);
+    }
+
+    function renderProviders(rows) {
+      tablaProveedores.innerHTML = rows.map((row) => {
+        if (state.editingProvider === row.proveedor) {
+          return `
+            <tr>
+              <td><input class="row-input" data-field="proveedor" type="text" value="${row.proveedor}"></td>
+              <td><input class="row-input" data-field="descuento" type="text" value="${row.descuento ?? 0}"></td>
+              <td><input class="row-input" data-field="cuit" type="text" value="${row.cuit ?? ""}"></td>
+              <td class="actions-cell"><button class="icon-button" type="button" data-action="save" data-id="${row.proveedor}" title="Guardar">✓</button></td>
+            </tr>
+          `;
+        }
+
+        return `
+          <tr>
+            <td>${row.proveedor}</td>
+            <td>${row.descuento ?? 0}</td>
+            <td>${row.cuit || "-"}</td>
+            <td class="actions-cell"><button class="icon-button" type="button" data-action="edit" data-id="${row.proveedor}" title="Editar">✎</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      sinResultados.hidden = rows.length !== 0;
+    }
+
+    function filterProviders() {
+      const query = buscarProveedor.value.trim().toLowerCase();
+      state.filteredProviders = state.providers.filter((row) =>
+        row.proveedor.toLowerCase().includes(query)
+      );
+      renderProviders(state.filteredProviders);
+    }
+
+    function renderClients(rows) {
+      tablaClientes.innerHTML = rows.map((row) => {
+        if (state.editingClient === row.cliente) {
+          return `
+            <tr>
+              <td><input class="row-input" data-client-field="cliente" type="text" value="${row.cliente}"></td>
+              <td><input class="row-input" data-client-field="cuit" type="text" value="${row.cuit ?? ""}"></td>
+              <td><input class="row-input" data-client-field="telefono" type="text" value="${row.telefono ?? ""}"></td>
+              <td class="actions-cell"><button class="icon-button" type="button" data-client-action="save" data-id="${row.cliente}" title="Guardar">✓</button></td>
+            </tr>
+          `;
+        }
+
+        return `
+          <tr>
+            <td>${row.cliente}</td>
+            <td>${row.cuit || "-"}</td>
+            <td>${row.telefono || "-"}</td>
+            <td class="actions-cell"><button class="icon-button" type="button" data-client-action="edit" data-id="${row.cliente}" title="Editar">✎</button></td>
+          </tr>
+        `;
+      }).join("");
+
+      sinClientes.hidden = rows.length !== 0;
+    }
+
+    function filterClients() {
+      const query = buscarCliente.value.trim().toLowerCase();
+      const visibles = state.clients.filter((row) =>
+        row.cliente.toLowerCase().includes(query)
+      );
+      state.filteredClients = visibles;
+      renderClients(visibles);
+    }
+
+    async function saveClient(originalId) {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "No se pudo conectar con Supabase.", "error");
+        return;
+      }
+
+      const cliente = tablaClientes.querySelector('[data-client-field="cliente"]').value.trim();
+      const cuit = tablaClientes.querySelector('[data-client-field="cuit"]').value.trim() || null;
+      const telefono = tablaClientes.querySelector('[data-client-field="telefono"]').value.trim() || null;
+
+      if (!cliente) {
+        setStatus(uploadStatus, "El nombre del cliente no puede estar vacío.", "error");
+        return;
+      }
+
+      const { error } = await state.supabase
+        .from("clientes")
+        .update({ cliente, cuit, telefono })
+        .eq("cliente", originalId);
+
+      if (error) {
+        setStatus(uploadStatus, "No pude guardar el cliente: " + error.message, "error");
+        return;
+      }
+
+      state.editingClient = null;
+      setStatus(uploadStatus, "Cliente actualizado correctamente.", "success");
+      await loadClients();
+    }
+
+    async function createClient() {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "No se pudo conectar con Supabase.", "error");
+        return;
+      }
+
+      const cliente = window.prompt("Nombre del nuevo cliente:");
+      if (!cliente) {
+        return;
+      }
+
+      const { error } = await state.supabase
+        .from("clientes")
+        .insert({ cliente: cliente.trim(), cuit: null, telefono: null });
+
+      if (error) {
+        setStatus(uploadStatus, "No pude crear el cliente: " + error.message, "error");
+        return;
+      }
+
+      setStatus(uploadStatus, "Cliente agregado correctamente.", "success");
+      await loadClients();
+    }
+
+    async function saveProvider(originalId) {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "No se pudo conectar con Supabase.", "error");
+        return;
+      }
+
+      const proveedor = tablaProveedores.querySelector('[data-field="proveedor"]').value.trim();
+      const descuentoRaw = tablaProveedores.querySelector('[data-field="descuento"]').value.trim();
+      const cuit = tablaProveedores.querySelector('[data-field="cuit"]').value.trim() || null;
+      const descuento = Number(String(descuentoRaw).replace(",", "."));
+
+      if (!proveedor) {
+        setStatus(uploadStatus, "El nombre del proveedor no puede estar vacio.", "error");
+        return;
+      }
+
+      if (!Number.isFinite(descuento)) {
+        setStatus(uploadStatus, "El descuento tiene que ser numerico.", "error");
+        return;
+      }
+
+      const { error } = await state.supabase
+        .from("proveedores")
+        .update({ proveedor, descuento, cuit })
+        .eq("proveedor", originalId);
+
+      if (error) {
+        setStatus(uploadStatus, "No pude guardar el proveedor: " + error.message, "error");
+        return;
+      }
+
+      state.editingProvider = null;
+      setStatus(uploadStatus, "Proveedor actualizado correctamente.", "success");
+      await loadProviders();
+    }
+
+    async function createProvider() {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "No se pudo conectar con Supabase.", "error");
+        return;
+      }
+
+      const proveedor = window.prompt("Nombre del nuevo proveedor:");
+      if (!proveedor) {
+        return;
+      }
+
+      const { error } = await state.supabase
+        .from("proveedores")
+        .insert({ proveedor: proveedor.trim(), descuento: 0, cuit: null });
+
+      if (error) {
+        setStatus(uploadStatus, "No pude crear el proveedor: " + error.message, "error");
+        return;
+      }
+
+      setStatus(uploadStatus, "Proveedor agregado correctamente.", "success");
+      await loadProviders();
+    }
+
+    function renderArticles(rows) {
+      tablaArticulos.innerHTML = rows.map((row) => `
+        <tr>
+          <td>${row.codigo}</td>
+          <td>${row.articulo}</td>
+          <td>${row.proveedor}</td>
+          <td>${formatCurrency(row.precio_siva)}</td>
+          <td>${formatCurrency(row.precio_civa)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function renderOrders(rows) {
+      tablaPedidos.innerHTML = rows.map((row) => {
+        const fecha = new Date(row.created_at).toLocaleString("es-AR");
+        const itemsCount = Array.isArray(row.items) ? row.items.length : 0;
+        return `
+          <tr>
+            <td>${fecha}</td>
+            <td>${row.proveedor}</td>
+            <td>${row.cliente}</td>
+            <td>${itemsCount}</td>
+            <td>${formatCurrency(row.total)}</td>
+            <td>${row.estado}</td>
+          </tr>
+        `;
+      }).join("");
+
+      sinPedidos.hidden = rows.length !== 0;
+    }
+
+    async function loadArticlesPreview() {
+      if (!state.supabase) {
+        renderArticles([]);
+        return;
+      }
+
+      const { data, error } = await state.supabase
+        .from("articulos")
+        .select("codigo, articulo, proveedor, precio_siva, precio_civa")
+        .order("updated_at", { ascending: false })
+        .limit(20);
+
+      if (error) {
+        setStatus(uploadStatus, "No pude leer articulos: " + error.message, "error");
+        return;
+      }
+
+      state.loadedArticles = data || [];
+      renderArticles(state.loadedArticles);
+      if (state.loadedArticles.length) {
+        setStatus(uploadStatus, `Vista previa cargada con ${state.loadedArticles.length} articulos recientes.`, "success");
+      }
+    }
+
+    async function parsePriceFile(file) {
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+      const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rawRows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+      const parsedRows = rawRows
+        .map(normalizeImportRow)
+        .filter(Boolean);
+
+      state.pendingPriceRows = parsedRows;
+      renderArticles(parsedRows.slice(0, 30));
+
+      if (!parsedRows.length) {
+        setStatus(uploadStatus, "No pude reconocer filas validas. Revisa que el Excel tenga codigo, articulo y proveedor.", "error");
+        return;
+      }
+
+      setStatus(uploadStatus, `Archivo procesado. Detecte ${parsedRows.length} filas listas para subir.`, "success");
+      openImportModal(parsedRows);
+    }
+
+    async function chunkedUpsert(rows) {
+      const chunkSize = 500;
+      for (let index = 0; index < rows.length; index += chunkSize) {
+        const chunk = rows.slice(index, index + chunkSize);
+        const { error } = await state.supabase
+          .from("articulos")
+          .upsert(chunk, { onConflict: "codigo,proveedor" });
+
+        if (error) {
+          throw error;
+        }
+      }
+    }
+
+    async function importRowsByMode(mode) {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "Primero guarda la conexion a Supabase.", "error");
+        return;
+      }
+
+      if (!state.pendingPriceRows.length) {
+        setStatus(uploadStatus, "Elegi un archivo primero.", "error");
+        return;
+      }
+
+      try {
+        if (mode === "full") {
+          const proveedoresUnicos = [...new Set(state.pendingPriceRows.map((row) => row.proveedor))];
+          const { error: deleteError } = await state.supabase
+            .from("articulos")
+            .delete()
+            .in("proveedor", proveedoresUnicos);
+
+          if (deleteError) {
+            throw deleteError;
+          }
+
+          await chunkedUpsert(state.pendingPriceRows);
+          importResults.textContent = `Sincronizacion completa terminada. Se reemplazaron ${state.pendingPriceRows.length} filas.`;
+        } else if (mode === "update") {
+          const existingByKey = new Map();
+          const { data: existingRows, error: existingError } = await state.supabase
+            .from("articulos")
+            .select("id, codigo, proveedor, articulo, precio_siva, precio_civa")
+            .in("proveedor", [...new Set(state.pendingPriceRows.map((row) => row.proveedor))]);
+
+          if (existingError) {
+            throw existingError;
+          }
+
+          (existingRows || []).forEach((row) => {
+            existingByKey.set(`${row.codigo}__${row.proveedor}`, row);
+          });
+
+          const rowsToUpdate = state.pendingPriceRows
+            .filter((row) => existingByKey.has(`${row.codigo}__${row.proveedor}`))
+            .map((row) => ({
+              ...row,
+              articulo: existingByKey.get(`${row.codigo}__${row.proveedor}`).articulo || row.articulo
+            }));
+
+          if (!rowsToUpdate.length) {
+            importResults.textContent = "No encontre articulos existentes para actualizar precios.";
+            setStatus(uploadStatus, "No habia coincidencias por codigo y proveedor.", "error");
+            return;
+          }
+
+          await chunkedUpsert(rowsToUpdate);
+          importResults.textContent = `Actualizacion de precios terminada. Se actualizaron ${rowsToUpdate.length} articulos.`;
+        } else if (mode === "missing") {
+          const existingByKey = new Set();
+          const { data: existingRows, error: existingError } = await state.supabase
+            .from("articulos")
+            .select("codigo, proveedor")
+            .in("proveedor", [...new Set(state.pendingPriceRows.map((row) => row.proveedor))]);
+
+          if (existingError) {
+            throw existingError;
+          }
+
+          (existingRows || []).forEach((row) => {
+            existingByKey.add(`${row.codigo}__${row.proveedor}`);
+          });
+
+          const rowsToInsert = state.pendingPriceRows.filter((row) => !existingByKey.has(`${row.codigo}__${row.proveedor}`));
+
+          if (!rowsToInsert.length) {
+            importResults.textContent = "No hay articulos faltantes para importar.";
+            setStatus(uploadStatus, "Todos esos articulos ya existen en Supabase.", "success");
+            return;
+          }
+
+          await chunkedUpsert(rowsToInsert);
+          importResults.textContent = `Importacion de faltantes terminada. Se agregaron ${rowsToInsert.length} articulos nuevos.`;
+        }
+
+        setStatus(uploadStatus, "Importacion completada correctamente.", "success");
+        await loadArticlesPreview();
+        closeImportModal();
+      } catch (error) {
+        importResults.textContent = "Error: " + error.message;
+        setStatus(uploadStatus, "Error al subir articulos: " + error.message, "error");
+      }
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => activateTab(tab.dataset.tab));
+    });
+
+    reloadProvidersButton.addEventListener("click", loadProviders);
+    addProviderButton.addEventListener("click", createProvider);
+    buscarProveedor.addEventListener("input", filterProviders);
+    reloadClientsButton.addEventListener("click", loadClients);
+    addClientButton.addEventListener("click", createClient);
+    buscarCliente.addEventListener("input", filterClients);
+    reloadOrdersButton.addEventListener("click", loadOrders);
+
+    tablaProveedores.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-action]");
+      if (!button) {
+        return;
+      }
+
+      const id = button.dataset.id;
+      if (button.dataset.action === "edit") {
+        state.editingProvider = id;
+        filterProviders();
+      }
+
+      if (button.dataset.action === "save") {
+        await saveProvider(id);
+      }
+    });
+
+    tablaClientes.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-client-action]");
+      if (!button) {
+        return;
+      }
+
+      const id = button.dataset.id;
+      if (button.dataset.clientAction === "edit") {
+        state.editingClient = id;
+        filterClients();
+      }
+
+      if (button.dataset.clientAction === "save") {
+        await saveClient(id);
+      }
+    });
+
+    priceFileInput.addEventListener("change", async () => {
+      const file = priceFileInput.files[0];
+      if (!file) {
+        priceFileName.textContent = "Sin archivo seleccionado";
+        state.pendingPriceRows = [];
+        renderArticles([]);
+        return;
+      }
+
+      priceFileName.textContent = file.name;
+      await parsePriceFile(file);
+    });
+
+    uploadPricesButton.addEventListener("click", () => {
+      if (!state.pendingPriceRows.length) {
+        setStatus(uploadStatus, "Elegi un archivo primero.", "error");
+        return;
+      }
+      openImportModal(state.pendingPriceRows);
+    });
+
+    btnUpdatePrices.addEventListener("click", () => importRowsByMode("update"));
+    btnImportMissing.addEventListener("click", () => importRowsByMode("missing"));
+    btnFullSync.addEventListener("click", () => importRowsByMode("full"));
+    btnCloseImport.addEventListener("click", closeImportModal);
+    importModal.addEventListener("click", (event) => {
+      if (event.target === importModal) {
+        closeImportModal();
+      }
+    });
+
+    deleteAllArticlesButton.addEventListener("click", async () => {
+      if (!state.supabase) {
+        setStatus(uploadStatus, "No se pudo conectar con Supabase.", "error");
+        return;
+      }
+
+      const confirmed = window.confirm("¿Seguro que querés borrar todos los artículos de Supabase?");
+      if (!confirmed) {
+        return;
+      }
+
+      const { error } = await state.supabase
+        .from("articulos")
+        .delete()
+        .not("id", "is", null);
+
+      if (error) {
+        setStatus(uploadStatus, "No pude borrar los artículos: " + error.message, "error");
+        return;
+      }
+
+      state.pendingPriceRows = [];
+      state.loadedArticles = [];
+      renderArticles([]);
+      setStatus(uploadStatus, "Se borraron todos los artículos correctamente.", "success");
+    });
+
+    if (DEFAULT_SUPABASE_URL && DEFAULT_SUPABASE_KEY) {
+      createSupabaseClient();
+      loadProviders();
+      loadClients();
+      loadArticlesPreview();
+      loadOrders();
+    }
+  </script>
 </body>
 </html>
