@@ -2,4 +2,6 @@ node_modules/
 .env
 .cache/
 dist/
+bin/
+obj/
 server.log

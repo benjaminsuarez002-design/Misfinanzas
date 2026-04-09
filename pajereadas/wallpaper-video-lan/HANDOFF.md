@@ -7,6 +7,11 @@
 ## Instalador (link directo)
 - https://raw.githubusercontent.com/benjaminsuarez002-design/Misfinanzas/main/pajereadas/wallpaper-video-lan/installer/Instalar-Desde-GitHub.bat
 
+## Instalador EXE local
+- Proyecto: `installer/exe-installer/WallpaperVideoLAN.Installer.csproj`
+- Build: `crear-instalador-exe.bat`
+- Salida: `installer/dist/WallpaperVideoLAN-Installer.exe`
+
 ## Estado actual importante
 - El instalador:
   - Descarga el repo desde GitHub
@@ -28,7 +33,11 @@
 
 ## Host Control (Windows)
 - EXE: `WallpaperVideoLAN.HostControl.exe`
+- Proyecto fuente: `installer/hostcontrol`
 - Función: iniciar/detener servidor Node en segundo plano y mostrar URL local/teléfono.
+- Estado actual:
+  - self-contained
+  - no requiere `.NET Desktop Runtime` instalado en la PC destino
 
 ## API / App Web (Node + Express)
 - `GET /api/videos`

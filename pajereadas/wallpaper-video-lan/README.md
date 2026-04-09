@@ -51,6 +51,7 @@ wallpaper-video-lan/
 - Windows con Node.js 18+ (probado con Node 24).
 - Carpeta local de Workshop de Wallpaper Engine ya existente.
 - Opcional: `ffmpeg` y `ffprobe` en PATH para miniaturas y duración más completa.
+- `WallpaperVideoLAN.HostControl.exe` ahora es self-contained y no requiere `.NET Desktop Runtime` aparte.
 
 ## Configuración
 
@@ -132,16 +133,27 @@ En la otra PC, descarga y ejecuta:
 
 `installer\Instalar-Desde-GitHub.bat`
 
+Si quieres generar un instalador `.exe` unico desde este repo:
+
+`crear-instalador-exe.bat`
+
+Salida esperada:
+
+`installer\dist\WallpaperVideoLAN-Installer.exe`
+
+Si quieres generar un autoextraible WinRAR:
+
+`crear-instalador-winrar-sfx.bat`
+
 Ese instalador:
 - descarga el repo desde GitHub
 - instala todo en `%USERPROFILE%\WallpaperVideoLAN`
 - ejecuta `npm install`
 - crea/actualiza `.env`
 - pregunta si quieres auto inicio con Windows
-- crea los `.bat` del servidor en el escritorio del usuario actual:
-  - `Levantar-Host-WallpaperVideoLAN.bat` (invisible)
-  - `Levantar-Host-WallpaperVideoLAN-Visible.bat` (muestra IP/URL)
-  - `Cerrar-Host-WallpaperVideoLAN.bat` (detener servidor)
+- no deja `.bat` en escritorio
+- crea un acceso directo en escritorio a `WallpaperVideoLAN.HostControl.exe`
+- usa un `WallpaperVideoLAN.HostControl.exe` self-contained
 - si eliges auto inicio, copia `AutoInicio-WallpaperVideoLAN.bat` a:
   - `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`
 
