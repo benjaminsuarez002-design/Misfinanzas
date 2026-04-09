@@ -126,11 +126,27 @@
   }
   .btn:hover{transform:translateY(-1px)}
   .btn:disabled{opacity:.55;cursor:not-allowed;transform:none}
-  .btn-primary{background:linear-gradient(135deg,var(--blue),var(--accent));box-shadow:0 10px 28px rgba(124,140,255,.24)}
-  .btn-dark{background:rgba(255,255,255,.08);border:1px solid var(--border);color:var(--text)}
-  .btn-green{background:linear-gradient(135deg,#13d69a,#3ad6c0)}
-  .btn-red{background:linear-gradient(135deg,#ff5f7f,#ff7b63)}
-  .btn-yellow{background:linear-gradient(135deg,#ffb347,#ff8c42)}
+  .btn-primary{
+    background:var(--button-gradient, linear-gradient(135deg,var(--blue),var(--accent)));
+    box-shadow:0 10px 28px var(--button-shadow, rgba(124,140,255,.24));
+  }
+  .btn-dark{
+    background:var(--surface-alt, rgba(255,255,255,.08));
+    border:1px solid var(--border);
+    color:var(--text);
+  }
+  .btn-green{
+    background:var(--button-gradient, linear-gradient(135deg,var(--blue),var(--accent)));
+    box-shadow:0 10px 28px var(--button-shadow, rgba(124,140,255,.24));
+  }
+  .btn-yellow{
+    background:linear-gradient(135deg, var(--button-to, var(--blue)), var(--blue, var(--accent)));
+    box-shadow:0 10px 28px var(--button-shadow, rgba(124,140,255,.24));
+  }
+  .btn-red{
+    background:linear-gradient(135deg, var(--accent2, var(--accent)), var(--button-to, var(--red)));
+    box-shadow:0 10px 28px var(--button-shadow, rgba(124,140,255,.24));
+  }
   .msg{
     margin-top:14px;
     padding:14px 16px;
@@ -247,7 +263,7 @@
   }
   .tab-btn.active{
     color:#fff;
-    background:linear-gradient(135deg,var(--blue),var(--accent));
+    background:var(--button-gradient, linear-gradient(135deg,var(--blue),var(--accent)));
     border-color:transparent;
   }
   .panel{display:none}
@@ -324,9 +340,9 @@
     display:inline-flex;
     align-items:center;
     justify-content:center;
-    background:rgba(124,140,255,.12);
-    color:#d7dbff;
-    border:1px solid rgba(124,140,255,.2);
+    background:var(--surface-alt, rgba(124,140,255,.12));
+    color:var(--text);
+    border:1px solid var(--border);
     font-size:14px;
     line-height:1;
   }
@@ -553,6 +569,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw",
@@ -565,9 +582,15 @@ const firebaseConfig = {
 
 const REGISTRO_WORKER_URL = 'https://shiny-wildflower-bdfanotificaciones.benjaminsuarez002.workers.dev';
 const ADMIN_EMAIL = 'benjaminsuarez002@gmail.com';
+const SUPABASE_URL = 'https://tizyjenayrcdkcodsjnc.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpenlqZW5heXJjZGtjb2Rzam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzE4MDYsImV4cCI6MjA4NzgwNzgwNn0.Xue8zgo8QJiKTErtzfUOgpczMngsAaePJZqLvA8Z7oI';
+const SUPABASE_ADMIN_ALIAS_TABLE = 'admin_user_aliases';
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
 const ADMIN_UNLOCK_KEY = 'mis_finanzas_admin_unlock_v1';
 const ADMIN_USER_ALIAS_KEY = 'mis_finanzas_admin_user_aliases_v1';
 
@@ -578,6 +601,7 @@ let adminUnlocked = false;
 let currentUsers = [];
 let filteredUsers = [];
 let renameTarget = null;
+let supabaseAliasReady = false;
 
 const $ = id => document.getElementById(id);
 
@@ -634,6 +658,60 @@ function getUserAliases(){
 
 function saveUserAliases(map){
   localStorage.setItem(ADMIN_USER_ALIAS_KEY, JSON.stringify(map || {}));
+}
+
+function getAliasKey(target = {}){
+  const uid = String(target.uid || '').trim();
+  if(uid) return uid;
+  const email = String(target.email || '').trim().toLowerCase();
+  return email || '';
+}
+
+async function loadUserAliasesFromSupabase(){
+  if(!supabase) return getUserAliases();
+  const { data, error } = await supabase
+    .from(SUPABASE_ADMIN_ALIAS_TABLE)
+    .select('uid,email,nombre')
+    .order('updated_at', { ascending: false });
+  if(error) throw error;
+  const aliases = {};
+  (data || []).forEach(item => {
+    const nombre = String(item.nombre || '').trim();
+    if(!nombre) return;
+    if(item.uid) aliases[String(item.uid)] = nombre;
+    if(item.email) aliases[String(item.email).toLowerCase()] = nombre;
+  });
+  saveUserAliases(aliases);
+  supabaseAliasReady = true;
+  return aliases;
+}
+
+async function upsertUserAliasInSupabase(target = {}, nombre = ''){
+  if(!supabase) throw new Error('Supabase no configurado.');
+  const cleanName = String(nombre || '').trim();
+  const uid = String(target.uid || '').trim();
+  const email = String(target.email || '').trim().toLowerCase();
+  const key = getAliasKey({ uid, email });
+  if(!key) throw new Error('No se encontró referencia válida para este usuario.');
+  if(cleanName){
+    const payload = {
+      alias_key: key,
+      uid: uid || null,
+      email: email || null,
+      nombre: cleanName,
+      updated_by: String(currentUser?.email || '').toLowerCase()
+    };
+    const { error } = await supabase
+      .from(SUPABASE_ADMIN_ALIAS_TABLE)
+      .upsert(payload, { onConflict: 'alias_key' });
+    if(error) throw error;
+    return;
+  }
+  const { error } = await supabase
+    .from(SUPABASE_ADMIN_ALIAS_TABLE)
+    .delete()
+    .eq('alias_key', key);
+  if(error) throw error;
 }
 
 function saveAdminUnlock(){
@@ -742,20 +820,42 @@ function closeRenameModal(){
   $('renameModal').classList.remove('show');
 }
 
-function saveRenamedUserName(value){
+async function saveRenamedUserName(value){
   if(!renameTarget) return;
   const cleanName = String(value || '').trim();
-  const key = renameTarget.uid || renameTarget.email;
+  const key = getAliasKey(renameTarget);
   if(!key) return;
-  const aliases = getUserAliases();
-  if(cleanName){
-    aliases[key] = cleanName;
-  } else {
-    delete aliases[key];
+  const aliases = { ...getUserAliases() };
+  try{
+    await upsertUserAliasInSupabase(renameTarget, cleanName);
+    if(cleanName){
+      if(renameTarget.uid) aliases[String(renameTarget.uid)] = cleanName;
+      if(renameTarget.email) aliases[String(renameTarget.email).toLowerCase()] = cleanName;
+      aliases[key] = cleanName;
+    } else {
+      if(renameTarget.uid) delete aliases[String(renameTarget.uid)];
+      if(renameTarget.email) delete aliases[String(renameTarget.email).toLowerCase()];
+      delete aliases[key];
+    }
+    saveUserAliases(aliases);
+    renderUsers(currentUsers);
+    closeRenameModal();
+    showMsg('dashMsg', cleanName ? 'Nombre guardado en Supabase.' : 'Nombre eliminado de Supabase.');
+  }catch(err){
+    if(cleanName){
+      if(renameTarget.uid) aliases[String(renameTarget.uid)] = cleanName;
+      if(renameTarget.email) aliases[String(renameTarget.email).toLowerCase()] = cleanName;
+      aliases[key] = cleanName;
+    } else {
+      if(renameTarget.uid) delete aliases[String(renameTarget.uid)];
+      if(renameTarget.email) delete aliases[String(renameTarget.email).toLowerCase()];
+      delete aliases[key];
+    }
+    saveUserAliases(aliases);
+    renderUsers(currentUsers);
+    closeRenameModal();
+    showMsg('dashMsg', err.message || 'No se pudo guardar en Supabase. Se dejó guardado localmente.');
   }
-  saveUserAliases(aliases);
-  renderUsers(currentUsers);
-  closeRenameModal();
 }
 
 async function getFreshToken(){
@@ -894,6 +994,12 @@ async function loadDashboard(){
       adminFetch('/admin/users', { method: 'GET' }),
       adminFetch('/admin/audit', { method: 'GET' })
     ]);
+    try{
+      await loadUserAliasesFromSupabase();
+    }catch(err){
+      supabaseAliasReady = false;
+      console.warn('No se pudieron cargar nombres desde Supabase:', err);
+    }
     renderPending(pending.items || pending.rows || pending.pending || []);
     renderUsers(users.items || users.users || []);
     renderAudit(audit.items || audit.rows || audit.logs || []);
