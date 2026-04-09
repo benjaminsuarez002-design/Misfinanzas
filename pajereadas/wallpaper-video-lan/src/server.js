@@ -150,6 +150,51 @@ async function detectLanDevices(excludeAddresses = []) {
   }
 }
 
+async function probeWallpaperHost(address, port) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 700);
+
+  try {
+    const response = await fetch(`http://${address}:${port}/api/health`, {
+      method: 'GET',
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const data = await response.json().catch(() => null);
+    if (!data || data.ok !== true) {
+      return null;
+    }
+
+    return {
+      address,
+      url: `http://${address}:${port}`,
+      port: Number(data.port || port)
+    };
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function detectWallpaperHosts(addresses, port) {
+  const unique = [...new Set((addresses || []).filter(isValidIpv4))];
+  if (unique.length === 0) {
+    return [];
+  }
+
+  const checks = unique.map((address) => probeWallpaperHost(address, port));
+  const results = await Promise.all(checks);
+
+  return results
+    .filter(Boolean)
+    .sort((a, b) => compareIpv4(a.address, b.address));
+}
+
 async function streamVideo(req, res, filePath) {
   const stats = await fsPromises.stat(filePath);
   const fileSize = stats.size;
@@ -213,13 +258,17 @@ app.get('/api/network', async (req, res) => {
     const lan = getLanInterfaces();
     const excluded = new Set(['127.0.0.1', ...lan.map((entry) => entry.address)]);
     const devices = await detectLanDevices([...excluded]);
+    const hosts = await detectWallpaperHosts(
+      devices.map((entry) => entry.address),
+      config.port
+    );
 
     res.json({
       host: config.host,
       port: config.port,
       localhostUrl: `http://localhost:${config.port}`,
       lan,
-      devices
+      hosts
     });
   } catch (error) {
     res.status(500).json({ error: error.message || 'No se pudo obtener la red local.' });

@@ -12,7 +12,8 @@
   videosMode: 'direct',
   activeInline: null,
   scanStatus: null,
-  scanPollHandle: null
+  scanPollHandle: null,
+  scanStatusFailCount: 0
 };
 
 const dom = {
@@ -133,25 +134,22 @@ function renderConnections(payload) {
     fragment.appendChild(buildConnectionItem(label, url));
   }
 
-  const devices = Array.isArray(payload.devices) ? payload.devices : [];
-  for (const device of devices) {
-    const url = `http://${device.address}`;
+  const hosts = Array.isArray(payload.hosts) ? payload.hosts : [];
+  for (const host of hosts) {
+    const url = host.url || `http://${host.address}:${payload.port || 3000}`;
     if (seenUrls.has(url)) {
       continue;
     }
 
     seenUrls.add(url);
-    const details = [device.mac, device.type].filter(Boolean).join(' | ');
-    const label = details
-      ? `Dispositivo LAN (${device.address}) - ${details}`
-      : `Dispositivo LAN (${device.address})`;
+    const label = `Host Wallpaper activo (${host.address})`;
     fragment.appendChild(buildConnectionItem(label, url));
   }
 
-  if (lan.length === 0 && devices.length === 0) {
+  if (lan.length === 0 && hosts.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty-row';
-    empty.textContent = 'No se detectaron IPs LAN ni dispositivos vecinos. Revisa Wi-Fi o cable de red.';
+    empty.textContent = 'No se detectaron hosts activos en LAN. Revisa Wi-Fi o cable de red.';
     fragment.appendChild(empty);
   }
 
@@ -404,8 +402,28 @@ async function loadScanStatus() {
   }
 
   const data = await response.json();
+  state.scanStatusFailCount = 0;
   state.scanStatus = data;
   renderScanStatus(data);
+}
+
+function handleScanStatusError() {
+  state.scanStatusFailCount += 1;
+
+  const lastKnown = state.scanStatus || {
+    inProgress: false,
+    percent: 0,
+    discoveredEntries: 0,
+    processedEntries: 0,
+    foundVideos: 0,
+    currentPath: '',
+    message: 'Esperando estado de escaneo...'
+  };
+
+  renderScanStatus({
+    ...lastKnown,
+    message: `Reconectando estado de escaneo... (intento ${state.scanStatusFailCount})`
+  });
 }
 
 async function openFolder(folderPath, options = {}) {
@@ -508,15 +526,13 @@ async function bootstrap() {
   await loadConnections().catch(() => {
     dom.connectionList.innerHTML = '<p class="empty-row">No se pudo detectar la red local.</p>';
   });
-  await loadScanStatus().catch(() => {
-    dom.scanText.textContent = 'No se pudo detectar el progreso de escaneo.';
-  });
+  await loadScanStatus().catch(handleScanStatusError);
 
   if (state.scanPollHandle) {
     clearInterval(state.scanPollHandle);
   }
   state.scanPollHandle = setInterval(() => {
-    loadScanStatus().catch(() => {});
+    loadScanStatus().catch(handleScanStatusError);
   }, 1200);
 
   await loadSummary();
