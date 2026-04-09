@@ -94,8 +94,17 @@ if not errorlevel 1 (
   powershell -NoProfile -Command "if (-not (Get-NetFirewallRule -DisplayName 'WallpaperVideoLAN-3000' -ErrorAction SilentlyContinue)) { New-NetFirewallRule -DisplayName 'WallpaperVideoLAN-3000' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private | Out-Null }"
 )
 
-set "START_BAT=%USERPROFILE%\Desktop\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT=%USERPROFILE%\Desktop\Detener-WallpaperVideoLAN.bat"
+set "DESKTOP_DIR="
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) do set "DESKTOP_DIR=%%I"
+if "%DESKTOP_DIR%"=="" set "DESKTOP_DIR=%USERPROFILE%\Desktop"
+if not exist "%DESKTOP_DIR%" set "DESKTOP_DIR=%USERPROFILE%\Escritorio"
+if not exist "%DESKTOP_DIR%" mkdir "%DESKTOP_DIR%" >nul 2>nul
+set "PUBLIC_DESKTOP=%PUBLIC%\Desktop"
+
+set "START_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
+set "STOP_BAT=%DESKTOP_DIR%\Detener-WallpaperVideoLAN.bat"
+set "START_BAT_PUBLIC=%PUBLIC_DESKTOP%\Levantar-Host-WallpaperVideoLAN.bat"
+set "STOP_BAT_PUBLIC=%PUBLIC_DESKTOP%\Detener-WallpaperVideoLAN.bat"
 
 > "%START_BAT%" echo @echo off
 >> "%START_BAT%" echo setlocal
@@ -114,6 +123,11 @@ set "STOP_BAT=%USERPROFILE%\Desktop\Detener-WallpaperVideoLAN.bat"
 >> "%STOP_BAT%" echo powershell -NoProfile -Command "Get-CimInstance Win32_Process ^| Where-Object { $_.Name -eq 'node.exe' -and $_.CommandLine -like '*wallpaper-video-lan*src\\server.js*' } ^| ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"
 >> "%STOP_BAT%" echo echo Servidor detenido ^(si estaba corriendo^).
 >> "%STOP_BAT%" echo timeout /t 2 /nobreak ^>nul
+
+if exist "%PUBLIC_DESKTOP%" (
+  copy /Y "%START_BAT%" "%START_BAT_PUBLIC%" >nul 2>nul
+  copy /Y "%STOP_BAT%" "%STOP_BAT_PUBLIC%" >nul 2>nul
+)
 
 call "%START_BAT%"
 exit /b 0
