@@ -259,10 +259,17 @@ internal sealed class MainForm : Form
     private async Task StopServerAsync()
     {
         var targetScript = Path.Combine(_appDirectory, "src", "server.js").Replace("'", "''");
-        var command = "$target = '" + targetScript + "'; " +
-                      "Get-CimInstance Win32_Process | " +
-                      "Where-Object { $_.Name -eq 'node.exe' -and $_.CommandLine -like ('*' + $target + '*') } | " +
-                      "ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }";
+        var command = "$killed = $false; " +
+                      "try { " +
+                      "  $listenerPids = Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction Stop | Select-Object -ExpandProperty OwningProcess -Unique; " +
+                      "  foreach ($procId in $listenerPids) { Stop-Process -Id $procId -Force -ErrorAction SilentlyContinue; $killed = $true } " +
+                      "} catch { } " +
+                      "if (-not $killed) { " +
+                      "  $target = '" + targetScript + "'; " +
+                      "  Get-CimInstance Win32_Process | " +
+                      "  Where-Object { $_.Name -eq 'node.exe' -and (($_.CommandLine -like '*src\\\\server.js*') -or ($_.CommandLine -like ('*' + $target + '*'))) } | " +
+                      "  ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue } " +
+                      "}";
 
         var startInfo = new ProcessStartInfo
         {
