@@ -1,0 +1,56 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wallpaper Video LAN</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <h1>Wallpaper Video LAN</h1>
+        <p id="statusText">Cargando biblioteca...</p>
+      </div>
+      <button id="rescanBtn" class="ghost-btn">Reescanear</button>
+    </header>
+
+    <section class="controls">
+      <input id="searchInput" type="search" placeholder="Buscar por nombre o carpeta" />
+      <label class="toggle">
+        <input id="foldersOnly" type="checkbox" />
+        <span>Solo carpetas con video</span>
+      </label>
+    </section>
+
+    <section id="playerPanel" class="player-panel hidden">
+      <div class="player-head">
+        <strong id="playerTitle"></strong>
+        <small id="playerMeta"></small>
+      </div>
+      <video id="videoPlayer" controls playsinline preload="metadata"></video>
+    </section>
+
+    <section id="grid" class="grid"></section>
+  </main>
+
+  <template id="videoCardTemplate">
+    <article class="card">
+      <div class="thumb-wrap">
+        <img class="thumb hidden" alt="Miniatura" loading="lazy" />
+        <div class="placeholder">
+          <span>VIDEO</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h3 class="title"></h3>
+        <p class="meta"></p>
+        <button class="play-btn">Reproducir</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="/app.js"></script>
+</body>
+</html>
