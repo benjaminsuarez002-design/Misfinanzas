@@ -834,6 +834,12 @@
     transform-origin: center center;
     will-change: transform;
   }
+  .cfg-box.cfg-box-personal {
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
   .cfg-title { font-family: Arial Black,sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 22px; display:flex; align-items:center; gap:8px; }
   .cfg-section-title { font-size: 11px; color: var(--blue); font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display:flex; align-items:center; gap:6px; }
   .cfg-option {
@@ -930,6 +936,19 @@
   }
   .cfg-panel { display:none; }
   .cfg-panel.active { display:block; }
+  .cfg-panel-personal.active {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: calc(88vh - 170px);
+    overflow-y: auto;
+    padding-right: 4px;
+    overscroll-behavior: contain;
+  }
+  .cfg-panel-personal.active::-webkit-scrollbar { width: 8px; }
+  .cfg-panel-personal.active::-webkit-scrollbar-thumb {
+    background: rgba(108,140,255,.24);
+    border-radius: 999px;
+  }
   .cfg-section-note { font-size: 12px; color: var(--muted); line-height: 1.45; margin: -4px 0 12px; }
   .cfg-theme-list { display:grid; gap:10px; }
   .cfg-theme-row {
@@ -958,10 +977,10 @@
   .cfg-theme-dots { display:flex; gap:5px; }
   .cfg-theme-action {
     padding:10px 12px; border-radius:12px; border:none; cursor:pointer;
-    background: linear-gradient(135deg,#2dd9e8,#7d75ff); color:#fff;
+    background: var(--button-gradient, linear-gradient(135deg,#2dd9e8,#7d75ff)); color:#fff;
     font-family: Arial Black,sans-serif; font-size: 11px; font-weight: 800;
     white-space: nowrap; flex-shrink: 0;
-    box-shadow: 0 10px 20px rgba(92,111,255,.18);
+    box-shadow: 0 10px 20px var(--button-shadow, rgba(92,111,255,.18));
   }
   .cfg-theme-picker-overlay {
     position: fixed; inset: 0; z-index: 5100; display:none;
@@ -973,6 +992,8 @@
     width:min(100%, 460px); background: var(--card); border-radius: 24px;
     padding:22px 20px 18px; border: 1.5px solid var(--border);
     box-shadow: 0 24px 64px rgba(88,77,180,.22);
+    max-height: min(90vh, 760px);
+    overflow-y: auto;
   }
   .cfg-theme-picker-title { font-family: Arial Black,sans-serif; font-size: 20px; color: var(--text); margin-bottom: 8px; }
   .cfg-theme-picker-sub { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
@@ -990,6 +1011,56 @@
   .cfg-theme-choice-preview { display:flex; gap:5px; flex-shrink:0; }
   .cfg-theme-choice-preview .cfg-theme-bar { width:96px; }
   .cfg-theme-picker-actions { display:flex; justify-content:flex-end; gap:10px; }
+  .cfg-theme-custom {
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px dashed rgba(108,140,255,.2);
+  }
+  .cfg-theme-custom-title {
+    font-family: Arial Black,sans-serif; font-size: 12px; font-weight: 800;
+    color: var(--text); margin-bottom: 4px; text-transform: uppercase; letter-spacing: .6px;
+  }
+  .cfg-theme-custom-sub {
+    font-size: 11px; color: var(--muted); line-height: 1.4; margin-bottom: 12px;
+  }
+  .cfg-theme-color-grid {
+    display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;
+  }
+  .cfg-theme-color-field {
+    border: 1.5px solid rgba(108,140,255,.14);
+    background: linear-gradient(135deg, rgba(255,255,255,.46), rgba(243,238,255,.26));
+    border-radius: 14px; padding: 10px 10px 8px;
+  }
+  .cfg-theme-color-label {
+    display:block; font-size: 10px; color: var(--muted);
+    font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cfg-theme-color-input {
+    width: 100%; height: 40px; border: none; padding: 0; background: transparent; cursor: pointer;
+  }
+  .cfg-theme-color-input::-webkit-color-swatch-wrapper { padding: 0; }
+  .cfg-theme-color-input::-webkit-color-swatch {
+    border: 1.5px solid rgba(255,255,255,.55);
+    border-radius: 10px;
+  }
+  .cfg-theme-color-input::-moz-color-swatch {
+    border: 1.5px solid rgba(255,255,255,.55);
+    border-radius: 10px;
+  }
+  .cfg-theme-custom-actions {
+    display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+  }
+  .cfg-theme-custom-btn {
+    padding:10px 12px; border-radius:12px; border:none; cursor:pointer;
+    font-family: Arial Black,sans-serif; font-size: 11px; font-weight: 800;
+  }
+  .cfg-theme-custom-btn.apply {
+    background: var(--button-gradient, linear-gradient(135deg,#2dd9e8,#7d75ff)); color:#fff;
+    box-shadow: 0 10px 20px var(--button-shadow, rgba(92,111,255,.18));
+  }
+  .cfg-theme-custom-btn.clear {
+    background: rgba(108,140,255,.08); color: var(--blue); border: 1.5px solid rgba(108,140,255,.18);
+  }
 
 
   .recordatorio-row { display: flex; align-items: center; justify-content: space-between; background: rgba(108,140,255,.07); border: 1.5px solid rgba(108,140,255,.2); border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; cursor: pointer; }
@@ -1759,7 +1830,7 @@ window.abrirConfig = () => {
   ).join('');
 
   overlay.innerHTML = `
-    <div class="cfg-box">
+    <div class="cfg-box ${userConfig.configTab==='personalizacion'?'cfg-box-personal':''}">
       <div class="cfg-title">⚙️ Configuración</div>
       <div class="cfg-top-tabs">
         <button type="button" id="cfgTabGeneral" class="cfg-tab-chip ${userConfig.configTab!=='personalizacion'?'active':''}" onclick="setCfgConfigTab('general')">Configuración general</button>
@@ -1819,7 +1890,7 @@ window.abrirConfig = () => {
         </div>
       </div>
 
-      <div id="cfgPanelPersonal" class="cfg-panel ${userConfig.configTab==='personalizacion'?'active':''}">
+      <div id="cfgPanelPersonal" class="cfg-panel cfg-panel-personal ${userConfig.configTab==='personalizacion'?'active':''}">
         <div class="cfg-section-title">🎨 Personalización global</div>
         <div class="cfg-section-note">Lo que elijas acá se comparte con los HTML de Mis Finanzas para mantener el mismo estilo en login, reset, aprobaciones, panel admin y app principal.</div>
         <div id="cfgThemeList" class="cfg-theme-list"></div>
@@ -1837,6 +1908,7 @@ window.abrirConfig = () => {
   document.querySelectorAll('.cfg-dia-sem').forEach((b,i) =>
     b.classList.toggle('active', i === (userConfig.diaCobro ?? 5))
   );
+  syncCfgConfigLayoutMode();
   refreshCfgThemeList();
   requestAnimationFrame(window.fitConfigBoxToViewport);
 };
@@ -1846,6 +1918,10 @@ window.fitConfigBoxToViewport = () => {
   const box = overlay?.querySelector('.cfg-box');
   if(!box) return;
   box.style.transform = 'scale(1)';
+  if(userConfig.configTab === 'personalizacion'){
+    syncCfgConfigLayoutMode();
+    return;
+  }
   const margin = 20;
   const rect = box.getBoundingClientRect();
   const maxW = Math.max(200, window.innerWidth - margin);
@@ -1899,7 +1975,7 @@ function getCfgThemeApi(){
 function getCfgThemeState(){
   const api = getCfgThemeApi();
   const current = api?.getCurrent?.() || {};
-  userConfig.personalizacion = { ...current, ...(userConfig.personalizacion || {}) };
+  userConfig.personalizacion = { ...(userConfig.personalizacion || {}), ...current };
   return userConfig.personalizacion;
 }
 
@@ -1952,6 +2028,57 @@ function buildCfgThemeSwatches(option = {}){
   `;
 }
 
+function getCfgThemeManualPalette(state, category){
+  const colors = state?.customColors?.[category];
+  return Array.isArray(colors) && colors.length ? colors.slice(0, 4) : null;
+}
+
+function getCfgThemeDisplayOption(category, state, catalog){
+  const manual = getCfgThemeManualPalette(state, category);
+  if(manual){
+    return {
+      key: '__manual__',
+      label: 'Paleta manual',
+      description: 'Combinacion personalizada de 4 colores.',
+      swatches: manual
+    };
+  }
+  return (catalog[category] || []).find(item => item.key === state[category]) || (catalog[category] || [])[0] || {};
+}
+
+function getCfgEditablePalette(category, state){
+  const api = getCfgThemeApi();
+  const palette = api?.getActivePalette?.(category, state) || [];
+  const fallback = ['#2ee6ff', '#8758ff', '#ff62c1', '#ffb347'];
+  return (Array.isArray(palette) ? palette : [])
+    .slice(0, 4)
+    .concat(fallback)
+    .slice(0, 4);
+}
+
+function renderCfgThemeCustomBlock(category, state){
+  const labels = ['Primario', 'Secundario', 'Terciario', 'Cuaternario'];
+  const palette = getCfgEditablePalette(category, state);
+  return `
+    <div class="cfg-theme-custom">
+      <div class="cfg-theme-custom-title">Paleta manual</div>
+      <div class="cfg-theme-custom-sub">Elegí 4 colores para este apartado. Si querés un look más fino, podés mezclar un primario protagonista con secundarios suaves.</div>
+      <div class="cfg-theme-color-grid">
+        ${labels.map((label, index) => `
+          <div class="cfg-theme-color-field">
+            <label class="cfg-theme-color-label" for="cfgThemeColor-${category}-${index}">${label}</label>
+            <input type="color" id="cfgThemeColor-${category}-${index}" class="cfg-theme-color-input" value="${palette[index]}">
+          </div>
+        `).join('')}
+      </div>
+      <div class="cfg-theme-custom-actions">
+        <button type="button" class="cfg-theme-custom-btn clear" onclick="limpiarCfgThemePalette('${category}')">Limpiar manual</button>
+        <button type="button" class="cfg-theme-custom-btn apply" onclick="aplicarCfgThemePalette('${category}')">Aplicar paleta</button>
+      </div>
+    </div>
+  `;
+}
+
 function buildCfgThemeListHtml(){
   const api = getCfgThemeApi();
   if(!api) return '<div class="cfg-section-note">No se pudo cargar la personalización global.</div>';
@@ -1959,7 +2086,7 @@ function buildCfgThemeListHtml(){
   const state = getCfgThemeState();
   const meta = getCfgThemeMeta();
   return Object.entries(meta).map(([key, info]) => {
-    const option = (catalog[key] || []).find(item => item.key === state[key]) || (catalog[key] || [])[0] || {};
+    const option = getCfgThemeDisplayOption(key, state, catalog);
     return `
       <div class="cfg-theme-row">
         <div class="cfg-theme-copy">
@@ -1980,12 +2107,19 @@ window.refreshCfgThemeList = () => {
   requestAnimationFrame(window.fitConfigBoxToViewport);
 };
 
+window.syncCfgConfigLayoutMode = () => {
+  const box = document.querySelector('#cfgOverlay .cfg-box');
+  if(!box) return;
+  box.classList.toggle('cfg-box-personal', userConfig.configTab === 'personalizacion');
+};
+
 window.setCfgConfigTab = tab => {
   userConfig.configTab = tab === 'personalizacion' ? 'personalizacion' : 'general';
   document.getElementById('cfgTabGeneral')?.classList.toggle('active', userConfig.configTab === 'general');
   document.getElementById('cfgTabPersonal')?.classList.toggle('active', userConfig.configTab === 'personalizacion');
   document.getElementById('cfgPanelGeneral')?.classList.toggle('active', userConfig.configTab === 'general');
   document.getElementById('cfgPanelPersonal')?.classList.toggle('active', userConfig.configTab === 'personalizacion');
+  syncCfgConfigLayoutMode();
   requestAnimationFrame(window.fitConfigBoxToViewport);
 };
 
@@ -2024,6 +2158,7 @@ window.abrirCfgThemePicker = category => {
           </button>
         `).join('')}
       </div>
+      ${renderCfgThemeCustomBlock(category, state)}
       <div class="cfg-theme-picker-actions">
         <button class="cfg-btn-cancel" type="button" onclick="cerrarCfgThemePicker()">Cerrar</button>
       </div>
@@ -2038,6 +2173,27 @@ window.seleccionarCfgThemeOption = (category, optionKey) => {
   const next = category === 'preset'
     ? api.applyPreset(optionKey, { persist: true })
     : api.updateCategory(category, optionKey, { persist: true });
+  userConfig.personalizacion = next;
+  refreshCfgThemeList();
+  abrirCfgThemePicker(category);
+};
+
+window.aplicarCfgThemePalette = category => {
+  const api = getCfgThemeApi();
+  if(!api?.applyCustomPalette) return;
+  const colors = [0, 1, 2, 3].map(index =>
+    document.getElementById(`cfgThemeColor-${category}-${index}`)?.value || ''
+  );
+  const next = api.applyCustomPalette(category, colors, { persist: true });
+  userConfig.personalizacion = next;
+  refreshCfgThemeList();
+  abrirCfgThemePicker(category);
+};
+
+window.limpiarCfgThemePalette = category => {
+  const api = getCfgThemeApi();
+  if(!api?.clearCustomPalette) return;
+  const next = api.clearCustomPalette(category, { persist: true });
   userConfig.personalizacion = next;
   refreshCfgThemeList();
   abrirCfgThemePicker(category);

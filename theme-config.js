@@ -237,7 +237,147 @@
     graphite: '#475569'
   };
 
+  const customPaletteDefaults = {
+    preset: ['#2ee6ff', '#8758ff', '#ff62c1', '#ffb347'],
+    mode: ['#0b1020', '#141b31', '#1f2946', '#8f9dc2'],
+    background: ['#0b1020', '#141b31', '#201c42', '#2b1a52'],
+    lines: ['#19dfff', '#8cff66', '#ffb347', '#ff5f9a'],
+    lineMotion: ['#19dfff', '#8cff66', '#ffb347', '#ff5f9a'],
+    effects: ['#4cc7ff', '#8f6bff', '#ff62c1', '#ffb14d'],
+    buttons: ['#2ee6ff', '#8758ff', '#ff62c1', '#ffb347'],
+    general: ['#8f6bff', '#3fb9ff', '#ff5f9a', '#ffb347']
+  };
+
   let currentTheme = null;
+
+  function sanitizeHexColor(value, fallback){
+    const raw = String(value || '').trim();
+    if(/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
+    if(/^#[0-9a-fA-F]{3}$/.test(raw)){
+      return '#' + raw.slice(1).split('').map(char => char + char).join('').toLowerCase();
+    }
+    return fallback;
+  }
+
+  function hexToRgb(hex){
+    const safe = sanitizeHexColor(hex, '#8f6bff').replace('#', '');
+    return {
+      r: parseInt(safe.slice(0, 2), 16),
+      g: parseInt(safe.slice(2, 4), 16),
+      b: parseInt(safe.slice(4, 6), 16)
+    };
+  }
+
+  function rgbToHex(r, g, b){
+    return '#' + [r, g, b].map(channel => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, '0')).join('');
+  }
+
+  function mixHex(hexA, hexB, amount){
+    const ratio = Math.max(0, Math.min(1, Number(amount) || 0));
+    const a = hexToRgb(hexA);
+    const b = hexToRgb(hexB);
+    return rgbToHex(
+      Math.round(a.r + (b.r - a.r) * ratio),
+      Math.round(a.g + (b.g - a.g) * ratio),
+      Math.round(a.b + (b.b - a.b) * ratio)
+    );
+  }
+
+  function expandPalette(colors, fallback){
+    const baseFallback = (Array.isArray(fallback) && fallback.length ? fallback : customPaletteDefaults.general).map((color, index) =>
+      sanitizeHexColor(color, customPaletteDefaults.general[index % customPaletteDefaults.general.length])
+    );
+    const source = Array.isArray(colors) ? colors : [];
+    const normalized = source
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((color, index) => sanitizeHexColor(color, baseFallback[index % baseFallback.length]));
+    while(normalized.length < 4){
+      normalized.push(baseFallback[normalized.length % baseFallback.length]);
+    }
+    return normalized;
+  }
+
+  function derivePaletteFromSource(colors, fallback){
+    const source = (Array.isArray(colors) ? colors : [])
+      .filter(Boolean)
+      .slice(0, 4)
+      .map((color, index) => sanitizeHexColor(color, (fallback || customPaletteDefaults.general)[index % (fallback || customPaletteDefaults.general).length]));
+    if(source.length >= 4) return source;
+    if(source.length === 3){
+      return [source[0], source[1], source[2], mixHex(source[1], source[2], 0.5)];
+    }
+    if(source.length === 2){
+      return [source[0], mixHex(source[0], source[1], 0.4), source[1], mixHex(source[1], source[0], 0.4)];
+    }
+    if(source.length === 1){
+      return [
+        mixHex(source[0], '#ffffff', 0.24),
+        source[0],
+        mixHex(source[0], '#111827', 0.2),
+        mixHex(source[0], '#111827', 0.38)
+      ];
+    }
+    return expandPalette([], fallback);
+  }
+
+  function normalizeCustomColors(customColors){
+    const source = customColors && typeof customColors === 'object' ? customColors : {};
+    return Object.keys(customPaletteDefaults).reduce((acc, category) => {
+      if(Array.isArray(source[category]) && source[category].length){
+        acc[category] = expandPalette(source[category], customPaletteDefaults[category]);
+      }
+      return acc;
+    }, {});
+  }
+
+  function getCatalogOption(category, key){
+    return (catalog[category] || []).find(item => item.key === key) || null;
+  }
+
+  function getCatalogPalette(category, key){
+    const option = getCatalogOption(category, key);
+    return derivePaletteFromSource(option?.swatches || [], customPaletteDefaults[category] || customPaletteDefaults.general);
+  }
+
+  function buildCustomModeProfile(modeKey, colors){
+    const base = modeProfiles[modeKey] || modeProfiles.light;
+    if(!Array.isArray(colors) || !colors.length) return base;
+    const [a, b, c, d] = expandPalette(colors, customPaletteDefaults.mode);
+    const dark = modeKey === 'dark';
+    const bg = dark ? mixHex(a, '#040913', 0.78) : mixHex(a, '#ffffff', 0.86);
+    const bg2 = dark ? mixHex(b, '#0b1322', 0.70) : mixHex(b, '#ffffff', 0.78);
+    const cardHex = dark ? mixHex(c, '#11192c', 0.62) : mixHex(c, '#ffffff', 0.84);
+    const card2Hex = dark ? mixHex(d, '#162036', 0.54) : mixHex(d, '#ffffff', 0.78);
+    const chromeHex = dark ? mixHex(a, '#050913', 0.82) : mixHex(a, '#ffffff', 0.88);
+    const chromeStrongHex = dark ? mixHex(b, '#08101d', 0.78) : mixHex(b, '#ffffff', 0.84);
+    const surfaceAltHex = dark ? mixHex(c, '#162136', 0.66) : mixHex(c, '#ffffff', 0.72);
+    return {
+      bg,
+      bg2,
+      card: hexToRgba(cardHex, dark ? 0.94 : 0.96),
+      card2: hexToRgba(card2Hex, dark ? 0.98 : 0.98),
+      cardSoft: hexToRgba(cardHex, dark ? 0.24 : 0.78),
+      chrome: hexToRgba(chromeHex, dark ? 0.84 : 0.72),
+      chromeStrong: hexToRgba(chromeStrongHex, dark ? 0.94 : 0.82),
+      surfaceAlt: hexToRgba(surfaceAltHex, dark ? 0.88 : 0.78),
+      text: base.text,
+      muted: dark ? mixHex(d, '#9ba8c8', 0.66) : mixHex(d, '#71749a', 0.36),
+      inputBg: hexToRgba(dark ? mixHex(c, '#ffffff', 0.1) : mixHex(c, '#ffffff', 0.32), dark ? 0.16 : 0.42),
+      overlay: hexToRgba(d, dark ? 0.22 : 0.16),
+      success: base.success,
+      red: base.red,
+      yellow: base.yellow
+    };
+  }
+
+  function buildBackgroundGradient(colors, modeKey){
+    const [a, b, c, d] = expandPalette(colors, customPaletteDefaults.background);
+    if(modeKey === 'dark'){
+      return `radial-gradient(circle at 18% 18%, ${hexToRgba(b, .18)} 0%, transparent 28%), radial-gradient(circle at 82% 14%, ${hexToRgba(c, .16)} 0%, transparent 26%), linear-gradient(180deg, ${mixHex(a, '#050913', 0.76)} 0%, ${mixHex(b, '#0c1322', 0.72)} 34%, ${mixHex(c, '#121a30', 0.74)} 68%, ${mixHex(d, '#0a101d', 0.8)} 100%)`;
+    }
+    return `radial-gradient(circle at 18% 18%, ${hexToRgba(b, .16)} 0%, transparent 28%), radial-gradient(circle at 82% 14%, ${hexToRgba(c, .14)} 0%, transparent 26%), linear-gradient(135deg, ${mixHex(a, '#ffffff', 0.82)} 0%, ${mixHex(b, '#ffffff', 0.72)} 35%, ${mixHex(c, '#ffffff', 0.6)} 68%, ${mixHex(d, '#ffffff', 0.56)} 100%)`;
+  }
 
   function clampTheme(theme){
     const incoming = theme || {};
@@ -251,6 +391,7 @@
       }
     });
 
+    next.customColors = normalizeCustomColors(next.customColors);
     return next;
   }
 
@@ -457,8 +598,8 @@
         border-color: rgba(143,107,255,.44) !important;
       }
       [data-mf-mode="dark"] .cfg-theme-action{
-        background: linear-gradient(135deg, rgba(45,217,232,.96), rgba(125,117,255,.96)) !important;
-        box-shadow: 0 12px 24px rgba(46,83,255,.18) !important;
+        background: var(--button-gradient) !important;
+        box-shadow: 0 12px 24px var(--button-shadow) !important;
       }
       [data-mf-mode="dark"] .mov-item:hover,
       [data-mf-mode="dark"] .sem-header:hover,
@@ -622,13 +763,29 @@
 
   function buildVars(theme){
     const safeTheme = clampTheme(theme);
-    const mode = modeProfiles[safeTheme.mode];
-    const border = lineProfiles[safeTheme.lines];
+    const palettes = {
+      mode: safeTheme.customColors.mode || getCatalogPalette('mode', safeTheme.mode),
+      background: safeTheme.customColors.background || getCatalogPalette('background', safeTheme.background),
+      lines: safeTheme.customColors.lines || getCatalogPalette('lines', safeTheme.lines),
+      lineMotion: safeTheme.customColors.lineMotion || getCatalogPalette('lineMotion', safeTheme.lineMotion),
+      effects: safeTheme.customColors.effects || getCatalogPalette('effects', safeTheme.effects),
+      buttons: safeTheme.customColors.buttons || getCatalogPalette('buttons', safeTheme.buttons),
+      general: safeTheme.customColors.general || getCatalogPalette('general', safeTheme.general)
+    };
+    const mode = buildCustomModeProfile(safeTheme.mode, safeTheme.customColors.mode);
+    const border = palettes.lines[0];
     const lineMotion = lineMotionProfiles[safeTheme.lineMotion];
-    const effect = effectProfiles[safeTheme.effects];
-    const button = buttonProfiles[safeTheme.buttons];
-    const general = generalProfiles[safeTheme.general];
-    const bodyBg = backgroundProfiles[safeTheme.background];
+    const effectPalette = palettes.effects;
+    const buttonPalette = palettes.buttons;
+    const generalPalette = palettes.general;
+    const effect = effectPalette[0];
+    const general = generalPalette[0];
+    const bodyBg = safeTheme.customColors.background
+      ? buildBackgroundGradient(palettes.background, safeTheme.mode)
+      : backgroundProfiles[safeTheme.background];
+    const buttonGradient = safeTheme.customColors.buttons
+      ? `linear-gradient(135deg, ${buttonPalette.join(', ')})`
+      : `linear-gradient(135deg, ${buttonPalette[0]}, ${buttonPalette[1]})`;
     return {
       '--bg': mode.bg,
       '--bg2': mode.bg2,
@@ -641,7 +798,7 @@
       '--border': border,
       '--text': mode.text,
       '--muted': mode.muted,
-      '--accent': button.from,
+      '--accent': buttonPalette[0],
       '--accent2': effect,
       '--green': mode.success,
       '--red': mode.red,
@@ -650,20 +807,20 @@
       '--input-bg': mode.inputBg,
       '--overlay-soft': mode.overlay,
       '--body-bg': bodyBg,
-      '--button-gradient': 'linear-gradient(135deg, ' + button.from + ', ' + button.to + ')',
-      '--button-from': button.from,
-      '--button-to': button.to,
-      '--button-shadow': hexToRgba(button.to, 0.42),
-      '--focus-ring': hexToRgba(general, 0.24),
-      '--surface-shadow': hexToRgba(effect, 0.24),
+      '--button-gradient': buttonGradient,
+      '--button-from': buttonPalette[0],
+      '--button-to': buttonPalette[1],
+      '--button-shadow': hexToRgba(buttonPalette[buttonPalette.length - 1] || buttonPalette[1], 0.42),
+      '--focus-ring': hexToRgba(generalPalette[1] || general, 0.24),
+      '--surface-shadow': hexToRgba(effectPalette[1] || effect, 0.24),
       '--line-animation-name': lineMotion.animation,
       '--line-animation-duration': lineMotion.duration,
       '--line-glow-soft': hexToRgba(effect, lineMotion.glowSoft),
       '--line-glow-strong': hexToRgba(effect, lineMotion.glowStrong),
       '--line-tint': hexToRgba(border, lineMotion.opacity),
-      '--line-glow-accent-a': hexToRgba(button.from, lineMotion.glowStrong),
-      '--line-glow-accent-b': hexToRgba(button.to, lineMotion.glowStrong),
-      '--line-glow-accent-c': hexToRgba(general, lineMotion.glowStrong)
+      '--line-glow-accent-a': hexToRgba(palettes.lineMotion[0], lineMotion.glowStrong),
+      '--line-glow-accent-b': hexToRgba(palettes.lineMotion[1], lineMotion.glowStrong),
+      '--line-glow-accent-c': hexToRgba(palettes.lineMotion[2], lineMotion.glowStrong)
     };
   }
 
@@ -685,7 +842,13 @@
   function applyPreset(presetKey, options){
     const preset = presetProfiles[presetKey];
     if(!preset) return currentTheme || readTheme();
-    const next = clampTheme({ preset: presetKey, ...preset });
+    const base = currentTheme || readTheme();
+    const next = clampTheme({
+      ...base,
+      preset: presetKey,
+      ...preset,
+      customColors: presetKey === 'custom' ? base.customColors : {}
+    });
     return applyTheme(next, !options || options.persist !== false);
   }
 
@@ -693,10 +856,60 @@
     if(category === 'preset'){
       return applyPreset(value, options);
     }
+    const base = currentTheme || readTheme();
+    const customColors = normalizeCustomColors(base.customColors);
+    delete customColors[category];
     const next = clampTheme({
-      ...(currentTheme || readTheme()),
+      ...base,
       [category]: value,
-      preset: 'custom'
+      preset: 'custom',
+      customColors
+    });
+    return applyTheme(next, !options || options.persist !== false);
+  }
+
+  function getActivePalette(category, theme){
+    const safeTheme = clampTheme(theme || currentTheme || readTheme());
+    if(safeTheme.customColors[category]){
+      return [...safeTheme.customColors[category]];
+    }
+    if(category in safeTheme){
+      return getCatalogPalette(category, safeTheme[category]);
+    }
+    return expandPalette([], customPaletteDefaults[category] || customPaletteDefaults.general);
+  }
+
+  function applyCustomPalette(category, colors, options){
+    const base = currentTheme || readTheme();
+    const customColors = normalizeCustomColors(base.customColors);
+    const palette = expandPalette(colors, getActivePalette(category, base));
+    if(category === 'preset'){
+      customColors.preset = palette;
+      ['mode', 'background', 'lines', 'lineMotion', 'effects', 'buttons', 'general'].forEach(key => {
+        customColors[key] = [...palette];
+      });
+    } else {
+      customColors[category] = palette;
+    }
+    const next = clampTheme({
+      ...base,
+      preset: 'custom',
+      customColors
+    });
+    return applyTheme(next, !options || options.persist !== false);
+  }
+
+  function clearCustomPalette(category, options){
+    const base = currentTheme || readTheme();
+    const customColors = normalizeCustomColors(base.customColors);
+    if(category === 'preset'){
+      Object.keys(customColors).forEach(key => delete customColors[key]);
+    } else {
+      delete customColors[category];
+    }
+    const next = clampTheme({
+      ...base,
+      customColors
     });
     return applyTheme(next, !options || options.persist !== false);
   }
@@ -717,6 +930,9 @@
     },
     applyPreset,
     updateCategory,
+    applyCustomPalette,
+    clearCustomPalette,
+    getActivePalette,
     resetTheme(options){
       return applyPreset(defaultTheme.preset, options);
     },
