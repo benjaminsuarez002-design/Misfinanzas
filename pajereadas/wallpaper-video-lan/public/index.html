@@ -24,14 +24,6 @@
       </label>
     </section>
 
-    <section id="playerPanel" class="player-panel hidden">
-      <div class="player-head">
-        <strong id="playerTitle"></strong>
-        <small id="playerMeta"></small>
-      </div>
-      <video id="videoPlayer" controls playsinline preload="metadata"></video>
-    </section>
-
     <section id="grid" class="grid"></section>
   </main>
 
@@ -42,6 +34,7 @@
         <div class="placeholder">
           <span>VIDEO</span>
         </div>
+        <video class="inline-player hidden" controls playsinline preload="metadata"></video>
       </div>
       <div class="card-body">
         <h3 class="title"></h3>

@@ -92,31 +92,6 @@ input[type='search']:focus {
   font-weight: 600;
 }
 
-.player-panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 10px;
-  margin-bottom: 14px;
-}
-
-.player-head {
-  margin-bottom: 8px;
-}
-
-.player-head small {
-  display: block;
-  color: var(--muted);
-  margin-top: 4px;
-}
-
-#videoPlayer {
-  width: 100%;
-  max-height: 60vh;
-  border-radius: 10px;
-  background: #000;
-}
-
 .hidden {
   display: none !important;
 }
@@ -140,10 +115,17 @@ input[type='search']:focus {
   position: relative;
 }
 
-.thumb {
+.thumb,
+.inline-player {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.inline-player {
+  position: absolute;
+  inset: 0;
+  background: #000;
 }
 
 .placeholder {

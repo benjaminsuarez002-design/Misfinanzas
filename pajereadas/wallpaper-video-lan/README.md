@@ -125,3 +125,40 @@ Fuerza un nuevo escaneo inmediato.
 - No descarga nada de Steam.
 - No usa autenticación ni Docker.
 - Solo explora y reproduce archivos locales existentes.
+
+## Instalador para otra PC
+
+Si quieres llevar esta app a otra computadora Windows sin hacerlo manualmente:
+
+1. En la PC origen, ejecuta:
+
+```bat
+crear-paquete-instalable.bat
+```
+
+Esto genera un ZIP en `dist\wallpaper-video-lan-instalable.zip`.
+
+2. Copia ese ZIP a la otra PC y descomprímelo.
+
+3. En la otra PC, entra a `installer\` y ejecuta:
+
+```bat
+Instalar-WallpaperVideoLAN.bat
+```
+
+El instalador hace esto automáticamente:
+- ejecuta `npm install`
+- crea/actualiza `.env`
+- intenta crear regla de firewall para puerto `3000` (si hay permisos admin)
+- crea accesos directos en escritorio:
+  - `Levantar-Host-WallpaperVideoLAN.bat` (muestra la IP LAN)
+  - `Detener-WallpaperVideoLAN.bat`
+
+4. Abre desde el teléfono en la misma Wi-Fi:
+
+`http://IP_DE_LA_PC:3000`
+
+Notas:
+- Si no ejecutas como administrador, el firewall puede quedar bloqueando acceso LAN.
+- El instalador te deja elegir la ruta de videos (`WALLPAPER_ROOT`).
+- Si pones `C:\` escanea todo el disco y puede tardar bastante en iniciar.
