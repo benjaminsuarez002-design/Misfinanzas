@@ -17,6 +17,8 @@ set "FIREWALL_RULE=WallpaperVideoLAN-3000"
 set "TOTAL_STEPS=9"
 set "BAR_WIDTH=28"
 set "INSTALL_OK=0"
+set "NODE_EXE="
+set "NPM_CMD="
 
 echo.
 echo === Instalador WallpaperVideoLAN desde GitHub ===
@@ -128,21 +130,16 @@ if errorlevel 1 (
   exit /b 1
 )
 
-winget install OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements
+winget install OpenJS.NodeJS.LTS -e --accept-package-agreements --accept-source-agreements --disable-interactivity
 if errorlevel 1 (
   echo [ERROR] Fallo la instalacion automatica de Node.js.
   exit /b 1
 )
 
 set "PATH=%PATH%;C:\Program Files\nodejs;C:\Program Files (x86)\nodejs;%LOCALAPPDATA%\Programs\nodejs"
-where node >nul 2>nul
+call :resolve_node_and_npm
 if errorlevel 1 (
-  echo [ERROR] Node.js no disponible aun. Reabre consola y ejecuta otra vez.
-  exit /b 1
-)
-where npm.cmd >nul 2>nul
-if errorlevel 1 (
-  echo [ERROR] npm no disponible aun. Reabre consola y ejecuta otra vez.
+  echo [ERROR] Node.js o npm no quedaron disponibles aun. Reabre consola y ejecuta otra vez.
   exit /b 1
 )
 for /f "delims=" %%I in ('where node 2^>nul') do (
@@ -150,6 +147,23 @@ for /f "delims=" %%I in ('where node 2^>nul') do (
   goto :node_after_install
 )
 :node_after_install
+exit /b 0
+
+:resolve_node_and_npm
+set "NODE_EXE="
+set "NPM_CMD="
+for /f "delims=" %%I in ('where node 2^>nul') do (
+  set "NODE_EXE=%%I"
+  goto :node_found
+)
+:node_found
+for /f "delims=" %%I in ('where npm.cmd 2^>nul') do (
+  set "NPM_CMD=%%I"
+  goto :npm_found
+)
+:npm_found
+if "%NODE_EXE%"=="" exit /b 1
+if "%NPM_CMD%"=="" exit /b 1
 exit /b 0
 
 :configure_firewall
@@ -190,9 +204,11 @@ if not exist "%AUTO_TEMPLATE%" (
   exit /b 1
 )
 
-copy /Y "%APP_EXE_SRC%" "%APP_EXE_DEST%" >nul
+call :stop_host_control
+call :copy_file_with_retry "%APP_EXE_SRC%" "%APP_EXE_DEST%" 3
 if errorlevel 1 (
   echo [ERROR] No se pudo copiar el ejecutable a: %APP_EXE_DEST%
+  echo [INFO] Cierra WallpaperVideoLAN.HostControl.exe y vuelve a intentar.
   exit /b 1
 )
 
@@ -201,9 +217,16 @@ if exist "%APP_ICON_SRC%" (
 )
 
 set "ICON_FOR_SHORTCUT=%APP_EXE_DEST%"
-if exist "%APP_ICON_DEST%" set "ICON_FOR_SHORTCUT=%APP_ICON_DEST%"
+set "ICON_LOCATION=%APP_EXE_DEST%,0"
+if exist "%APP_ICON_DEST%" (
+  set "ICON_FOR_SHORTCUT=%APP_ICON_DEST%"
+  set "ICON_LOCATION=%APP_ICON_DEST%"
+) else if exist "%APP_ICON_SRC%" (
+  set "ICON_FOR_SHORTCUT=%APP_ICON_SRC%"
+  set "ICON_LOCATION=%APP_ICON_SRC%"
+)
 
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath='%APP_EXE_DEST%'; $s.WorkingDirectory='%WORK_DIR%'; $s.IconLocation='%ICON_FOR_SHORTCUT%,0'; $s.Save()"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath='%APP_EXE_DEST%'; $s.WorkingDirectory='%WORK_DIR%'; $s.IconLocation='%ICON_LOCATION%'; $s.Description='WallpaperVideoLAN Host Control'; $s.Save()"
 if errorlevel 1 (
   echo [ERROR] No se pudo crear el acceso directo en escritorio.
   exit /b 1
@@ -211,8 +234,28 @@ if errorlevel 1 (
 
 echo [OK] Acceso directo creado en escritorio:
 echo - %DESKTOP_SHORTCUT%
+echo [OK] Icono usado:
+echo - %ICON_FOR_SHORTCUT%
 
 exit /b 0
+
+:stop_host_control
+echo [INFO] Cerrando Host Control si esta en ejecucion...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-Process WallpaperVideoLAN.HostControl -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue"
+timeout /t 1 /nobreak >nul
+exit /b 0
+
+:copy_file_with_retry
+set "SRC_FILE=%~1"
+set "DEST_FILE=%~2"
+set "RETRY_COUNT=%~3"
+:copy_retry_loop
+copy /Y "%SRC_FILE%" "%DEST_FILE%" >nul
+if not errorlevel 1 exit /b 0
+set /a RETRY_COUNT-=1
+if %RETRY_COUNT% LEQ 0 exit /b 1
+timeout /t 2 /nobreak >nul
+goto :copy_retry_loop
 
 :configure_autostart
 set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
@@ -243,6 +286,12 @@ set "STAMP_FILE=%WORK_DIR%\.deps-lock.sha256"
 set "LOCK_HASH="
 set "PREV_HASH="
 
+call :resolve_node_and_npm
+if errorlevel 1 (
+  echo [ERROR] npm no esta disponible en PATH.
+  exit /b 1
+)
+
 if exist "%WORK_DIR%\package-lock.json" (
   for /f "usebackq delims=" %%H in (`powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '%WORK_DIR%\package-lock.json').Hash"`) do set "LOCK_HASH=%%H"
 )
@@ -257,9 +306,12 @@ if exist "%WORK_DIR%\node_modules" if not "%LOCK_HASH%"=="" if /I "%LOCK_HASH%"=
 )
 
 echo [INFO] Ejecutando npm install...
-call npm.cmd install
+call "%NPM_CMD%" install --no-fund --no-audit
 if errorlevel 1 (
   echo [ERROR] Fallo npm install.
+  echo [INFO] Versiones detectadas:
+  call "%NODE_EXE%" --version
+  call "%NPM_CMD%" --version
   exit /b 1
 )
 
