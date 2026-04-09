@@ -2,6 +2,7 @@
 setlocal EnableExtensions
 
 set "REPO_ZIP_URL=https://codeload.github.com/benjaminsuarez002-design/Misfinanzas/zip/refs/heads/main"
+set "REPO_ZIP_URL_ALT=https://github.com/benjaminsuarez002-design/Misfinanzas/archive/refs/heads/main.zip"
 set "SUBDIR_IN_REPO=pajereadas\wallpaper-video-lan"
 set "WORK_DIR=%USERPROFILE%\WallpaperVideoLAN"
 set "TMP_DIR=%TEMP%\wvlan-bootstrap"
@@ -31,7 +32,7 @@ mkdir "%EXTRACT_DIR%" >nul 2>nul
 if not exist "%WORK_DIR%" mkdir "%WORK_DIR%" >nul 2>nul
 
 call :progress 2 "Descargando repo desde GitHub"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri '%REPO_ZIP_URL%' -OutFile '%ZIP_PATH%' } catch { Write-Host $_.Exception.Message; exit 1 }"
+call :download_repo
 if errorlevel 1 (
   echo [ERROR] No se pudo descargar el repo.
   goto :fail
@@ -318,6 +319,30 @@ if errorlevel 1 (
 if not "%LOCK_HASH%"=="" (
   > "%STAMP_FILE%" echo %LOCK_HASH%
 )
+exit /b 0
+
+:download_repo
+if exist "%ZIP_PATH%" del /f /q "%ZIP_PATH%" >nul 2>nul
+
+call :download_with_powershell "%REPO_ZIP_URL%" "%ZIP_PATH%"
+if not errorlevel 1 if exist "%ZIP_PATH%" exit /b 0
+
+echo [AVISO] Primer enlace no respondio. Probando enlace alternativo...
+call :download_with_powershell "%REPO_ZIP_URL_ALT%" "%ZIP_PATH%"
+if not errorlevel 1 if exist "%ZIP_PATH%" exit /b 0
+
+echo [AVISO] Descarga por PowerShell fallo. Probando con bitsadmin...
+where bitsadmin >nul 2>nul
+if not errorlevel 1 (
+  bitsadmin /transfer wvlan /download /priority normal "%REPO_ZIP_URL_ALT%" "%ZIP_PATH%" >nul 2>nul
+  if not errorlevel 1 if exist "%ZIP_PATH%" exit /b 0
+)
+
+exit /b 1
+
+:download_with_powershell
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12; $url='%~1'; $out='%~2'; $wc=New-Object Net.WebClient; $wc.Headers.Add('User-Agent','WallpaperVideoLAN-Installer'); $wc.DownloadFile($url,$out)"
+if errorlevel 1 exit /b 1
 exit /b 0
 
 :progress
