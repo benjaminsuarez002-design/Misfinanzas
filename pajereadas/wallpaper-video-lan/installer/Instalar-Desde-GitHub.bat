@@ -57,13 +57,10 @@ call :progress 5 "Verificando Node.js"
 call :ensure_node
 if errorlevel 1 goto :fail
 
-call :progress 6 "Instalando dependencias (puede tardar)"
+call :progress 6 "Verificando/instalando dependencias"
 cd /d "%WORK_DIR%"
-call npm.cmd install
-if errorlevel 1 (
-  echo [ERROR] Fallo npm install.
-  goto :fail
-)
+call :install_dependencies
+if errorlevel 1 goto :fail
 
 call :progress 7 "Configurando .env"
 echo.
@@ -236,6 +233,36 @@ if errorlevel 1 (
     exit /b 1
   )
   echo [OK] Auto inicio activado: %AUTO_BAT%
+)
+exit /b 0
+
+:install_dependencies
+set "STAMP_FILE=%WORK_DIR%\.deps-lock.sha256"
+set "LOCK_HASH="
+set "PREV_HASH="
+
+if exist "%WORK_DIR%\package-lock.json" (
+  for /f "usebackq delims=" %%H in (`powershell -NoProfile -Command "(Get-FileHash -Algorithm SHA256 '%WORK_DIR%\package-lock.json').Hash"`) do set "LOCK_HASH=%%H"
+)
+
+if exist "%STAMP_FILE%" (
+  set /p "PREV_HASH="<"%STAMP_FILE%"
+)
+
+if exist "%WORK_DIR%\node_modules" if not "%LOCK_HASH%"=="" if /I "%LOCK_HASH%"=="%PREV_HASH%" (
+  echo [INFO] Dependencias ya estan instaladas. Saltando npm install.
+  exit /b 0
+)
+
+echo [INFO] Ejecutando npm install...
+call npm.cmd install
+if errorlevel 1 (
+  echo [ERROR] Fallo npm install.
+  exit /b 1
+)
+
+if not "%LOCK_HASH%"=="" (
+  > "%STAMP_FILE%" echo %LOCK_HASH%
 )
 exit /b 0
 
