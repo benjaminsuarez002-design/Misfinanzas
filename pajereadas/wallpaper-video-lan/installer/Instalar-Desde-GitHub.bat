@@ -10,6 +10,7 @@ set "EXTRACT_DIR=%TMP_DIR%\extract"
 set "REPO_ROOT_IN_ZIP=%EXTRACT_DIR%\Misfinanzas-main"
 set "SOURCE_DIR=%REPO_ROOT_IN_ZIP%\%SUBDIR_IN_REPO%"
 set "LAUNCHERS_DIR=%WORK_DIR%\installer\launchers"
+set "TOOLS_DIR=%WORK_DIR%\installer\tools"
 
 set "DEFAULT_ROOT=C:\"
 set "FIREWALL_RULE=WallpaperVideoLAN-3000"
@@ -84,10 +85,10 @@ if errorlevel 2 goto :ask_root
   echo ENABLE_DURATION_PROBE=true
 )
 
-call :progress 8 "Configurando firewall y lanzadores"
+call :progress 8 "Configurando firewall y acceso directo"
 call :configure_firewall
 if errorlevel 1 goto :fail
-call :create_launchers
+call :create_shortcut
 if errorlevel 1 goto :fail
 call :configure_autostart
 if errorlevel 1 goto :fail
@@ -97,10 +98,10 @@ call :progress 9 "Finalizando instalacion"
 echo.
 echo Instalacion completada.
 echo App: %WORK_DIR%
-echo Lanzadores en escritorio:
-echo - %BG_BAT%
-echo - %FG_BAT%
-echo - %STOP_BAT%
+echo Ejecutable: %APP_EXE_DEST%
+echo Icono: %APP_ICON_DEST%
+echo Acceso directo en escritorio:
+echo - %DESKTOP_SHORTCUT%
 echo.
 
 set "INSTALL_OK=1"
@@ -162,51 +163,54 @@ if errorlevel 1 (
 powershell -NoProfile -Command "if (-not (Get-NetFirewallRule -DisplayName '%FIREWALL_RULE%' -ErrorAction SilentlyContinue)) { New-NetFirewallRule -DisplayName '%FIREWALL_RULE%' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private | Out-Null }"
 exit /b 0
 
-:create_launchers
+:create_shortcut
 set "DESKTOP_DIR="
 for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('DesktopDirectory')"`) do set "DESKTOP_DIR=%%I"
 if "%DESKTOP_DIR%"=="" set "DESKTOP_DIR=%USERPROFILE%\Desktop"
 if not exist "%DESKTOP_DIR%" set "DESKTOP_DIR=%USERPROFILE%\Escritorio"
 if not exist "%DESKTOP_DIR%" mkdir "%DESKTOP_DIR%" >nul 2>nul
 
-set "BG_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
-set "FG_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat"
-set "STOP_BAT=%DESKTOP_DIR%\Cerrar-Host-WallpaperVideoLAN.bat"
+set "APP_EXE_SRC=%TOOLS_DIR%\WallpaperVideoLAN.HostControl.exe"
+set "APP_EXE_DEST=%WORK_DIR%\WallpaperVideoLAN.HostControl.exe"
+set "APP_ICON_SRC=%TOOLS_DIR%\WallpaperVideoLAN.HostControl.ico"
+set "APP_ICON_DEST=%WORK_DIR%\WallpaperVideoLAN.HostControl.ico"
+set "DESKTOP_SHORTCUT=%DESKTOP_DIR%\WallpaperVideoLAN Host Control.lnk"
 set "AUTO_TEMPLATE=%LAUNCHERS_DIR%\AutoInicio-WallpaperVideoLAN.bat"
 
-if not exist "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN.bat" (
-  echo [ERROR] No se encontro el lanzador base en: %LAUNCHERS_DIR%
+if exist "%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat" del /f /q "%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat" >nul 2>nul
+if exist "%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" del /f /q "%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" >nul 2>nul
+if exist "%DESKTOP_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" del /f /q "%DESKTOP_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" >nul 2>nul
+
+if not exist "%APP_EXE_SRC%" (
+  echo [ERROR] No se encontro el ejecutable en: %APP_EXE_SRC%
   exit /b 1
 )
-if not exist "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" (
-  echo [ERROR] No se encontro el lanzador visible en: %LAUNCHERS_DIR%
-  exit /b 1
-)
-if not exist "%LAUNCHERS_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" (
-  echo [ERROR] No se encontro el lanzador de cierre en: %LAUNCHERS_DIR%
+if not exist "%AUTO_TEMPLATE%" (
+  echo [ERROR] No se encontro el auto inicio base en: %AUTO_TEMPLATE%
   exit /b 1
 )
 
-copy /Y "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN.bat" "%BG_BAT%" >nul
+copy /Y "%APP_EXE_SRC%" "%APP_EXE_DEST%" >nul
 if errorlevel 1 (
-  echo [ERROR] No se pudo crear: %BG_BAT%
-  exit /b 1
-)
-copy /Y "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" "%FG_BAT%" >nul
-if errorlevel 1 (
-  echo [ERROR] No se pudo crear: %FG_BAT%
-  exit /b 1
-)
-copy /Y "%LAUNCHERS_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" "%STOP_BAT%" >nul
-if errorlevel 1 (
-  echo [ERROR] No se pudo crear: %STOP_BAT%
+  echo [ERROR] No se pudo copiar el ejecutable a: %APP_EXE_DEST%
   exit /b 1
 )
 
-echo [OK] Lanzadores creados en escritorio:
-echo - %BG_BAT%
-echo - %FG_BAT%
-echo - %STOP_BAT%
+if exist "%APP_ICON_SRC%" (
+  copy /Y "%APP_ICON_SRC%" "%APP_ICON_DEST%" >nul
+)
+
+set "ICON_FOR_SHORTCUT=%APP_EXE_DEST%"
+if exist "%APP_ICON_DEST%" set "ICON_FOR_SHORTCUT=%APP_ICON_DEST%"
+
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell; $s=$ws.CreateShortcut('%DESKTOP_SHORTCUT%'); $s.TargetPath='%APP_EXE_DEST%'; $s.WorkingDirectory='%WORK_DIR%'; $s.IconLocation='%ICON_FOR_SHORTCUT%,0'; $s.Save()"
+if errorlevel 1 (
+  echo [ERROR] No se pudo crear el acceso directo en escritorio.
+  exit /b 1
+)
+
+echo [OK] Acceso directo creado en escritorio:
+echo - %DESKTOP_SHORTCUT%
 
 exit /b 0
 
@@ -225,8 +229,6 @@ if errorlevel 2 (
 if errorlevel 1 (
   if exist "%AUTO_TEMPLATE%" (
     copy /Y "%AUTO_TEMPLATE%" "%AUTO_BAT%" >nul
-  ) else (
-    copy /Y "%BG_BAT%" "%AUTO_BAT%" >nul
   )
   if errorlevel 1 (
     echo [ERROR] No se pudo crear auto inicio en: %AUTO_BAT%
@@ -293,8 +295,8 @@ set "INSTALL_OK=0"
 :end
 echo.
 if "%INSTALL_OK%"=="1" (
-  choice /C SN /N /M "Abrir iniciador visible ahora? [S/N]: "
-  if errorlevel 1 call "%FG_BAT%"
+  choice /C SN /N /M "Abrir Host Control ahora? [S/N]: "
+  if errorlevel 1 start "" "%APP_EXE_DEST%"
 )
 echo.
 echo Presiona una tecla para cerrar este instalador...
