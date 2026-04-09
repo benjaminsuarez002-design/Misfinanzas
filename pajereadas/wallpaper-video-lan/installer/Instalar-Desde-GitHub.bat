@@ -13,25 +13,28 @@ set "LAUNCHERS_DIR=%WORK_DIR%\installer\launchers"
 
 set "DEFAULT_ROOT=C:\Program Files (x86)\Steam\steamapps\workshop\content\431960"
 set "FIREWALL_RULE=WallpaperVideoLAN-3000"
+set "TOTAL_STEPS=9"
+set "BAR_WIDTH=28"
+set "INSTALL_OK=0"
 
 echo.
 echo === Instalador WallpaperVideoLAN desde GitHub ===
 echo.
 
-echo [1/7] Preparando carpetas...
+call :progress 1 "Preparando carpetas"
 if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%"
 mkdir "%TMP_DIR%" >nul 2>nul
 mkdir "%EXTRACT_DIR%" >nul 2>nul
 if not exist "%WORK_DIR%" mkdir "%WORK_DIR%" >nul 2>nul
 
-echo [2/7] Descargando repo desde GitHub...
+call :progress 2 "Descargando repo desde GitHub"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri '%REPO_ZIP_URL%' -OutFile '%ZIP_PATH%' } catch { Write-Host $_.Exception.Message; exit 1 }"
 if errorlevel 1 (
   echo [ERROR] No se pudo descargar el repo.
   goto :fail
 )
 
-echo [3/7] Extrayendo ZIP...
+call :progress 3 "Extrayendo ZIP"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('%ZIP_PATH%','%EXTRACT_DIR%') } catch { Write-Host $_.Exception.Message; exit 1 }"
 if errorlevel 1 (
   echo [ERROR] No se pudo extraer el ZIP.
@@ -43,17 +46,18 @@ if not exist "%SOURCE_DIR%\package.json" (
   goto :fail
 )
 
-echo [4/7] Copiando app a %WORK_DIR% ...
+call :progress 4 "Copiando app a %WORK_DIR%"
 robocopy "%SOURCE_DIR%" "%WORK_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD node_modules .git .cache dist /XF .env server.log >nul
 if errorlevel 8 (
   echo [ERROR] Fallo al copiar archivos.
   goto :fail
 )
 
+call :progress 5 "Verificando Node.js"
 call :ensure_node
 if errorlevel 1 goto :fail
 
-echo [5/7] Instalando dependencias...
+call :progress 6 "Instalando dependencias (puede tardar)"
 cd /d "%WORK_DIR%"
 call npm.cmd install
 if errorlevel 1 (
@@ -61,9 +65,19 @@ if errorlevel 1 (
   goto :fail
 )
 
-echo [6/7] Configurando .env...
+call :progress 7 "Configurando .env"
+echo.
+echo Ruta de videos:
+echo - Presiona ENTER para usar la ruta por defecto.
+echo - O escribe una ruta personalizada (ej: C:\).
+echo.
+:ask_root
+set "WPRoot="
 set /p "WPRoot=Ruta de videos [ENTER=%DEFAULT_ROOT%]: "
 if "%WPRoot%"=="" set "WPRoot=%DEFAULT_ROOT%"
+echo Ruta elegida: "%WPRoot%"
+choice /C SN /N /M "Confirmar ruta? [S/N]: "
+if errorlevel 2 goto :ask_root
 
 > "%WORK_DIR%\.env" (
   echo WALLPAPER_ROOT=%WPRoot%
@@ -73,9 +87,15 @@ if "%WPRoot%"=="" set "WPRoot=%DEFAULT_ROOT%"
   echo ENABLE_DURATION_PROBE=true
 )
 
+call :progress 8 "Configurando firewall y lanzadores"
 call :configure_firewall
+if errorlevel 1 goto :fail
 call :create_launchers
+if errorlevel 1 goto :fail
 call :configure_autostart
+if errorlevel 1 goto :fail
+
+call :progress 9 "Finalizando instalacion"
 
 echo.
 echo Instalacion completada.
@@ -86,9 +106,8 @@ echo - %FG_BAT%
 echo - %STOP_BAT%
 echo.
 
-echo Abriendo iniciador visible...
-call "%FG_BAT%"
-exit /b 0
+set "INSTALL_OK=1"
+goto :end
 
 :ensure_node
 where node >nul 2>nul
@@ -136,7 +155,7 @@ for /f "delims=" %%I in ('where node 2^>nul') do (
 exit /b 0
 
 :configure_firewall
-echo [7/7] Configurando firewall (si hay permisos admin)...
+echo [INFO] Configurando firewall (si hay permisos admin)...
 net session >nul 2>nul
 if errorlevel 1 (
   echo [AVISO] Sin permisos de administrador. Saltando firewall.
@@ -199,9 +218,14 @@ set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
 if not exist "%STARTUP_DIR%" mkdir "%STARTUP_DIR%" >nul 2>nul
 set "AUTO_BAT=%STARTUP_DIR%\AutoInicio-WallpaperVideoLAN.bat"
 
-set "AUTO_WIN="
-set /p "AUTO_WIN=Quieres iniciar WallpaperVideoLAN con Windows? (S/N) [N]: "
-if /I "%AUTO_WIN%"=="S" (
+choice /C SN /N /M "Quieres iniciar WallpaperVideoLAN con Windows? [S/N]: "
+if errorlevel 2 (
+  if exist "%AUTO_BAT%" del /f /q "%AUTO_BAT%"
+  echo [OK] Auto inicio desactivado.
+  exit /b 0
+)
+
+if errorlevel 1 (
   if exist "%AUTO_TEMPLATE%" (
     copy /Y "%AUTO_TEMPLATE%" "%AUTO_BAT%" >nul
   ) else (
@@ -212,15 +236,43 @@ if /I "%AUTO_WIN%"=="S" (
     exit /b 1
   )
   echo [OK] Auto inicio activado: %AUTO_BAT%
-) else (
-  if exist "%AUTO_BAT%" del /f /q "%AUTO_BAT%"
-  echo [OK] Auto inicio desactivado.
 )
+exit /b 0
+
+:progress
+setlocal EnableDelayedExpansion
+set "STEP=%~1"
+set "LABEL=%~2"
+set /a PCT=(STEP*100)/TOTAL_STEPS
+set /a FILLED=(STEP*BAR_WIDTH)/TOTAL_STEPS
+set "BAR="
+for /L %%I in (1,1,!BAR_WIDTH!) do (
+  if %%I LEQ !FILLED! (
+    set "BAR=!BAR!#"
+  ) else (
+    set "BAR=!BAR!-"
+  )
+)
+echo [!BAR!] !PCT!%% - !LABEL!
+endlocal
 exit /b 0
 
 :fail
 echo.
 echo Instalacion cancelada por error.
 echo.
-pause
+set "INSTALL_OK=0"
+
+:end
+echo.
+if "%INSTALL_OK%"=="1" (
+  choice /C SN /N /M "Abrir iniciador visible ahora? [S/N]: "
+  if errorlevel 1 call "%FG_BAT%"
+)
+echo.
+echo Presiona una tecla para cerrar este instalador...
+pause >nul
+if "%INSTALL_OK%"=="1" (
+  exit /b 0
+)
 exit /b 1
