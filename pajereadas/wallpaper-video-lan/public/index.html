@@ -16,15 +16,45 @@
       <button id="rescanBtn" class="ghost-btn">Reescanear</button>
     </header>
 
-    <section class="controls">
-      <input id="searchInput" type="search" placeholder="Buscar por nombre o carpeta" />
-      <label class="toggle">
-        <input id="foldersOnly" type="checkbox" />
-        <span>Solo carpetas con video</span>
-      </label>
+    <section id="networkPanel" class="network-panel">
+      <div class="section-head">
+        <h2>Conexiones Locales Disponibles</h2>
+      </div>
+      <div id="connectionList" class="connection-list">
+        <p class="empty-row">Detectando conexiones...</p>
+      </div>
     </section>
 
-    <section id="grid" class="grid"></section>
+    <section id="scanPanel" class="scan-panel">
+      <div class="scan-head">
+        <strong id="scanTitle">Progreso de carga de archivos</strong>
+        <small id="scanPercent">0%</small>
+      </div>
+      <div class="scan-bar-wrap">
+        <div id="scanBar" class="scan-bar"></div>
+      </div>
+      <p id="scanText" class="scan-text">Esperando escaneo...</p>
+    </section>
+
+    <section class="controls">
+      <input id="searchInput" type="search" placeholder="Buscar en carpeta actual" />
+      <div class="nav-controls">
+        <button id="backBtn" class="ghost-btn" type="button">Atrás</button>
+        <button id="upBtn" class="ghost-btn" type="button">Subir</button>
+      </div>
+    </section>
+
+    <section class="explorer-shell">
+      <div id="breadcrumb" class="breadcrumb"></div>
+      <div id="folderList" class="folder-list"></div>
+    </section>
+
+    <section class="video-section">
+      <div class="section-head">
+        <h2 id="videoSectionTitle">Videos de la carpeta</h2>
+      </div>
+      <section id="grid" class="grid"></section>
+    </section>
   </main>
 
   <template id="videoCardTemplate">
@@ -41,6 +71,29 @@
         <p class="meta"></p>
         <button class="play-btn">Reproducir</button>
       </div>
+    </article>
+  </template>
+
+  <template id="folderItemTemplate">
+    <article class="folder-item">
+      <button class="folder-main-btn" type="button">
+        <span class="folder-icon">📁</span>
+        <span class="folder-text">
+          <strong class="folder-name"></strong>
+          <small class="folder-meta"></small>
+        </span>
+      </button>
+      <button class="folder-videos-btn" type="button">Ver videos</button>
+    </article>
+  </template>
+
+  <template id="connectionItemTemplate">
+    <article class="connection-item">
+      <div class="connection-main">
+        <strong class="connection-label"></strong>
+        <a class="connection-link" target="_blank" rel="noreferrer"></a>
+      </div>
+      <button class="copy-link-btn" type="button">Copiar</button>
     </article>
   </template>
 

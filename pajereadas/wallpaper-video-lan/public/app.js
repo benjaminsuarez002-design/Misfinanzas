@@ -1,21 +1,38 @@
 ﻿const state = {
-  allVideos: [],
-  foldersWithVideo: [],
   query: '',
-  foldersOnly: false,
   rootDir: '',
+  rootFolderName: 'Raíz',
   scannedAt: '',
   ffprobeAvailable: false,
-  activeInline: null
+  currentPath: '',
+  currentView: null,
+  displayedVideos: [],
+  navStack: [],
+  navIndex: -1,
+  videosMode: 'direct',
+  activeInline: null,
+  scanStatus: null,
+  scanPollHandle: null
 };
 
 const dom = {
   statusText: document.getElementById('statusText'),
   searchInput: document.getElementById('searchInput'),
-  foldersOnly: document.getElementById('foldersOnly'),
   grid: document.getElementById('grid'),
   cardTpl: document.getElementById('videoCardTemplate'),
-  rescanBtn: document.getElementById('rescanBtn')
+  folderTpl: document.getElementById('folderItemTemplate'),
+  connectionTpl: document.getElementById('connectionItemTemplate'),
+  connectionList: document.getElementById('connectionList'),
+  scanTitle: document.getElementById('scanTitle'),
+  scanPercent: document.getElementById('scanPercent'),
+  scanBar: document.getElementById('scanBar'),
+  scanText: document.getElementById('scanText'),
+  folderList: document.getElementById('folderList'),
+  breadcrumb: document.getElementById('breadcrumb'),
+  rescanBtn: document.getElementById('rescanBtn'),
+  videoSectionTitle: document.getElementById('videoSectionTitle'),
+  backBtn: document.getElementById('backBtn'),
+  upBtn: document.getElementById('upBtn')
 };
 
 function formatDuration(seconds) {
@@ -34,6 +51,150 @@ function formatDate(iso) {
   if (!iso) return '-';
   const date = new Date(iso);
   return Number.isNaN(date.getTime()) ? '-' : date.toLocaleString();
+}
+
+function safeIncludes(value, query) {
+  return String(value || '').toLowerCase().includes(query);
+}
+
+function getPathParts(folderPath) {
+  if (!folderPath) return [];
+  return folderPath.split('/').filter(Boolean);
+}
+
+function shortenPath(pathValue, max = 92) {
+  const raw = String(pathValue || '');
+  if (raw.length <= max) {
+    return raw;
+  }
+  return `...${raw.slice(raw.length - max)}`;
+}
+
+async function copyToClipboard(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const input = document.createElement('input');
+  input.value = text;
+  document.body.appendChild(input);
+  input.select();
+  document.execCommand('copy');
+  document.body.removeChild(input);
+}
+
+function buildConnectionItem(label, url) {
+  const node = dom.connectionTpl.content.firstElementChild.cloneNode(true);
+  const labelEl = node.querySelector('.connection-label');
+  const linkEl = node.querySelector('.connection-link');
+  const copyBtn = node.querySelector('.copy-link-btn');
+
+  labelEl.textContent = label;
+  linkEl.textContent = url;
+  linkEl.href = url;
+
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await copyToClipboard(url);
+      copyBtn.textContent = 'Copiado';
+      setTimeout(() => {
+        copyBtn.textContent = 'Copiar';
+      }, 1200);
+    } catch {
+      copyBtn.textContent = 'Error';
+      setTimeout(() => {
+        copyBtn.textContent = 'Copiar';
+      }, 1200);
+    }
+  });
+
+  return node;
+}
+
+function renderConnections(payload) {
+  dom.connectionList.innerHTML = '';
+  const fragment = document.createDocumentFragment();
+
+  fragment.appendChild(buildConnectionItem('Este equipo (localhost)', payload.localhostUrl));
+
+  const lan = Array.isArray(payload.lan) ? payload.lan : [];
+  for (const item of lan) {
+    const label = `${item.interface} (${item.address})`;
+    fragment.appendChild(buildConnectionItem(label, item.url));
+  }
+
+  if (lan.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'empty-row';
+    empty.textContent = 'No se detectaron IPs LAN. Revisa Wi-Fi o cable de red.';
+    fragment.appendChild(empty);
+  }
+
+  dom.connectionList.appendChild(fragment);
+}
+
+function renderScanStatus(status) {
+  const fallback = {
+    inProgress: false,
+    percent: 0,
+    discoveredEntries: 0,
+    processedEntries: 0,
+    foundVideos: 0,
+    currentPath: '',
+    message: 'Esperando escaneo...'
+  };
+
+  const data = { ...fallback, ...(status || {}) };
+  const percent = Math.max(0, Math.min(100, Number(data.percent || 0)));
+  const scanned = Number(data.processedEntries || 0);
+  const discovered = Number(data.discoveredEntries || 0);
+  const found = Number(data.foundVideos || 0);
+
+  dom.scanPercent.textContent = `${percent}%`;
+  dom.scanBar.style.width = `${percent}%`;
+  dom.scanTitle.textContent = data.inProgress
+    ? 'Cargando archivos...'
+    : 'Progreso de carga de archivos';
+
+  const progressLine = `${scanned}/${Math.max(discovered, scanned)} entradas revisadas | ${found} video(s) detectado(s)`;
+  const pathLine = data.currentPath ? ` | ${shortenPath(data.currentPath)}` : '';
+  dom.scanText.textContent = `${data.message || ''} (${progressLine}${pathLine})`;
+}
+
+function renderBreadcrumb() {
+  const parts = getPathParts(state.currentPath);
+  dom.breadcrumb.innerHTML = '';
+
+  const rootChip = document.createElement('button');
+  rootChip.type = 'button';
+  rootChip.className = 'crumb';
+  rootChip.textContent = state.rootFolderName;
+  rootChip.addEventListener('click', () => openFolder(''));
+  dom.breadcrumb.appendChild(rootChip);
+
+  let current = '';
+  for (const part of parts) {
+    current = current ? `${current}/${part}` : part;
+
+    const sep = document.createElement('span');
+    sep.className = 'crumb-sep';
+    sep.textContent = '›';
+    dom.breadcrumb.appendChild(sep);
+
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'crumb';
+    chip.textContent = part;
+    chip.addEventListener('click', () => openFolder(current));
+    dom.breadcrumb.appendChild(chip);
+  }
+}
+
+function updateNavButtons() {
+  dom.backBtn.disabled = state.navIndex <= 0;
+  const hasParent = Boolean(state.currentView?.folder?.parent || state.currentPath);
+  dom.upBtn.disabled = !hasParent;
 }
 
 function stopInlinePlayback(active) {
@@ -74,7 +235,7 @@ function startInlinePlayback(video, refs) {
   refs.playBtn.textContent = 'Cerrar';
 
   refs.player.play().catch(() => {
-    // En móvil puede requerirse interacción extra.
+    // Móvil puede requerir interacción adicional.
   });
 
   state.activeInline = {
@@ -83,7 +244,7 @@ function startInlinePlayback(video, refs) {
   };
 }
 
-function makeCard(video, extraLabel = '') {
+function buildVideoCard(video) {
   const node = dom.cardTpl.content.firstElementChild.cloneNode(true);
   const title = node.querySelector('.title');
   const meta = node.querySelector('.meta');
@@ -93,10 +254,7 @@ function makeCard(video, extraLabel = '') {
   const playBtn = node.querySelector('.play-btn');
 
   title.textContent = video.fileName;
-
-  const folder = video.workshopFolder || 'root';
-  const duration = formatDuration(video.durationSeconds);
-  meta.textContent = extraLabel || `Carpeta: ${folder} | Duración: ${duration}`;
+  meta.textContent = `Carpeta: ${video.folderRelative} | Duración: ${formatDuration(video.durationSeconds)}`;
 
   thumb.src = `/api/thumbnail/${encodeURIComponent(video.id)}`;
   thumb.addEventListener('load', () => {
@@ -115,89 +273,163 @@ function makeCard(video, extraLabel = '') {
   return node;
 }
 
-function getFilteredVideos() {
+function getFilteredFolders(folders) {
   const q = state.query.trim().toLowerCase();
+  if (!q) return folders;
 
-  if (state.foldersOnly) {
-    const byFolder = new Map();
-
-    for (const video of state.allVideos) {
-      if (!byFolder.has(video.workshopFolder)) {
-        byFolder.set(video.workshopFolder, { video, count: 0 });
-      }
-      byFolder.get(video.workshopFolder).count += 1;
-    }
-
-    return Array.from(byFolder.values())
-      .filter(({ video }) => {
-        if (!q) return true;
-        return (
-          video.fileName.toLowerCase().includes(q) ||
-          String(video.workshopFolder).toLowerCase().includes(q) ||
-          String(video.folderRelative).toLowerCase().includes(q)
-        );
-      })
-      .map(({ video, count }) => ({
-        video,
-        label: `Carpeta: ${video.workshopFolder} | ${count} video(s)`
-      }));
-  }
-
-  return state.allVideos
-    .filter((video) => {
-      if (!q) return true;
-      return (
-        video.fileName.toLowerCase().includes(q) ||
-        String(video.workshopFolder).toLowerCase().includes(q) ||
-        String(video.folderRelative).toLowerCase().includes(q)
-      );
-    })
-    .map((video) => ({ video, label: '' }));
+  return folders.filter((folder) => safeIncludes(folder.name, q) || safeIncludes(folder.path, q));
 }
 
-function render() {
+function getFilteredVideos(videos) {
+  const q = state.query.trim().toLowerCase();
+  if (!q) return videos;
+
+  return videos.filter((video) => safeIncludes(video.fileName, q) || safeIncludes(video.folderRelative, q));
+}
+
+function renderFolderList() {
+  dom.folderList.innerHTML = '';
+
+  if (!state.currentView) {
+    return;
+  }
+
+  const folders = getFilteredFolders(state.currentView.childFolders || []);
+
+  if (folders.length === 0) {
+    dom.folderList.innerHTML = '<p class="empty-row">No hay subcarpetas con videos.</p>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  for (const folder of folders) {
+    const row = dom.folderTpl.content.firstElementChild.cloneNode(true);
+    const mainBtn = row.querySelector('.folder-main-btn');
+    const name = row.querySelector('.folder-name');
+    const meta = row.querySelector('.folder-meta');
+    const videosBtn = row.querySelector('.folder-videos-btn');
+
+    name.textContent = folder.name;
+    meta.textContent = `${folder.totalVideos} video(s) en total`;
+
+    mainBtn.addEventListener('click', () => openFolder(folder.path));
+    videosBtn.addEventListener('click', () => loadFolderVideos(folder.path, true));
+
+    fragment.appendChild(row);
+  }
+
+  dom.folderList.appendChild(fragment);
+}
+
+function renderVideos(videos) {
   if (state.activeInline) {
     stopInlinePlayback(state.activeInline);
     state.activeInline = null;
   }
 
-  const items = getFilteredVideos();
   dom.grid.innerHTML = '';
 
-  if (items.length === 0) {
-    dom.grid.innerHTML = '<p>No hay resultados para ese filtro.</p>';
+  const filtered = getFilteredVideos(videos);
+  if (filtered.length === 0) {
+    dom.grid.innerHTML = '<p class="empty-row">No hay videos para mostrar.</p>';
     return;
   }
 
   const fragment = document.createDocumentFragment();
-  for (const item of items) {
-    fragment.appendChild(makeCard(item.video, item.label));
+  for (const video of filtered) {
+    fragment.appendChild(buildVideoCard(video));
   }
+
   dom.grid.appendChild(fragment);
 }
 
 function updateStatus() {
-  const mode = state.foldersOnly ? 'modo carpetas' : 'modo videos';
-  dom.statusText.textContent = `${state.allVideos.length} video(s) | Escaneado: ${formatDate(state.scannedAt)} | ${mode}${state.ffprobeAvailable ? '' : ' | sin ffprobe (duración parcial)'}`;
+  const folder = state.currentView?.folder;
+  const folderLabel = folder ? (folder.path || state.rootFolderName) : state.rootFolderName;
+
+  dom.statusText.textContent = `${folderLabel} | Escaneado: ${formatDate(state.scannedAt)}${state.ffprobeAvailable ? '' : ' | sin ffprobe (duración parcial)'}`;
 }
 
-async function loadLibrary() {
+async function loadSummary() {
   const response = await fetch('/api/videos');
-
   if (!response.ok) {
-    const payload = await response.json().catch(() => ({}));
-    throw new Error(payload.error || 'No se pudo leer la biblioteca.');
+    throw new Error('No se pudo cargar el resumen de biblioteca.');
   }
 
   const data = await response.json();
-  state.allVideos = data.videos || [];
-  state.foldersWithVideo = data.foldersWithVideo || [];
   state.rootDir = data.rootDir || '';
+  state.rootFolderName = data.rootFolderName || 'Raíz';
   state.scannedAt = data.scannedAt || '';
   state.ffprobeAvailable = Boolean(data.ffprobeAvailable);
+}
 
+async function loadConnections() {
+  const response = await fetch('/api/network');
+  if (!response.ok) {
+    throw new Error('No se pudieron obtener conexiones locales.');
+  }
+
+  const data = await response.json();
+  renderConnections(data);
+}
+
+async function loadScanStatus() {
+  const response = await fetch('/api/scan-status');
+  if (!response.ok) {
+    throw new Error('No se pudo leer el progreso de escaneo.');
+  }
+
+  const data = await response.json();
+  state.scanStatus = data;
+  renderScanStatus(data);
+}
+
+async function openFolder(folderPath, options = {}) {
+  const { fromHistory = false } = options;
+  const response = await fetch(`/api/folder?path=${encodeURIComponent(folderPath || '')}`);
+  if (!response.ok) {
+    throw new Error('No se pudo abrir la carpeta seleccionada.');
+  }
+
+  const data = await response.json();
+  state.currentPath = data.folder.path || '';
+  state.currentView = data;
+  state.videosMode = 'direct';
+  state.displayedVideos = data.videos || [];
+
+  if (!fromHistory) {
+    const currentHistoryPath = state.navStack[state.navIndex];
+    if (currentHistoryPath !== state.currentPath) {
+      state.navStack = state.navStack.slice(0, state.navIndex + 1);
+      state.navStack.push(state.currentPath);
+      state.navIndex = state.navStack.length - 1;
+    }
+  }
+
+  dom.videoSectionTitle.textContent = `Videos de ${data.folder.path || state.rootFolderName}`;
+  renderBreadcrumb();
+  renderFolderList();
+  renderVideos(state.displayedVideos);
   updateStatus();
-  render();
+  updateNavButtons();
+}
+
+async function loadFolderVideos(folderPath, recursive) {
+  const response = await fetch(`/api/folder/videos?path=${encodeURIComponent(folderPath || '')}&recursive=${recursive ? 'true' : 'false'}`);
+  if (!response.ok) {
+    throw new Error('No se pudo cargar los videos de la carpeta.');
+  }
+
+  const data = await response.json();
+  state.videosMode = recursive ? 'recursive' : 'direct';
+  state.displayedVideos = data.videos || [];
+
+  const label = data.folderPath || state.rootFolderName;
+  dom.videoSectionTitle.textContent = recursive
+    ? `Todos los videos dentro de ${label}`
+    : `Videos directos de ${label}`;
+
+  renderVideos(state.displayedVideos);
 }
 
 async function rescan() {
@@ -208,26 +440,65 @@ async function rescan() {
     throw new Error('Error al reescanear.');
   }
 
-  await loadLibrary();
+  await loadSummary();
+  await loadScanStatus().catch(() => {});
+  await openFolder(state.currentPath || '', { fromHistory: true });
 }
 
-dom.searchInput.addEventListener('input', (event) => {
-  state.query = event.target.value;
-  render();
-});
-
-dom.foldersOnly.addEventListener('change', (event) => {
-  state.foldersOnly = Boolean(event.target.checked);
-  updateStatus();
-  render();
-});
-
-dom.rescanBtn.addEventListener('click', () => {
-  rescan().catch((error) => {
-    dom.statusText.textContent = error.message;
+function wireEvents() {
+  dom.searchInput.addEventListener('input', (event) => {
+    state.query = event.target.value;
+    renderFolderList();
+    renderVideos(state.displayedVideos);
   });
-});
 
-loadLibrary().catch((error) => {
+  dom.rescanBtn.addEventListener('click', () => {
+    rescan().catch((error) => {
+      dom.statusText.textContent = error.message;
+    });
+  });
+
+  dom.backBtn.addEventListener('click', () => {
+    if (state.navIndex <= 0) {
+      return;
+    }
+
+    state.navIndex -= 1;
+    const path = state.navStack[state.navIndex] || '';
+    openFolder(path, { fromHistory: true }).catch((error) => {
+      dom.statusText.textContent = error.message;
+    });
+  });
+
+  dom.upBtn.addEventListener('click', () => {
+    const parent = state.currentView?.folder?.parent || '';
+    openFolder(parent).catch((error) => {
+      dom.statusText.textContent = error.message;
+    });
+  });
+}
+
+async function bootstrap() {
+  wireEvents();
+  renderScanStatus();
+  await loadConnections().catch(() => {
+    dom.connectionList.innerHTML = '<p class="empty-row">No se pudo detectar la red local.</p>';
+  });
+  await loadScanStatus().catch(() => {
+    dom.scanText.textContent = 'No se pudo detectar el progreso de escaneo.';
+  });
+
+  if (state.scanPollHandle) {
+    clearInterval(state.scanPollHandle);
+  }
+  state.scanPollHandle = setInterval(() => {
+    loadScanStatus().catch(() => {});
+  }, 1200);
+
+  await loadSummary();
+  await openFolder('');
+}
+
+bootstrap().catch((error) => {
   dom.statusText.textContent = error.message;
 });

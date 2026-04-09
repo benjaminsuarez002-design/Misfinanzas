@@ -9,76 +9,60 @@ set "ZIP_PATH=%TMP_DIR%\misfinanzas-main.zip"
 set "EXTRACT_DIR=%TMP_DIR%\extract"
 set "REPO_ROOT_IN_ZIP=%EXTRACT_DIR%\Misfinanzas-main"
 set "SOURCE_DIR=%REPO_ROOT_IN_ZIP%\%SUBDIR_IN_REPO%"
+set "LAUNCHERS_DIR=%WORK_DIR%\installer\launchers"
+
+set "DEFAULT_ROOT=C:\Program Files (x86)\Steam\steamapps\workshop\content\431960"
+set "FIREWALL_RULE=WallpaperVideoLAN-3000"
 
 echo.
-echo === Bootstrap Wallpaper Video LAN desde GitHub ===
+echo === Instalador WallpaperVideoLAN desde GitHub ===
 echo.
 
-echo [1/5] Preparando carpetas...
+echo [1/7] Preparando carpetas...
 if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%"
 mkdir "%TMP_DIR%" >nul 2>nul
 mkdir "%EXTRACT_DIR%" >nul 2>nul
 if not exist "%WORK_DIR%" mkdir "%WORK_DIR%" >nul 2>nul
 
-echo [2/5] Descargando repo desde GitHub...
+echo [2/7] Descargando repo desde GitHub...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Uri '%REPO_ZIP_URL%' -OutFile '%ZIP_PATH%' } catch { Write-Host $_.Exception.Message; exit 1 }"
 if errorlevel 1 (
   echo [ERROR] No se pudo descargar el repo.
-  echo Verifica internet y acceso a GitHub.
   goto :fail
 )
 
-echo [3/5] Extrayendo ZIP...
+echo [3/7] Extrayendo ZIP...
 powershell -NoProfile -ExecutionPolicy Bypass -Command "try { Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('%ZIP_PATH%','%EXTRACT_DIR%') } catch { Write-Host $_.Exception.Message; exit 1 }"
 if errorlevel 1 (
   echo [ERROR] No se pudo extraer el ZIP.
-  echo En PCs muy antiguas puede faltar soporte .NET para ZIP.
   goto :fail
 )
 
 if not exist "%SOURCE_DIR%\package.json" (
-  echo [ERROR] No se encontro la app en el repo: %SOURCE_DIR%
+  echo [ERROR] No se encontro la app en: %SOURCE_DIR%
   goto :fail
 )
 
-echo [4/5] Copiando app a %WORK_DIR% ...
+echo [4/7] Copiando app a %WORK_DIR% ...
 robocopy "%SOURCE_DIR%" "%WORK_DIR%" /E /NFL /NDL /NJH /NJS /NC /NS /XD node_modules .git .cache dist /XF .env server.log >nul
 if errorlevel 8 (
   echo [ERROR] Fallo al copiar archivos.
   goto :fail
 )
 
-echo [5/5] Ejecutando instalador principal...
-if not exist "%WORK_DIR%\installer\Instalar-WallpaperVideoLAN.bat" (
-  echo [AVISO] No se encontro instalador principal. Ejecutando instalacion inline...
-  call :inline_install
-  exit /b %errorlevel%
-)
-
-call "%WORK_DIR%\installer\Instalar-WallpaperVideoLAN.bat"
-exit /b %errorlevel%
-
-:inline_install
-echo.
-echo === Instalacion inline ===
-
 call :ensure_node
-if errorlevel 1 exit /b 1
+if errorlevel 1 goto :fail
 
-if not exist "%WORK_DIR%\package.json" (
-  echo [ERROR] package.json no encontrado en %WORK_DIR%
-  exit /b 1
-)
-
+echo [5/7] Instalando dependencias...
 cd /d "%WORK_DIR%"
 call npm.cmd install
 if errorlevel 1 (
   echo [ERROR] Fallo npm install.
-  exit /b 1
+  goto :fail
 )
 
-set "DEFAULT_ROOT=C:\Program Files (x86)\Steam\steamapps\workshop\content\431960"
-set /p "WPRoot=Ruta de videos [ENTER = %DEFAULT_ROOT%]: "
+echo [6/7] Configurando .env...
+set /p "WPRoot=Ruta de videos [ENTER=%DEFAULT_ROOT%]: "
 if "%WPRoot%"=="" set "WPRoot=%DEFAULT_ROOT%"
 
 > "%WORK_DIR%\.env" (
@@ -89,87 +73,21 @@ if "%WPRoot%"=="" set "WPRoot=%DEFAULT_ROOT%"
   echo ENABLE_DURATION_PROBE=true
 )
 
-net session >nul 2>nul
-if not errorlevel 1 (
-  powershell -NoProfile -Command "if (-not (Get-NetFirewallRule -DisplayName 'WallpaperVideoLAN-3000' -ErrorAction SilentlyContinue)) { New-NetFirewallRule -DisplayName 'WallpaperVideoLAN-3000' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private | Out-Null }"
-)
-
-set "DESKTOP_DIR="
-for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('Desktop')"`) do set "DESKTOP_DIR=%%I"
-if "%DESKTOP_DIR%"=="" set "DESKTOP_DIR=%USERPROFILE%\Desktop"
-if not exist "%DESKTOP_DIR%" set "DESKTOP_DIR=%USERPROFILE%\Escritorio"
-if not exist "%DESKTOP_DIR%" mkdir "%DESKTOP_DIR%" >nul 2>nul
-set "PUBLIC_DESKTOP=%PUBLIC%\Desktop"
-set "ALT_DESKTOP=%HOMEDRIVE%%HOMEPATH%\Desktop"
-set "ALT_ESCRITORIO=%HOMEDRIVE%%HOMEPATH%\Escritorio"
-
-set "START_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT=%DESKTOP_DIR%\Detener-WallpaperVideoLAN.bat"
-set "START_BAT_PUBLIC=%PUBLIC_DESKTOP%\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT_PUBLIC=%PUBLIC_DESKTOP%\Detener-WallpaperVideoLAN.bat"
-set "START_BAT_ALT=%ALT_DESKTOP%\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT_ALT=%ALT_DESKTOP%\Detener-WallpaperVideoLAN.bat"
-set "START_BAT_ALT_ES=%ALT_ESCRITORIO%\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT_ALT_ES=%ALT_ESCRITORIO%\Detener-WallpaperVideoLAN.bat"
-set "START_BAT_LOCAL=%WORK_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
-set "STOP_BAT_LOCAL=%WORK_DIR%\Detener-WallpaperVideoLAN.bat"
-
-> "%START_BAT%" echo @echo off
->> "%START_BAT%" echo setlocal
->> "%START_BAT%" echo set "APP_DIR=%WORK_DIR%"
->> "%START_BAT%" echo cd /d "%%APP_DIR%%"
->> "%START_BAT%" echo set "LAN_IP="
->> "%START_BAT%" echo for /f "usebackq delims=" %%%%I in (`powershell -NoProfile -Command "(Get-NetIPAddress -AddressFamily IPv4 ^| Where-Object { $_.IPAddress -notlike '127.*' -and $_.PrefixOrigin -ne 'WellKnown' } ^| Select-Object -ExpandProperty IPAddress -First 1)"`) do set "LAN_IP=%%%%I"
->> "%START_BAT%" echo if "%%LAN_IP%%"=="" set "LAN_IP=localhost"
->> "%START_BAT%" echo start "WallpaperVideoLAN" /min cmd /k "cd /d \"%%APP_DIR%%\" ^&^& npm.cmd start ^>^> \"%%APP_DIR%%\server.log\" 2^>^&1"
->> "%START_BAT%" echo echo URL local: http://localhost:3000
->> "%START_BAT%" echo echo URL telefono: http://%%LAN_IP%%:3000
->> "%START_BAT%" echo pause
->> "%START_BAT%" echo exit /b 0
-
-> "%STOP_BAT%" echo @echo off
->> "%STOP_BAT%" echo powershell -NoProfile -Command "Get-CimInstance Win32_Process ^| Where-Object { $_.Name -eq 'node.exe' -and $_.CommandLine -like '*wallpaper-video-lan*src\\server.js*' } ^| ForEach-Object { Stop-Process -Id $_.ProcessId -Force }"
->> "%STOP_BAT%" echo echo Servidor detenido ^(si estaba corriendo^).
->> "%STOP_BAT%" echo timeout /t 2 /nobreak ^>nul
-
-if exist "%PUBLIC_DESKTOP%" (
-  copy /Y "%START_BAT%" "%START_BAT_PUBLIC%" >nul 2>nul
-  copy /Y "%STOP_BAT%" "%STOP_BAT_PUBLIC%" >nul 2>nul
-)
-if exist "%ALT_DESKTOP%" (
-  copy /Y "%START_BAT%" "%START_BAT_ALT%" >nul 2>nul
-  copy /Y "%STOP_BAT%" "%STOP_BAT_ALT%" >nul 2>nul
-)
-if exist "%ALT_ESCRITORIO%" (
-  copy /Y "%START_BAT%" "%START_BAT_ALT_ES%" >nul 2>nul
-  copy /Y "%STOP_BAT%" "%STOP_BAT_ALT_ES%" >nul 2>nul
-)
-copy /Y "%START_BAT%" "%START_BAT_LOCAL%" >nul 2>nul
-copy /Y "%STOP_BAT%" "%STOP_BAT_LOCAL%" >nul 2>nul
+call :configure_firewall
+call :create_launchers
+call :configure_autostart
 
 echo.
-echo Lanzadores creados. Rutas detectadas:
-if exist "%START_BAT%" echo - %START_BAT%
-if exist "%START_BAT_PUBLIC%" echo - %START_BAT_PUBLIC%
-if exist "%START_BAT_ALT%" echo - %START_BAT_ALT%
-if exist "%START_BAT_ALT_ES%" echo - %START_BAT_ALT_ES%
-if exist "%START_BAT_LOCAL%" echo - %START_BAT_LOCAL%
-if not exist "%START_BAT%" if not exist "%START_BAT_PUBLIC%" if not exist "%START_BAT_ALT%" if not exist "%START_BAT_ALT_ES%" (
-  echo [AVISO] No se pudo escribir en escritorios. Usa temporalmente:
-  echo - %START_BAT_LOCAL%
-)
+echo Instalacion completada.
+echo App: %WORK_DIR%
+echo Lanzadores en escritorio:
+echo - %BG_BAT%
+echo - %FG_BAT%
+echo - %STOP_BAT%
+echo.
 
-if exist "%START_BAT%" (
-  call "%START_BAT%"
-) else if exist "%START_BAT_PUBLIC%" (
-  call "%START_BAT_PUBLIC%"
-) else if exist "%START_BAT_ALT%" (
-  call "%START_BAT_ALT%"
-) else if exist "%START_BAT_ALT_ES%" (
-  call "%START_BAT_ALT_ES%"
-) else (
-  call "%START_BAT_LOCAL%"
-)
+echo Abriendo iniciador visible...
+call "%FG_BAT%"
 exit /b 0
 
 :ensure_node
@@ -177,13 +95,19 @@ where node >nul 2>nul
 if errorlevel 1 goto :install_node
 where npm.cmd >nul 2>nul
 if errorlevel 1 goto :install_node
+for /f "delims=" %%I in ('where node 2^>nul') do (
+  set "NODE_EXE=%%I"
+  goto :node_done
+)
+:node_done
+if "%NODE_EXE%"=="" set "NODE_EXE=C:\Program Files\nodejs\node.exe"
 exit /b 0
 
 :install_node
 echo [INFO] Node.js no encontrado. Intentando instalar automaticamente...
 where winget >nul 2>nul
 if errorlevel 1 (
-  echo [ERROR] No se encontro winget. Instala Node.js LTS manualmente desde https://nodejs.org
+  echo [ERROR] No se encontro winget. Instala Node.js LTS manualmente.
   exit /b 1
 )
 
@@ -195,14 +119,108 @@ if errorlevel 1 (
 
 set "PATH=%PATH%;C:\Program Files\nodejs;C:\Program Files (x86)\nodejs;%LOCALAPPDATA%\Programs\nodejs"
 where node >nul 2>nul
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+  echo [ERROR] Node.js no disponible aun. Reabre consola y ejecuta otra vez.
+  exit /b 1
+)
 where npm.cmd >nul 2>nul
-if errorlevel 1 exit /b 1
+if errorlevel 1 (
+  echo [ERROR] npm no disponible aun. Reabre consola y ejecuta otra vez.
+  exit /b 1
+)
+for /f "delims=" %%I in ('where node 2^>nul') do (
+  set "NODE_EXE=%%I"
+  goto :node_after_install
+)
+:node_after_install
+exit /b 0
+
+:configure_firewall
+echo [7/7] Configurando firewall (si hay permisos admin)...
+net session >nul 2>nul
+if errorlevel 1 (
+  echo [AVISO] Sin permisos de administrador. Saltando firewall.
+  exit /b 0
+)
+
+powershell -NoProfile -Command "if (-not (Get-NetFirewallRule -DisplayName '%FIREWALL_RULE%' -ErrorAction SilentlyContinue)) { New-NetFirewallRule -DisplayName '%FIREWALL_RULE%' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 3000 -Profile Private | Out-Null }"
+exit /b 0
+
+:create_launchers
+set "DESKTOP_DIR="
+for /f "usebackq delims=" %%I in (`powershell -NoProfile -Command "[Environment]::GetFolderPath('DesktopDirectory')"`) do set "DESKTOP_DIR=%%I"
+if "%DESKTOP_DIR%"=="" set "DESKTOP_DIR=%USERPROFILE%\Desktop"
+if not exist "%DESKTOP_DIR%" set "DESKTOP_DIR=%USERPROFILE%\Escritorio"
+if not exist "%DESKTOP_DIR%" mkdir "%DESKTOP_DIR%" >nul 2>nul
+
+set "BG_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
+set "FG_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat"
+set "STOP_BAT=%DESKTOP_DIR%\Cerrar-Host-WallpaperVideoLAN.bat"
+set "AUTO_TEMPLATE=%LAUNCHERS_DIR%\AutoInicio-WallpaperVideoLAN.bat"
+
+if not exist "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN.bat" (
+  echo [ERROR] No se encontro el lanzador base en: %LAUNCHERS_DIR%
+  exit /b 1
+)
+if not exist "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" (
+  echo [ERROR] No se encontro el lanzador visible en: %LAUNCHERS_DIR%
+  exit /b 1
+)
+if not exist "%LAUNCHERS_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" (
+  echo [ERROR] No se encontro el lanzador de cierre en: %LAUNCHERS_DIR%
+  exit /b 1
+)
+
+copy /Y "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN.bat" "%BG_BAT%" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo crear: %BG_BAT%
+  exit /b 1
+)
+copy /Y "%LAUNCHERS_DIR%\Levantar-Host-WallpaperVideoLAN-Visible.bat" "%FG_BAT%" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo crear: %FG_BAT%
+  exit /b 1
+)
+copy /Y "%LAUNCHERS_DIR%\Cerrar-Host-WallpaperVideoLAN.bat" "%STOP_BAT%" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo crear: %STOP_BAT%
+  exit /b 1
+)
+
+echo [OK] Lanzadores creados en escritorio:
+echo - %BG_BAT%
+echo - %FG_BAT%
+echo - %STOP_BAT%
+
+exit /b 0
+
+:configure_autostart
+set "STARTUP_DIR=%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup"
+if not exist "%STARTUP_DIR%" mkdir "%STARTUP_DIR%" >nul 2>nul
+set "AUTO_BAT=%STARTUP_DIR%\AutoInicio-WallpaperVideoLAN.bat"
+
+set "AUTO_WIN="
+set /p "AUTO_WIN=Quieres iniciar WallpaperVideoLAN con Windows? (S/N) [N]: "
+if /I "%AUTO_WIN%"=="S" (
+  if exist "%AUTO_TEMPLATE%" (
+    copy /Y "%AUTO_TEMPLATE%" "%AUTO_BAT%" >nul
+  ) else (
+    copy /Y "%BG_BAT%" "%AUTO_BAT%" >nul
+  )
+  if errorlevel 1 (
+    echo [ERROR] No se pudo crear auto inicio en: %AUTO_BAT%
+    exit /b 1
+  )
+  echo [OK] Auto inicio activado: %AUTO_BAT%
+) else (
+  if exist "%AUTO_BAT%" del /f /q "%AUTO_BAT%"
+  echo [OK] Auto inicio desactivado.
+)
 exit /b 0
 
 :fail
 echo.
-echo Bootstrap cancelado por error.
+echo Instalacion cancelada por error.
 echo.
 pause
 exit /b 1

@@ -54,7 +54,7 @@ wallpaper-video-lan/
 
 ## Configuración
 
-1. Abre `C:\Users\Corralon-svr\Downloads\wallpaper-video-lan\.env`.
+1. Abre `%USERPROFILE%\WallpaperVideoLAN\.env`.
 2. Verifica `WALLPAPER_ROOT`:
 
 ```env
@@ -72,7 +72,7 @@ Si tu Steam Library está en otra unidad, cambia la ruta.
 En PowerShell (desde la carpeta del proyecto):
 
 ```powershell
-cd C:\Users\Corralon-svr\Downloads\wallpaper-video-lan
+cd C:\Users\TU_USUARIO\WallpaperVideoLAN
 npm.cmd install
 npm.cmd run dev
 ```
@@ -126,39 +126,25 @@ Fuerza un nuevo escaneo inmediato.
 - No usa autenticación ni Docker.
 - Solo explora y reproduce archivos locales existentes.
 
-## Instalador para otra PC
+## Instalador para otra PC (desde GitHub)
 
-Si quieres llevar esta app a otra computadora Windows sin hacerlo manualmente:
+En la otra PC, descarga y ejecuta:
 
-1. En la PC origen, ejecuta:
+`installer\Instalar-Desde-GitHub.bat`
 
-```bat
-crear-paquete-instalable.bat
-```
-
-Esto genera un ZIP en `dist\wallpaper-video-lan-instalable.zip`.
-
-2. Copia ese ZIP a la otra PC y descomprímelo.
-
-3. En la otra PC, entra a `installer\` y ejecuta:
-
-```bat
-Instalar-WallpaperVideoLAN.bat
-```
-
-El instalador hace esto automáticamente:
+Ese instalador:
+- descarga el repo desde GitHub
+- instala todo en `%USERPROFILE%\WallpaperVideoLAN`
 - ejecuta `npm install`
 - crea/actualiza `.env`
-- intenta crear regla de firewall para puerto `3000` (si hay permisos admin)
-- crea accesos directos en escritorio:
-  - `Levantar-Host-WallpaperVideoLAN.bat` (muestra la IP LAN)
-  - `Detener-WallpaperVideoLAN.bat`
-
-4. Abre desde el teléfono en la misma Wi-Fi:
-
-`http://IP_DE_LA_PC:3000`
+- pregunta si quieres auto inicio con Windows
+- crea los `.bat` del servidor en el escritorio del usuario actual:
+  - `Levantar-Host-WallpaperVideoLAN.bat` (invisible)
+  - `Levantar-Host-WallpaperVideoLAN-Visible.bat` (muestra IP/URL)
+  - `Cerrar-Host-WallpaperVideoLAN.bat` (detener servidor)
+- si eliges auto inicio, copia `AutoInicio-WallpaperVideoLAN.bat` a:
+  - `%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup`
 
 Notas:
 - Si no ejecutas como administrador, el firewall puede quedar bloqueando acceso LAN.
-- El instalador te deja elegir la ruta de videos (`WALLPAPER_ROOT`).
-- Si pones `C:\` escanea todo el disco y puede tardar bastante en iniciar.
+- Si pones `C:\` como `WALLPAPER_ROOT`, escanea todo el disco y puede tardar bastante.

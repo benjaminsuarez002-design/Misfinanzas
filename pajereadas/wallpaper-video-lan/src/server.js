@@ -2,6 +2,7 @@
 const fs = require('fs');
 const fsPromises = require('fs/promises');
 const path = require('path');
+const os = require('os');
 
 const config = require('./config');
 const VideoIndexer = require('./videoIndexer');
@@ -80,6 +81,84 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
+app.get('/api/scan-status', (req, res) => {
+  try {
+    res.json(indexer.getScanStatus());
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'No se pudo obtener estado de escaneo.' });
+  }
+});
+
+app.get('/api/network', (req, res) => {
+  try {
+    const interfaces = os.networkInterfaces();
+    const lan = [];
+
+    for (const [ifaceName, records] of Object.entries(interfaces)) {
+      for (const record of records || []) {
+        const isIpv4 = record.family === 'IPv4' || record.family === 4;
+        if (!isIpv4 || record.internal || !record.address) {
+          continue;
+        }
+
+        lan.push({
+          interface: ifaceName,
+          address: record.address,
+          url: `http://${record.address}:${config.port}`
+        });
+      }
+    }
+
+    lan.sort((a, b) => a.address.localeCompare(b.address));
+
+    res.json({
+      host: config.host,
+      port: config.port,
+      localhostUrl: `http://localhost:${config.port}`,
+      lan
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'No se pudo obtener la red local.' });
+  }
+});
+app.get('/api/folder', (req, res) => {
+  try {
+    const folderPath = typeof req.query.path === 'string' ? req.query.path : '';
+    const view = indexer.getFolderView(folderPath);
+
+    if (!view) {
+      res.status(404).json({ error: 'Carpeta no encontrada.' });
+      return;
+    }
+
+    res.json(view);
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'No se pudo abrir la carpeta.' });
+  }
+});
+
+app.get('/api/folder/videos', (req, res) => {
+  try {
+    const folderPath = typeof req.query.path === 'string' ? req.query.path : '';
+    const recursive = String(req.query.recursive || 'true').toLowerCase() !== 'false';
+    const videos = indexer.getVideosForFolder(folderPath, recursive);
+
+    if (!videos) {
+      res.status(404).json({ error: 'Carpeta no encontrada.' });
+      return;
+    }
+
+    res.json({
+      folderPath,
+      recursive,
+      count: videos.length,
+      videos
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message || 'No se pudieron obtener videos de la carpeta.' });
+  }
+});
+
 app.get('/api/video/:id/stream', async (req, res) => {
   try {
     const video = indexer.getById(req.params.id);
@@ -133,7 +212,14 @@ app.get('/api/health', (req, res) => {
 async function bootstrap() {
   try {
     await thumbnailService.init();
-    await indexer.scan();
+    app.listen(config.port, config.host, () => {
+      console.log(`Servidor listo en http://${config.host}:${config.port}`);
+      console.log(`Carpeta raíz: ${config.wallpaperRoot}`);
+    });
+
+    indexer.scan().catch((error) => {
+      console.error('[scan inicial] error:', error.message);
+    });
 
     setInterval(async () => {
       try {
@@ -142,11 +228,6 @@ async function bootstrap() {
         console.error('[scan] error:', error.message);
       }
     }, Math.max(30, config.scanIntervalSeconds) * 1000);
-
-    app.listen(config.port, config.host, () => {
-      console.log(`Servidor listo en http://${config.host}:${config.port}`);
-      console.log(`Carpeta raíz: ${config.wallpaperRoot}`);
-    });
   } catch (error) {
     console.error('No se pudo iniciar el servidor:', error.message);
     process.exit(1);
@@ -154,3 +235,4 @@ async function bootstrap() {
 }
 
 bootstrap();
+
