@@ -100,11 +100,19 @@ if "%DESKTOP_DIR%"=="" set "DESKTOP_DIR=%USERPROFILE%\Desktop"
 if not exist "%DESKTOP_DIR%" set "DESKTOP_DIR=%USERPROFILE%\Escritorio"
 if not exist "%DESKTOP_DIR%" mkdir "%DESKTOP_DIR%" >nul 2>nul
 set "PUBLIC_DESKTOP=%PUBLIC%\Desktop"
+set "ALT_DESKTOP=%HOMEDRIVE%%HOMEPATH%\Desktop"
+set "ALT_ESCRITORIO=%HOMEDRIVE%%HOMEPATH%\Escritorio"
 
 set "START_BAT=%DESKTOP_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
 set "STOP_BAT=%DESKTOP_DIR%\Detener-WallpaperVideoLAN.bat"
 set "START_BAT_PUBLIC=%PUBLIC_DESKTOP%\Levantar-Host-WallpaperVideoLAN.bat"
 set "STOP_BAT_PUBLIC=%PUBLIC_DESKTOP%\Detener-WallpaperVideoLAN.bat"
+set "START_BAT_ALT=%ALT_DESKTOP%\Levantar-Host-WallpaperVideoLAN.bat"
+set "STOP_BAT_ALT=%ALT_DESKTOP%\Detener-WallpaperVideoLAN.bat"
+set "START_BAT_ALT_ES=%ALT_ESCRITORIO%\Levantar-Host-WallpaperVideoLAN.bat"
+set "STOP_BAT_ALT_ES=%ALT_ESCRITORIO%\Detener-WallpaperVideoLAN.bat"
+set "START_BAT_LOCAL=%WORK_DIR%\Levantar-Host-WallpaperVideoLAN.bat"
+set "STOP_BAT_LOCAL=%WORK_DIR%\Detener-WallpaperVideoLAN.bat"
 
 > "%START_BAT%" echo @echo off
 >> "%START_BAT%" echo setlocal
@@ -128,8 +136,40 @@ if exist "%PUBLIC_DESKTOP%" (
   copy /Y "%START_BAT%" "%START_BAT_PUBLIC%" >nul 2>nul
   copy /Y "%STOP_BAT%" "%STOP_BAT_PUBLIC%" >nul 2>nul
 )
+if exist "%ALT_DESKTOP%" (
+  copy /Y "%START_BAT%" "%START_BAT_ALT%" >nul 2>nul
+  copy /Y "%STOP_BAT%" "%STOP_BAT_ALT%" >nul 2>nul
+)
+if exist "%ALT_ESCRITORIO%" (
+  copy /Y "%START_BAT%" "%START_BAT_ALT_ES%" >nul 2>nul
+  copy /Y "%STOP_BAT%" "%STOP_BAT_ALT_ES%" >nul 2>nul
+)
+copy /Y "%START_BAT%" "%START_BAT_LOCAL%" >nul 2>nul
+copy /Y "%STOP_BAT%" "%STOP_BAT_LOCAL%" >nul 2>nul
 
-call "%START_BAT%"
+echo.
+echo Lanzadores creados. Rutas detectadas:
+if exist "%START_BAT%" echo - %START_BAT%
+if exist "%START_BAT_PUBLIC%" echo - %START_BAT_PUBLIC%
+if exist "%START_BAT_ALT%" echo - %START_BAT_ALT%
+if exist "%START_BAT_ALT_ES%" echo - %START_BAT_ALT_ES%
+if exist "%START_BAT_LOCAL%" echo - %START_BAT_LOCAL%
+if not exist "%START_BAT%" if not exist "%START_BAT_PUBLIC%" if not exist "%START_BAT_ALT%" if not exist "%START_BAT_ALT_ES%" (
+  echo [AVISO] No se pudo escribir en escritorios. Usa temporalmente:
+  echo - %START_BAT_LOCAL%
+)
+
+if exist "%START_BAT%" (
+  call "%START_BAT%"
+) else if exist "%START_BAT_PUBLIC%" (
+  call "%START_BAT_PUBLIC%"
+) else if exist "%START_BAT_ALT%" (
+  call "%START_BAT_ALT%"
+) else if exist "%START_BAT_ALT_ES%" (
+  call "%START_BAT_ALT_ES%"
+) else (
+  call "%START_BAT_LOCAL%"
+)
 exit /b 0
 
 :ensure_node
