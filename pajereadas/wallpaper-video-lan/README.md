@@ -58,14 +58,14 @@ wallpaper-video-lan/
 2. Verifica `WALLPAPER_ROOT`:
 
 ```env
-WALLPAPER_ROOT=C:\\Program Files (x86)\\Steam\\steamapps\\workshop\\content\\431960
+WALLPAPER_ROOT=C:\\
 HOST=0.0.0.0
 PORT=3000
 SCAN_INTERVAL_SECONDS=180
 ENABLE_DURATION_PROBE=true
 ```
 
-Si tu Steam Library está en otra unidad, cambia la ruta.
+Por defecto ahora usa `C:\`. Si quieres limitar el escaneo (recomendado), cambia la ruta a una carpeta más específica.
 
 ## Ejecución
 

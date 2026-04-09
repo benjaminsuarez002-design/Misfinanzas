@@ -11,7 +11,7 @@ set "REPO_ROOT_IN_ZIP=%EXTRACT_DIR%\Misfinanzas-main"
 set "SOURCE_DIR=%REPO_ROOT_IN_ZIP%\%SUBDIR_IN_REPO%"
 set "LAUNCHERS_DIR=%WORK_DIR%\installer\launchers"
 
-set "DEFAULT_ROOT=C:\Program Files (x86)\Steam\steamapps\workshop\content\431960"
+set "DEFAULT_ROOT=C:\"
 set "FIREWALL_RULE=WallpaperVideoLAN-3000"
 set "TOTAL_STEPS=9"
 set "BAR_WIDTH=28"

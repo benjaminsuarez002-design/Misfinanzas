@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const defaultRoot = 'C:\\Program Files (x86)\\Steam\\steamapps\\workshop\\content\\431960';
+const defaultRoot = 'C:\\';
 const envRoot = (process.env.WALLPAPER_ROOT || '').trim();
 
 const config = {
