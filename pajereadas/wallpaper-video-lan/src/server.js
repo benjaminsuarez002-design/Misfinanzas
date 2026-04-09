@@ -3,12 +3,15 @@ const fs = require('fs');
 const fsPromises = require('fs/promises');
 const path = require('path');
 const os = require('os');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
 
 const config = require('./config');
 const VideoIndexer = require('./videoIndexer');
 const ThumbnailService = require('./thumbnailService');
 
 const app = express();
+const execFileAsync = promisify(execFile);
 
 const indexer = new VideoIndexer({
   rootDir: config.wallpaperRoot,
@@ -29,6 +32,122 @@ const MIME_TYPES = {
 
 function resolveMime(filePath) {
   return MIME_TYPES[path.extname(filePath).toLowerCase()] || 'application/octet-stream';
+}
+
+function isValidIpv4(address) {
+  if (!address || typeof address !== 'string') return false;
+  const parts = address.split('.');
+  if (parts.length !== 4) return false;
+
+  return parts.every((part) => {
+    if (!/^\d+$/.test(part)) return false;
+    const num = Number(part);
+    return num >= 0 && num <= 255;
+  });
+}
+
+function compareIpv4(a, b) {
+  const aParts = String(a || '').split('.').map((part) => Number(part) || 0);
+  const bParts = String(b || '').split('.').map((part) => Number(part) || 0);
+
+  for (let i = 0; i < 4; i += 1) {
+    const diff = aParts[i] - bParts[i];
+    if (diff !== 0) return diff;
+  }
+
+  return 0;
+}
+
+function getLanInterfaces() {
+  const interfaces = os.networkInterfaces();
+  const lan = [];
+  const seen = new Set();
+
+  for (const [ifaceName, records] of Object.entries(interfaces)) {
+    for (const record of records || []) {
+      const isIpv4 = record.family === 'IPv4' || record.family === 4;
+      if (!isIpv4 || record.internal || !isValidIpv4(record.address)) {
+        continue;
+      }
+
+      if (seen.has(record.address)) {
+        continue;
+      }
+
+      seen.add(record.address);
+      lan.push({
+        interface: ifaceName,
+        address: record.address,
+        url: `http://${record.address}:${config.port}`
+      });
+    }
+  }
+
+  lan.sort((a, b) => compareIpv4(a.address, b.address));
+  return lan;
+}
+
+function parseArpTable(rawText) {
+  const entries = [];
+  const lines = String(rawText || '').split(/\r?\n/);
+
+  for (const line of lines) {
+    const match = line.trim().match(/^(\d{1,3}(?:\.\d{1,3}){3})\s+([0-9a-fA-F:-]{11,23})\s+(\S+)/);
+    if (!match) {
+      continue;
+    }
+
+    const address = match[1];
+    const mac = match[2].toLowerCase().replace(/-/g, ':');
+    const type = match[3].toLowerCase();
+    const octets = address.split('.').map((part) => Number(part));
+    const firstOctet = octets[0];
+    const lastOctet = octets[3];
+
+    if (!isValidIpv4(address) || address.startsWith('127.') || address === '0.0.0.0') {
+      continue;
+    }
+    if (firstOctet >= 224 || firstOctet === 0 || firstOctet === 255 || lastOctet === 255) {
+      continue;
+    }
+
+    if (mac === 'ff:ff:ff:ff:ff:ff' || mac === '00:00:00:00:00:00') {
+      continue;
+    }
+
+    entries.push({ address, mac, type });
+  }
+
+  return entries;
+}
+
+async function detectLanDevices(excludeAddresses = []) {
+  try {
+    const command = process.platform === 'win32' ? 'arp' : '/usr/sbin/arp';
+    const args = process.platform === 'win32' ? ['-a'] : ['-an'];
+    const { stdout } = await execFileAsync(command, args, {
+      windowsHide: true,
+      timeout: 1800,
+      maxBuffer: 1024 * 1024
+    });
+
+    const excluded = new Set(excludeAddresses);
+    const byIp = new Map();
+
+    for (const entry of parseArpTable(stdout)) {
+      if (excluded.has(entry.address)) {
+        continue;
+      }
+
+      if (!byIp.has(entry.address)) {
+        byIp.set(entry.address, entry);
+      }
+    }
+
+    return [...byIp.values()].sort((a, b) => compareIpv4(a.address, b.address));
+  } catch {
+    return [];
+  }
 }
 
 async function streamVideo(req, res, filePath) {
@@ -89,33 +208,18 @@ app.get('/api/scan-status', (req, res) => {
   }
 });
 
-app.get('/api/network', (req, res) => {
+app.get('/api/network', async (req, res) => {
   try {
-    const interfaces = os.networkInterfaces();
-    const lan = [];
-
-    for (const [ifaceName, records] of Object.entries(interfaces)) {
-      for (const record of records || []) {
-        const isIpv4 = record.family === 'IPv4' || record.family === 4;
-        if (!isIpv4 || record.internal || !record.address) {
-          continue;
-        }
-
-        lan.push({
-          interface: ifaceName,
-          address: record.address,
-          url: `http://${record.address}:${config.port}`
-        });
-      }
-    }
-
-    lan.sort((a, b) => a.address.localeCompare(b.address));
+    const lan = getLanInterfaces();
+    const excluded = new Set(['127.0.0.1', ...lan.map((entry) => entry.address)]);
+    const devices = await detectLanDevices([...excluded]);
 
     res.json({
       host: config.host,
       port: config.port,
       localhostUrl: `http://localhost:${config.port}`,
-      lan
+      lan,
+      devices
     });
   } catch (error) {
     res.status(500).json({ error: error.message || 'No se pudo obtener la red local.' });

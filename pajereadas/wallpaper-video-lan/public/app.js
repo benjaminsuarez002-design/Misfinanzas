@@ -115,19 +115,43 @@ function buildConnectionItem(label, url) {
 function renderConnections(payload) {
   dom.connectionList.innerHTML = '';
   const fragment = document.createDocumentFragment();
+  const seenUrls = new Set();
 
-  fragment.appendChild(buildConnectionItem('Este equipo (localhost)', payload.localhostUrl));
+  const localhostUrl = payload.localhostUrl || `http://localhost:${payload.port || 3000}`;
+  fragment.appendChild(buildConnectionItem('Este equipo (localhost)', localhostUrl));
+  seenUrls.add(localhostUrl);
 
   const lan = Array.isArray(payload.lan) ? payload.lan : [];
   for (const item of lan) {
-    const label = `${item.interface} (${item.address})`;
-    fragment.appendChild(buildConnectionItem(label, item.url));
+    const url = item.url || `http://${item.address}:${payload.port || 3000}`;
+    if (seenUrls.has(url)) {
+      continue;
+    }
+
+    seenUrls.add(url);
+    const label = `${item.interface || 'Interfaz'} (${item.address})`;
+    fragment.appendChild(buildConnectionItem(label, url));
   }
 
-  if (lan.length === 0) {
+  const devices = Array.isArray(payload.devices) ? payload.devices : [];
+  for (const device of devices) {
+    const url = `http://${device.address}`;
+    if (seenUrls.has(url)) {
+      continue;
+    }
+
+    seenUrls.add(url);
+    const details = [device.mac, device.type].filter(Boolean).join(' | ');
+    const label = details
+      ? `Dispositivo LAN (${device.address}) - ${details}`
+      : `Dispositivo LAN (${device.address})`;
+    fragment.appendChild(buildConnectionItem(label, url));
+  }
+
+  if (lan.length === 0 && devices.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'empty-row';
-    empty.textContent = 'No se detectaron IPs LAN. Revisa Wi-Fi o cable de red.';
+    empty.textContent = 'No se detectaron IPs LAN ni dispositivos vecinos. Revisa Wi-Fi o cable de red.';
     fragment.appendChild(empty);
   }
 
