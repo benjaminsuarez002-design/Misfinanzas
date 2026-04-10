@@ -951,11 +951,28 @@
   }
   .cfg-section-note { font-size: 12px; color: var(--muted); line-height: 1.45; margin: -4px 0 12px; }
   .cfg-theme-list { display:grid; gap:10px; }
+  .cfg-theme-block-title {
+    margin: 16px 2px 8px;
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .cfg-theme-block-note {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin: 0 2px 10px;
+  }
   .cfg-theme-row {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    padding:12px 14px; border-radius:14px; border:1.5px solid rgba(108,140,255,.16);
-    background: linear-gradient(135deg, rgba(255,255,255,.46), rgba(243,238,255,.3));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.36), 0 10px 22px rgba(108,140,255,.08);
+    padding:12px 14px; border-radius:14px; border:1.5px solid var(--line-tint, rgba(108,140,255,.16));
+    background:
+      linear-gradient(135deg, var(--card-soft, rgba(255,255,255,.46)), var(--surface-alt, rgba(243,238,255,.3))),
+      var(--card, #fff);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 10px 22px var(--surface-shadow, rgba(108,140,255,.08));
+    backdrop-filter: blur(10px);
   }
   .cfg-theme-copy { flex:1; min-width:0; }
   .cfg-theme-name { font-family: Arial Black,sans-serif; font-size: 13px; color: var(--text); }
@@ -963,7 +980,7 @@
   .cfg-theme-current { font-size: 11px; color: var(--blue); margin-top: 4px; font-family: Arial Black,sans-serif; letter-spacing: .3px; }
   .cfg-theme-preview { display:flex; align-items:center; gap:4px; flex-shrink:0; }
   .cfg-theme-swatch {
-    width:12px; height:12px; border-radius:999px; border:1px solid rgba(0,0,0,.06);
+    width:12px; height:12px; border-radius:999px; border:1px solid var(--line-tint, rgba(108,140,255,.16));
     box-shadow: inset 0 0 0 1px rgba(255,255,255,.26);
   }
   .cfg-theme-palette {
@@ -971,8 +988,8 @@
   }
   .cfg-theme-bar {
     width:72px; height:8px; border-radius:999px;
-    border:1px solid rgba(255,255,255,.42);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.05), 0 4px 12px rgba(108,140,255,.08);
+    border:1px solid var(--line-tint, rgba(108,140,255,.16));
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.1), 0 4px 12px var(--surface-shadow, rgba(108,140,255,.08));
   }
   .cfg-theme-dots { display:flex; gap:5px; }
   .cfg-theme-action {
@@ -981,6 +998,28 @@
     font-family: Arial Black,sans-serif; font-size: 11px; font-weight: 800;
     white-space: nowrap; flex-shrink: 0;
     box-shadow: 0 10px 20px var(--button-shadow, rgba(92,111,255,.18));
+  }
+  .cfg-theme-row.manual {
+    border-style: dashed;
+    background:
+      radial-gradient(circle at 92% 18%, var(--line-glow-soft, rgba(108,140,255,.18)), transparent 34%),
+      linear-gradient(135deg, var(--card-soft, rgba(108,140,255,.08)), var(--surface-alt, rgba(255,255,255,.32))),
+      var(--card, #fff);
+  }
+  .cfg-theme-manual-labels {
+    display:flex;
+    flex-wrap:wrap;
+    gap:5px;
+    margin-top:7px;
+  }
+  .cfg-theme-manual-pill {
+    font-size:9px;
+    font-family: Arial Black,sans-serif;
+    color: var(--muted);
+    border:1px solid var(--line-tint, rgba(108,140,255,.16));
+    border-radius:999px;
+    padding:3px 6px;
+    background: var(--card-soft, rgba(255,255,255,.2));
   }
   .cfg-theme-picker-overlay {
     position: fixed; inset: 0; z-index: 5100; display:none;
@@ -991,7 +1030,7 @@
   .cfg-theme-picker-card {
     width:min(100%, 460px); background: var(--card); border-radius: 24px;
     padding:22px 20px 18px; border: 1.5px solid var(--border);
-    box-shadow: 0 24px 64px rgba(88,77,180,.22);
+    box-shadow: 0 24px 64px var(--surface-shadow, rgba(88,77,180,.22));
     max-height: min(90vh, 760px);
     overflow-y: auto;
   }
@@ -1001,10 +1040,19 @@
   .cfg-theme-choice {
     display:flex; align-items:center; justify-content:space-between; gap:12px;
     width:100%; padding:12px 13px; border-radius:16px; cursor:pointer;
-    border:1.5px solid rgba(108,140,255,.14); background: linear-gradient(135deg, rgba(255,255,255,.5), rgba(243,238,255,.28));
+    border:1.5px solid var(--line-tint, rgba(108,140,255,.14));
+    background:
+      linear-gradient(135deg, var(--card-soft, rgba(255,255,255,.5)), var(--surface-alt, rgba(243,238,255,.28))),
+      var(--card, #fff);
     text-align:left; transition: all .15s ease;
   }
-  .cfg-theme-choice.active { background: linear-gradient(135deg, rgba(108,140,255,.12), rgba(143,107,255,.12)); }
+  .cfg-theme-choice.active {
+    border-color: var(--border);
+    background:
+      radial-gradient(circle at 92% 18%, var(--line-glow-soft, rgba(108,140,255,.18)), transparent 34%),
+      linear-gradient(135deg, var(--card2, rgba(108,140,255,.12)), var(--surface-alt, rgba(143,107,255,.12)));
+    box-shadow: 0 10px 22px var(--surface-shadow, rgba(108,140,255,.08));
+  }
   .cfg-theme-choice-copy { flex:1; min-width:0; }
   .cfg-theme-choice-name { font-family: Arial Black,sans-serif; font-size: 13px; color: var(--text); }
   .cfg-theme-choice-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.35; }
@@ -1026,26 +1074,226 @@
     display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom: 12px;
   }
   .cfg-theme-color-field {
-    border: 1.5px solid rgba(108,140,255,.14);
-    background: linear-gradient(135deg, rgba(255,255,255,.46), rgba(243,238,255,.26));
+    border: 1.5px solid var(--line-tint, rgba(108,140,255,.14));
+    background:
+      linear-gradient(135deg, var(--card-soft, rgba(255,255,255,.46)), var(--surface-alt, rgba(243,238,255,.26))),
+      var(--card, #fff);
     border-radius: 14px; padding: 10px 10px 8px;
+  }
+  .cfg-theme-color-field.button {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    text-align: left;
+    cursor: pointer;
   }
   .cfg-theme-color-label {
     display:block; font-size: 10px; color: var(--muted);
     font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
     margin-bottom: 8px;
   }
-  .cfg-theme-color-input {
-    width: 100%; height: 40px; border: none; padding: 0; background: transparent; cursor: pointer;
+  .cfg-theme-color-help {
+    display:block;
+    font-size: 10px;
+    color: var(--muted);
+    line-height: 1.25;
+    margin: -4px 0 8px;
   }
-  .cfg-theme-color-input::-webkit-color-swatch-wrapper { padding: 0; }
-  .cfg-theme-color-input::-webkit-color-swatch {
-    border: 1.5px solid rgba(255,255,255,.55);
-    border-radius: 10px;
+  .cfg-theme-color-trigger {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
   }
-  .cfg-theme-color-input::-moz-color-swatch {
-    border: 1.5px solid rgba(255,255,255,.55);
-    border-radius: 10px;
+  .cfg-theme-color-sample {
+    flex:1;
+    height:38px;
+    border-radius: 12px;
+    border:1.5px solid rgba(255,255,255,.22);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.24), 0 8px 20px rgba(0,0,0,.16);
+  }
+  .cfg-theme-color-value {
+    min-width: 78px;
+    text-align:right;
+    font-family: Arial Black,sans-serif;
+    font-size: 11px;
+    color: var(--text);
+    letter-spacing: .5px;
+  }
+  .cfg-theme-live-preview {
+    margin: 6px 0 14px;
+    border:1.5px solid var(--line-tint, rgba(108,140,255,.14));
+    border-radius: 18px;
+    padding: 14px;
+    background:
+      linear-gradient(135deg, var(--card-soft, rgba(255,255,255,.46)), var(--surface-alt, rgba(243,238,255,.26))),
+      var(--card, #fff);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 12px 28px var(--surface-shadow, rgba(108,140,255,.12));
+  }
+  .cfg-theme-live-title {
+    font-family: Arial Black,sans-serif;
+    font-size: 11px;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    margin-bottom: 10px;
+  }
+  .cfg-theme-live-card {
+    border-radius: 18px;
+    padding: 14px;
+    border: 1.5px solid rgba(255,255,255,.14);
+    background: linear-gradient(135deg, rgba(10,14,24,.92), rgba(18,24,40,.88));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 14px 30px rgba(0,0,0,.22);
+  }
+  .cfg-theme-live-card-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom: 10px;
+  }
+  .cfg-theme-live-card-name {
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    color: #fff;
+  }
+  .cfg-theme-live-chip {
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-family: Arial Black,sans-serif;
+    color: #08111f;
+  }
+  .cfg-theme-live-bar {
+    width: 100%;
+    height: 10px;
+    border-radius: 999px;
+    margin-bottom: 12px;
+  }
+  .cfg-theme-live-meta {
+    display:flex;
+    gap:8px;
+    margin-bottom: 12px;
+  }
+  .cfg-theme-live-pill {
+    flex:1;
+    height: 28px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,.08);
+  }
+  .cfg-theme-live-button {
+    width: 100%;
+    border:none;
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    color:#fff;
+    box-shadow: 0 12px 22px rgba(0,0,0,.18);
+  }
+  .cfg-color-editor-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 5200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    background: rgba(10,14,24,.52);
+    backdrop-filter: blur(10px);
+  }
+  .cfg-color-editor-overlay.visible { display:flex; }
+  .cfg-color-editor-card {
+    width:min(100%, 540px);
+    border-radius: 24px;
+    padding: 18px 18px 16px;
+    background: var(--card, #fff);
+    border: 1.5px solid var(--border, rgba(108,140,255,.22));
+    box-shadow: 0 24px 64px var(--surface-shadow, rgba(88,77,180,.22));
+  }
+  .cfg-color-editor-title {
+    font-family: Arial Black,sans-serif;
+    font-size: 26px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .cfg-color-editor-sub {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .cfg-color-editor-layout {
+    display:grid;
+    grid-template-columns: minmax(0, 1fr) 56px;
+    gap:14px;
+    align-items: stretch;
+  }
+  .cfg-color-editor-sv-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1.5px solid rgba(255,255,255,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.2), 0 12px 28px rgba(0,0,0,.12);
+  }
+  .cfg-color-editor-sv-canvas,
+  .cfg-color-editor-hue-canvas {
+    width: 100%;
+    height: 100%;
+    display:block;
+    cursor: crosshair;
+  }
+  .cfg-color-editor-sv-handle,
+  .cfg-color-editor-hue-handle {
+    position:absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(0,0,0,.22);
+    pointer-events:none;
+    transform: translate(-50%, -50%);
+  }
+  .cfg-color-editor-side {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    align-items: stretch;
+  }
+  .cfg-color-editor-preview {
+    flex: 1;
+    min-height: 96px;
+    border-radius: 14px;
+    border:1.5px solid rgba(255,255,255,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 12px 24px rgba(0,0,0,.12);
+  }
+  .cfg-color-editor-hue-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 180px;
+    border-radius: 999px;
+    overflow: hidden;
+    border:1.5px solid rgba(255,255,255,.18);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.16), 0 12px 24px rgba(0,0,0,.12);
+  }
+  .cfg-color-editor-value {
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    text-align:center;
+    letter-spacing: .7px;
+  }
+  .cfg-color-editor-preview-wrap {
+    margin-top: 14px;
+  }
+  .cfg-color-editor-actions {
+    margin-top: 14px;
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
   }
   .cfg-theme-custom-actions {
     display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
@@ -1059,7 +1307,7 @@
     box-shadow: 0 10px 20px var(--button-shadow, rgba(92,111,255,.18));
   }
   .cfg-theme-custom-btn.clear {
-    background: rgba(108,140,255,.08); color: var(--blue); border: 1.5px solid rgba(108,140,255,.18);
+    background: var(--card-soft, rgba(108,140,255,.08)); color: var(--blue); border: 1.5px solid var(--line-tint, rgba(108,140,255,.18));
   }
 
 
@@ -1893,7 +2141,11 @@ window.abrirConfig = () => {
       <div id="cfgPanelPersonal" class="cfg-panel cfg-panel-personal ${userConfig.configTab==='personalizacion'?'active':''}">
         <div class="cfg-section-title">🎨 Personalización global</div>
         <div class="cfg-section-note">Lo que elijas acá se comparte con los HTML de Mis Finanzas para mantener el mismo estilo en login, reset, aprobaciones, panel admin y app principal.</div>
+        <div class="cfg-theme-block-title">Presets rápidos</div>
         <div id="cfgThemeList" class="cfg-theme-list"></div>
+        <div class="cfg-theme-block-title">Personalizado</div>
+        <div class="cfg-theme-block-note">Acá elegís colores manuales por función. Cada botón abre una paleta de 4 colores explicando qué controla cada uno.</div>
+        <div id="cfgThemeCustomList" class="cfg-theme-list"></div>
       </div>
 
       <div class="cfg-btns">
@@ -2016,6 +2268,91 @@ function getCfgThemeMeta(){
   };
 }
 
+function getCfgThemeCustomMeta(){
+  return {
+    preset: {
+      title: 'Todo el tema',
+      subtitle: 'Aplica una paleta manual sincronizada a fondo, líneas, efectos, botones y acentos.',
+      labels: [
+        ['Base global', 'Color que guía la base visual.'],
+        ['Acento principal', 'Color protagonista para acciones y foco.'],
+        ['Brillo secundario', 'Color de glow y detalles vivos.'],
+        ['Contraste cálido', 'Color extra para profundidad y remates.']
+      ]
+    },
+    mode: {
+      title: 'Modo base',
+      subtitle: 'Ajusta la base clara u oscura: superficies, tarjetas, inputs y texto secundario.',
+      labels: [
+        ['Fondo base', 'Color que tiñe la capa general.'],
+        ['Paneles', 'Color de barras y superficies principales.'],
+        ['Tarjetas', 'Color que influye en cards e inputs.'],
+        ['Texto suave', 'Color de apoyo para textos secundarios.']
+      ]
+    },
+    background: {
+      title: 'Fondo',
+      subtitle: 'Controla el degradé ambiental de toda la app.',
+      labels: [
+        ['Fondo inicial', 'Primer color del degradé.'],
+        ['Fondo medio', 'Color central y profundidad.'],
+        ['Fondo final', 'Color de cierre del fondo.'],
+        ['Acento ambiente', 'Luz ambiental extra.']
+      ]
+    },
+    lines: {
+      title: 'Líneas y bordes',
+      subtitle: 'Define bordes, separadores y contornos principales.',
+      labels: [
+        ['Borde principal', 'Color visible de líneas y contornos.'],
+        ['Borde suave', 'Color de apoyo para bordes sutiles.'],
+        ['Borde fuerte', 'Color para énfasis y contraste.'],
+        ['Separadores', 'Color extra para divisiones y detalles.']
+      ]
+    },
+    lineMotion: {
+      title: 'Animación de líneas',
+      subtitle: 'Colores que alternan en efectos tipo RGB/ARGB.',
+      labels: [
+        ['Barrido 1', 'Primer color animado.'],
+        ['Barrido 2', 'Segundo color animado.'],
+        ['Barrido 3', 'Tercer color animado.'],
+        ['Glow final', 'Color de cierre del brillo.']
+      ]
+    },
+    effects: {
+      title: 'Efectos y glow',
+      subtitle: 'Controla luces, sombras coloreadas y acentos visuales.',
+      labels: [
+        ['Glow principal', 'Brillo más importante.'],
+        ['Glow secundario', 'Luz de apoyo.'],
+        ['Acento luminoso', 'Detalle vivo para destacar.'],
+        ['Brillo cálido', 'Remate para profundidad.']
+      ]
+    },
+    buttons: {
+      title: 'Botones',
+      subtitle: 'Controla el degradé y brillo de acciones principales.',
+      labels: [
+        ['Inicio degradé', 'Primer color del botón.'],
+        ['Centro degradé', 'Color de transición.'],
+        ['Final degradé', 'Color de cierre del botón.'],
+        ['Sombra/brillo', 'Color del glow del botón.']
+      ]
+    },
+    general: {
+      title: 'Color general',
+      subtitle: 'Marca el tono principal de selección, links y detalles activos.',
+      labels: [
+        ['Acento principal', 'Color general más usado.'],
+        ['Foco/selección', 'Color para estados activos.'],
+        ['Links/detalles', 'Color de textos y detalles.'],
+        ['Resalte extra', 'Color complementario.']
+      ]
+    }
+  };
+}
+
 function buildCfgThemeSwatches(option = {}){
   const colors = option.swatches || [];
   if(!colors.length) return '';
@@ -2047,6 +2384,9 @@ function getCfgThemeDisplayOption(category, state, catalog){
 }
 
 function getCfgEditablePalette(category, state){
+  if(window.cfgThemePickerSession?.category === category && Array.isArray(window.cfgThemePickerSession.draftPalette)){
+    return window.cfgThemePickerSession.draftPalette.slice(0, 4);
+  }
   const api = getCfgThemeApi();
   const palette = api?.getActivePalette?.(category, state) || [];
   const fallback = ['#2ee6ff', '#8758ff', '#ff62c1', '#ffb347'];
@@ -2056,27 +2396,190 @@ function getCfgEditablePalette(category, state){
     .slice(0, 4);
 }
 
+function cfgThemeClone(value){
+  return JSON.parse(JSON.stringify(value));
+}
+
+function cfgThemeHexToRgb(hex){
+  const safe = String(hex || '#8f6bff').replace('#','').trim();
+  const value = safe.length === 3 ? safe.split('').map(char => char + char).join('') : safe.padEnd(6, '0').slice(0, 6);
+  return {
+    r: parseInt(value.slice(0,2), 16),
+    g: parseInt(value.slice(2,4), 16),
+    b: parseInt(value.slice(4,6), 16)
+  };
+}
+
+function cfgThemeRgbToHex(r, g, b){
+  return '#' + [r, g, b].map(channel => Math.max(0, Math.min(255, Math.round(channel))).toString(16).padStart(2, '0')).join('');
+}
+
+function cfgThemeRgbToHsv(r, g, b){
+  const rn = r / 255;
+  const gn = g / 255;
+  const bn = b / 255;
+  const max = Math.max(rn, gn, bn);
+  const min = Math.min(rn, gn, bn);
+  const delta = max - min;
+  let h = 0;
+  if(delta){
+    if(max === rn) h = ((gn - bn) / delta) % 6;
+    else if(max === gn) h = (bn - rn) / delta + 2;
+    else h = (rn - gn) / delta + 4;
+    h *= 60;
+    if(h < 0) h += 360;
+  }
+  const s = max === 0 ? 0 : delta / max;
+  const v = max;
+  return { h, s, v };
+}
+
+function cfgThemeHexToHsv(hex){
+  const { r, g, b } = cfgThemeHexToRgb(hex);
+  return cfgThemeRgbToHsv(r, g, b);
+}
+
+function cfgThemeHsvToRgb(h, s, v){
+  const hue = ((Number(h) || 0) % 360 + 360) % 360;
+  const sat = Math.max(0, Math.min(1, Number(s) || 0));
+  const val = Math.max(0, Math.min(1, Number(v) || 0));
+  const c = val * sat;
+  const x = c * (1 - Math.abs(((hue / 60) % 2) - 1));
+  const m = val - c;
+  let r1 = 0, g1 = 0, b1 = 0;
+  if(hue < 60){ r1 = c; g1 = x; }
+  else if(hue < 120){ r1 = x; g1 = c; }
+  else if(hue < 180){ g1 = c; b1 = x; }
+  else if(hue < 240){ g1 = x; b1 = c; }
+  else if(hue < 300){ r1 = x; b1 = c; }
+  else { r1 = c; b1 = x; }
+  return {
+    r: Math.round((r1 + m) * 255),
+    g: Math.round((g1 + m) * 255),
+    b: Math.round((b1 + m) * 255)
+  };
+}
+
+function cfgThemeHsvToHex(h, s, v){
+  const rgb = cfgThemeHsvToRgb(h, s, v);
+  return cfgThemeRgbToHex(rgb.r, rgb.g, rgb.b);
+}
+
+function cfgThemeHexToRgba(hex, alpha){
+  const { r, g, b } = cfgThemeHexToRgb(hex);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function ensureCfgThemeCustomSession(category){
+  const api = getCfgThemeApi();
+  if(!api) return null;
+  const current = cfgThemeClone(api.getCurrent());
+  if(window.cfgThemePickerSession && window.cfgThemePickerSession.category !== category && !window.cfgThemePickerSession.persisted){
+    api.setTheme(window.cfgThemePickerSession.originalTheme, { persist: false });
+  }
+  if(!window.cfgThemePickerSession || window.cfgThemePickerSession.category !== category){
+    window.cfgThemePickerSession = {
+      category,
+      originalTheme: current,
+      draftPalette: getCfgEditablePalette(category, current),
+      persisted: false
+    };
+  }
+  return window.cfgThemePickerSession;
+}
+
+function cfgThemeBuildLivePreview(category, palette){
+  const colors = (Array.isArray(palette) ? palette : ['#2ee6ff', '#8758ff', '#ff62c1', '#ffb347']).slice(0, 4);
+  const gradient = `linear-gradient(135deg, ${colors.join(', ')})`;
+  const titleMap = {
+    preset: 'Vista completa del tema',
+    mode: 'Vista del modo base',
+    background: 'Vista del fondo',
+    lines: 'Vista de bordes y líneas',
+    lineMotion: 'Vista de la animación',
+    effects: 'Vista de efectos y glow',
+    buttons: 'Vista de botones',
+    general: 'Vista del acento general'
+  };
+  return `
+    <div class="cfg-theme-live-preview">
+      <div class="cfg-theme-live-title">Ejemplo en vivo</div>
+      <div class="cfg-theme-live-card" style="border-color:${cfgThemeHexToRgba(colors[0], .42)}; box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 16px 34px ${cfgThemeHexToRgba(colors[3], .18)};">
+        <div class="cfg-theme-live-card-head">
+          <div class="cfg-theme-live-card-name">${titleMap[category] || 'Vista previa'}</div>
+          <div class="cfg-theme-live-chip" style="background:${colors[1]}; color:${colors[1].toLowerCase()==='#ffffff' ? '#08111f' : '#08111f'};">Activo</div>
+        </div>
+        <div class="cfg-theme-live-bar" style="background:${gradient}; box-shadow:0 0 18px ${cfgThemeHexToRgba(colors[2], .22)};"></div>
+        <div class="cfg-theme-live-meta">
+          <div class="cfg-theme-live-pill" style="background:${cfgThemeHexToRgba(colors[0], .22)};"></div>
+          <div class="cfg-theme-live-pill" style="background:${cfgThemeHexToRgba(colors[1], .22)};"></div>
+          <div class="cfg-theme-live-pill" style="background:${cfgThemeHexToRgba(colors[2], .22)};"></div>
+        </div>
+        <button type="button" class="cfg-theme-live-button" style="background:${gradient}; box-shadow: 0 12px 22px ${cfgThemeHexToRgba(colors[3], .24)};">Guardar cambios</button>
+      </div>
+    </div>
+  `;
+}
+
 function renderCfgThemeCustomBlock(category, state){
-  const labels = ['Primario', 'Secundario', 'Terciario', 'Cuaternario'];
+  const customInfo = getCfgThemeCustomMeta()[category] || {
+    title: 'Paleta manual',
+    subtitle: 'Elegí 4 colores para este apartado.',
+    labels: [
+      ['Color 1', 'Primer color del apartado.'],
+      ['Color 2', 'Segundo color del apartado.'],
+      ['Color 3', 'Tercer color del apartado.'],
+      ['Color 4', 'Cuarto color del apartado.']
+    ]
+  };
   const palette = getCfgEditablePalette(category, state);
   return `
     <div class="cfg-theme-custom">
-      <div class="cfg-theme-custom-title">Paleta manual</div>
-      <div class="cfg-theme-custom-sub">Elegí 4 colores para este apartado. Si querés un look más fino, podés mezclar un primario protagonista con secundarios suaves.</div>
+      <div class="cfg-theme-custom-title">${customInfo.title}</div>
+      <div class="cfg-theme-custom-sub">${customInfo.subtitle}</div>
       <div class="cfg-theme-color-grid">
-        ${labels.map((label, index) => `
-          <div class="cfg-theme-color-field">
-            <label class="cfg-theme-color-label" for="cfgThemeColor-${category}-${index}">${label}</label>
-            <input type="color" id="cfgThemeColor-${category}-${index}" class="cfg-theme-color-input" value="${palette[index]}">
-          </div>
+        ${customInfo.labels.map(([label, help], index) => `
+          <button type="button" class="cfg-theme-color-field button" onclick="abrirCfgManualColorEditor('${category}', ${index})">
+            <span class="cfg-theme-color-label">${label}</span>
+            <span class="cfg-theme-color-help">${help}</span>
+            <span class="cfg-theme-color-trigger">
+              <span class="cfg-theme-color-sample" style="background:${palette[index]}"></span>
+              <span class="cfg-theme-color-value">${palette[index].toUpperCase()}</span>
+            </span>
+          </button>
         `).join('')}
       </div>
+      ${cfgThemeBuildLivePreview(category, palette)}
       <div class="cfg-theme-custom-actions">
         <button type="button" class="cfg-theme-custom-btn clear" onclick="limpiarCfgThemePalette('${category}')">Limpiar manual</button>
         <button type="button" class="cfg-theme-custom-btn apply" onclick="aplicarCfgThemePalette('${category}')">Aplicar paleta</button>
       </div>
     </div>
   `;
+}
+
+function buildCfgThemeCustomListHtml(){
+  const api = getCfgThemeApi();
+  if(!api) return '<div class="cfg-section-note">No se pudo cargar la personalización global.</div>';
+  const state = getCfgThemeState();
+  const customMeta = getCfgThemeCustomMeta();
+  return Object.entries(customMeta).map(([key, info]) => {
+    const option = getCfgThemeDisplayOption(key, state, api.getCatalog());
+    const manual = getCfgThemeManualPalette(state, key);
+    const labels = info.labels.map(([label]) => `<span class="cfg-theme-manual-pill">${label}</span>`).join('');
+    return `
+      <div class="cfg-theme-row manual">
+        <div class="cfg-theme-copy">
+          <div class="cfg-theme-name">${info.title}</div>
+          <div class="cfg-theme-sub">${info.subtitle}</div>
+          <div class="cfg-theme-current">Actual: ${manual ? 'Paleta personalizada' : (option.label || 'Predeterminado')}</div>
+          <div class="cfg-theme-manual-labels">${labels}</div>
+        </div>
+        <div class="cfg-theme-preview">${buildCfgThemeSwatches(option)}</div>
+        <button type="button" class="cfg-theme-action" onclick="abrirCfgThemeCustomPicker('${key}')">Personalizar</button>
+      </div>
+    `;
+  }).join('');
 }
 
 function buildCfgThemeListHtml(){
@@ -2104,6 +2607,8 @@ function buildCfgThemeListHtml(){
 window.refreshCfgThemeList = () => {
   const list = document.getElementById('cfgThemeList');
   if(list) list.innerHTML = buildCfgThemeListHtml();
+  const customList = document.getElementById('cfgThemeCustomList');
+  if(customList) customList.innerHTML = buildCfgThemeCustomListHtml();
   requestAnimationFrame(window.fitConfigBoxToViewport);
 };
 
@@ -2158,6 +2663,37 @@ window.abrirCfgThemePicker = category => {
           </button>
         `).join('')}
       </div>
+      <div class="cfg-theme-picker-actions">
+        <button class="cfg-btn-cancel" type="button" onclick="cerrarCfgThemePicker()">Cerrar</button>
+      </div>
+    </div>
+  `;
+  overlay.classList.add('visible');
+};
+
+window.abrirCfgThemeCustomPicker = category => {
+  const api = getCfgThemeApi();
+  if(!api) return;
+  const session = ensureCfgThemeCustomSession(category);
+  const state = getCfgThemeState();
+  const customInfo = getCfgThemeCustomMeta()[category];
+  if(!customInfo) return;
+
+  let overlay = document.getElementById('cfgThemePickerOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'cfgThemePickerOverlay';
+    overlay.className = 'cfg-theme-picker-overlay';
+    overlay.onclick = e => {
+      if(e.target === overlay) cerrarCfgThemePicker();
+    };
+    document.body.appendChild(overlay);
+  }
+
+  overlay.innerHTML = `
+    <div class="cfg-theme-picker-card" onclick="event.stopPropagation()">
+      <div class="cfg-theme-picker-title">Personalizado: ${customInfo.title}</div>
+      <div class="cfg-theme-picker-sub">Elegí los 4 colores manuales de este apartado. Tocá cada bloque para abrir la paleta visual; el tema se previsualiza en tiempo real mientras elegís.</div>
       ${renderCfgThemeCustomBlock(category, state)}
       <div class="cfg-theme-picker-actions">
         <button class="cfg-btn-cancel" type="button" onclick="cerrarCfgThemePicker()">Cerrar</button>
@@ -2181,13 +2717,17 @@ window.seleccionarCfgThemeOption = (category, optionKey) => {
 window.aplicarCfgThemePalette = category => {
   const api = getCfgThemeApi();
   if(!api?.applyCustomPalette) return;
-  const colors = [0, 1, 2, 3].map(index =>
-    document.getElementById(`cfgThemeColor-${category}-${index}`)?.value || ''
-  );
+  const session = ensureCfgThemeCustomSession(category);
+  const colors = session?.draftPalette || getCfgEditablePalette(category, getCfgThemeState());
   const next = api.applyCustomPalette(category, colors, { persist: true });
   userConfig.personalizacion = next;
+  if(window.cfgThemePickerSession?.category === category){
+    window.cfgThemePickerSession.originalTheme = cfgThemeClone(next);
+    window.cfgThemePickerSession.draftPalette = getCfgEditablePalette(category, next);
+    window.cfgThemePickerSession.persisted = true;
+  }
   refreshCfgThemeList();
-  abrirCfgThemePicker(category);
+  abrirCfgThemeCustomPicker(category);
 };
 
 window.limpiarCfgThemePalette = category => {
@@ -2195,12 +2735,203 @@ window.limpiarCfgThemePalette = category => {
   if(!api?.clearCustomPalette) return;
   const next = api.clearCustomPalette(category, { persist: true });
   userConfig.personalizacion = next;
+  if(window.cfgThemePickerSession?.category === category){
+    window.cfgThemePickerSession.originalTheme = cfgThemeClone(next);
+    window.cfgThemePickerSession.draftPalette = getCfgEditablePalette(category, next);
+    window.cfgThemePickerSession.persisted = true;
+  }
   refreshCfgThemeList();
-  abrirCfgThemePicker(category);
+  abrirCfgThemeCustomPicker(category);
 };
 
 window.cerrarCfgThemePicker = () => {
+  const api = getCfgThemeApi();
+  if(window.cfgThemePickerSession && !window.cfgThemePickerSession.persisted && api){
+    const restored = api.setTheme(window.cfgThemePickerSession.originalTheme, { persist: false });
+    userConfig.personalizacion = restored;
+    refreshCfgThemeList();
+  }
+  window.cfgThemePickerSession = null;
+  document.getElementById('cfgColorEditorOverlay')?.classList.remove('visible');
   document.getElementById('cfgThemePickerOverlay')?.classList.remove('visible');
+};
+
+function ensureCfgColorEditorOverlay(){
+  let overlay = document.getElementById('cfgColorEditorOverlay');
+  if(overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.id = 'cfgColorEditorOverlay';
+  overlay.className = 'cfg-color-editor-overlay';
+  overlay.innerHTML = `
+    <div class="cfg-color-editor-card" onclick="event.stopPropagation()">
+      <div class="cfg-color-editor-title" id="cfgColorEditorTitle">Editar color</div>
+      <div class="cfg-color-editor-sub" id="cfgColorEditorSub">Mové el selector para ajustar el color y ver el resultado al instante.</div>
+      <div class="cfg-color-editor-layout">
+        <div class="cfg-color-editor-sv-wrap">
+          <canvas id="cfgColorSvCanvas" class="cfg-color-editor-sv-canvas" width="320" height="320"></canvas>
+          <span id="cfgColorSvHandle" class="cfg-color-editor-sv-handle"></span>
+        </div>
+        <div class="cfg-color-editor-side">
+          <div id="cfgColorEditorPreview" class="cfg-color-editor-preview"></div>
+          <div class="cfg-color-editor-hue-wrap">
+            <canvas id="cfgColorHueCanvas" class="cfg-color-editor-hue-canvas" width="44" height="320"></canvas>
+            <span id="cfgColorHueHandle" class="cfg-color-editor-hue-handle"></span>
+          </div>
+          <div id="cfgColorEditorValue" class="cfg-color-editor-value">#FFFFFF</div>
+        </div>
+      </div>
+      <div class="cfg-color-editor-preview-wrap" id="cfgColorEditorConfigPreview"></div>
+      <div class="cfg-color-editor-actions">
+        <button class="cfg-btn-cancel" type="button" onclick="cerrarCfgManualColorEditor()">Cerrar</button>
+      </div>
+    </div>
+  `;
+  overlay.onclick = e => {
+    if(e.target === overlay) cerrarCfgManualColorEditor();
+  };
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function drawCfgSvCanvas(canvas, hue){
+  const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+  ctx.fillRect(0, 0, width, height);
+  const white = ctx.createLinearGradient(0, 0, width, 0);
+  white.addColorStop(0, 'rgba(255,255,255,1)');
+  white.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = white;
+  ctx.fillRect(0, 0, width, height);
+  const black = ctx.createLinearGradient(0, 0, 0, height);
+  black.addColorStop(0, 'rgba(0,0,0,0)');
+  black.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle = black;
+  ctx.fillRect(0, 0, width, height);
+}
+
+function drawCfgHueCanvas(canvas){
+  const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
+  [
+    [0.00, '#ff0000'],
+    [0.17, '#ffff00'],
+    [0.34, '#00ff00'],
+    [0.51, '#00ffff'],
+    [0.68, '#0000ff'],
+    [0.85, '#ff00ff'],
+    [1.00, '#ff0000']
+  ].forEach(([stop, color]) => gradient.addColorStop(stop, color));
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+}
+
+function renderCfgColorEditor(){
+  const editor = window.cfgThemeColorEditor;
+  const session = window.cfgThemePickerSession;
+  if(!editor || !session) return;
+  const overlay = ensureCfgColorEditorOverlay();
+  const customMeta = getCfgThemeCustomMeta()[editor.category];
+  const [label, help] = customMeta.labels[editor.index];
+  document.getElementById('cfgColorEditorTitle').textContent = label;
+  document.getElementById('cfgColorEditorSub').textContent = help;
+  const svCanvas = document.getElementById('cfgColorSvCanvas');
+  const hueCanvas = document.getElementById('cfgColorHueCanvas');
+  drawCfgSvCanvas(svCanvas, editor.h);
+  drawCfgHueCanvas(hueCanvas);
+  const hex = cfgThemeHsvToHex(editor.h, editor.s, editor.v);
+  document.getElementById('cfgColorEditorPreview').style.background = hex;
+  document.getElementById('cfgColorEditorValue').textContent = hex.toUpperCase();
+  document.getElementById('cfgColorEditorConfigPreview').innerHTML = cfgThemeBuildLivePreview(editor.category, session.draftPalette);
+  const svHandle = document.getElementById('cfgColorSvHandle');
+  svHandle.style.left = `${editor.s * svCanvas.offsetWidth}px`;
+  svHandle.style.top = `${(1 - editor.v) * svCanvas.offsetHeight}px`;
+  const hueHandle = document.getElementById('cfgColorHueHandle');
+  hueHandle.style.left = '50%';
+  hueHandle.style.top = `${(editor.h / 360) * hueCanvas.offsetHeight}px`;
+}
+
+function bindCfgColorEditorEvents(){
+  const svCanvas = document.getElementById('cfgColorSvCanvas');
+  const hueCanvas = document.getElementById('cfgColorHueCanvas');
+  if(!svCanvas || svCanvas.dataset.bound === '1') return;
+  const updateSessionColor = () => {
+    const editor = window.cfgThemeColorEditor;
+    const session = window.cfgThemePickerSession;
+    const api = getCfgThemeApi();
+    if(!editor || !session || !api) return;
+    const hex = cfgThemeHsvToHex(editor.h, editor.s, editor.v);
+    session.draftPalette[editor.index] = hex;
+    session.persisted = false;
+    const preview = api.applyCustomPalette(editor.category, session.draftPalette, { persist: false });
+    userConfig.personalizacion = preview;
+    renderCfgColorEditor();
+  };
+  const bindDrag = (target, onMove) => {
+    const applyMove = event => {
+      const rect = target.getBoundingClientRect();
+      onMove(
+        Math.max(0, Math.min(rect.width, event.clientX - rect.left)),
+        Math.max(0, Math.min(rect.height, event.clientY - rect.top)),
+        rect
+      );
+      updateSessionColor();
+    };
+    target.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      target.setPointerCapture?.(event.pointerId);
+      applyMove(event);
+      const move = evt => applyMove(evt);
+      const up = evt => {
+        target.releasePointerCapture?.(event.pointerId);
+        target.removeEventListener('pointermove', move);
+        target.removeEventListener('pointerup', up);
+        target.removeEventListener('pointercancel', up);
+      };
+      target.addEventListener('pointermove', move);
+      target.addEventListener('pointerup', up);
+      target.addEventListener('pointercancel', up);
+    });
+  };
+  bindDrag(svCanvas, (x, y, rect) => {
+    const editor = window.cfgThemeColorEditor;
+    editor.s = rect.width ? x / rect.width : 0;
+    editor.v = rect.height ? 1 - (y / rect.height) : 0;
+  });
+  bindDrag(hueCanvas, (x, y, rect) => {
+    const editor = window.cfgThemeColorEditor;
+    editor.h = rect.height ? (y / rect.height) * 360 : 0;
+  });
+  svCanvas.dataset.bound = '1';
+}
+
+window.abrirCfgManualColorEditor = (category, index) => {
+  const session = ensureCfgThemeCustomSession(category);
+  if(!session) return;
+  const hex = session.draftPalette[index] || '#8f6bff';
+  const hsv = cfgThemeHexToHsv(hex);
+  window.cfgThemeColorEditor = {
+    category,
+    index,
+    h: hsv.h,
+    s: hsv.s,
+    v: hsv.v
+  };
+  const overlay = ensureCfgColorEditorOverlay();
+  overlay.classList.add('visible');
+  bindCfgColorEditorEvents();
+  renderCfgColorEditor();
+};
+
+window.cerrarCfgManualColorEditor = () => {
+  document.getElementById('cfgColorEditorOverlay')?.classList.remove('visible');
+  window.cfgThemeColorEditor = null;
+  if(window.cfgThemePickerSession?.category){
+    abrirCfgThemeCustomPicker(window.cfgThemePickerSession.category);
+  }
 };
 
 function ensureInfoSemanalPopup(){
