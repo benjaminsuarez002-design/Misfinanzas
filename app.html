@@ -114,13 +114,14 @@
 
   /* ── USD BAR NUEVA ── */
   .usd-bar {
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: nowrap;
     padding: 10px 16px; background: rgba(255,255,255,.55);
     backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,.5);
     font-size: 13px; width: 100%;
+    overflow-x: auto; overflow-y: hidden;
   }
-  .usd-pills { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; align-items: center; }
-  .usd-bar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+  .usd-pills { display: flex; gap: 6px; flex: 0 1 auto; flex-wrap: nowrap; align-items: center; min-width: 0; }
+  .usd-bar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; flex: 0 0 auto; flex-wrap: nowrap; justify-content: flex-end; white-space: nowrap; }
   .usd-pill {
     display: flex; flex-direction: column; align-items: center;
     padding: 6px 14px; border-radius: 12px; cursor: pointer;
@@ -156,7 +157,9 @@
   .usd-fetch-status.ok  { color: #00c97a; }
   .usd-fetch-status.err { color: var(--red); }
   @media (max-width: 780px) {
-    .usd-bar-right { width: 100%; margin-left: 0; justify-content: flex-end; }
+    .usd-bar { gap: 8px; }
+    .usd-pill { min-width: 82px; padding: 6px 10px; }
+    .usd-bar-right { margin-left: 0; gap: 10px; }
   }
 
 
