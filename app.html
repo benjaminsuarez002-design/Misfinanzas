@@ -103,6 +103,7 @@
   }
   header h1 { font-family: 'Arial Black', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); }
   .header-right { display: flex; align-items: center; gap: 10px; }
+  .header-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
   .sync-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; margin-right: 6px; transition: background .3s; }
   .sync-dot.ok      { background: var(--green); box-shadow: 0 0 6px rgba(0,255,156,.6); }
   .sync-dot.loading { background: var(--accent); animation: pulse 1s infinite; }
@@ -120,6 +121,7 @@
     font-size: 13px; width: 100%;
   }
   .usd-pills { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; align-items: center; }
+  .usd-bar-right { display: flex; align-items: center; gap: 12px; margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
   .usd-pill {
     display: flex; flex-direction: column; align-items: center;
     padding: 6px 14px; border-radius: 12px; cursor: pointer;
@@ -154,6 +156,9 @@
   .usd-fetch-status { font-size: 10px; color: var(--muted); }
   .usd-fetch-status.ok  { color: #00c97a; }
   .usd-fetch-status.err { color: var(--red); }
+  @media (max-width: 780px) {
+    .usd-bar-right { width: 100%; margin-left: 0; justify-content: flex-end; }
+  }
 
 
   /* ── TABS ── */
@@ -1434,12 +1439,6 @@
     <h1>💰 Mis Finanzas</h1>
     <div class="header-right">
       <div class="sync-label"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Conectando</span></div>
-      <span class="user-badge" id="userBadge"></span>
-      <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notificaciones">
-        🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span>
-      </button>
-      <button class="config-btn" onclick="abrirConfig()" title="Configuración">⚙️</button>
-      <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </header>
 
@@ -1468,7 +1467,17 @@
       </div>
     </div>
     <input type="number" id="usdRate" value="1000" style="display:none">
-    <span class="usd-fetch-status" id="usdStatus">⏳</span>
+    <div class="usd-bar-right">
+      <div class="header-actions">
+        <span class="user-badge" id="userBadge"></span>
+        <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notificaciones">
+          🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </button>
+        <button class="config-btn" onclick="abrirConfig()" title="Configuración">⚙️</button>
+        <button class="logout-btn" onclick="doLogout()">Salir</button>
+      </div>
+      <span class="usd-fetch-status" id="usdStatus">⏳</span>
+    </div>
   </div>
   </div><!-- /top-collapsible -->
 
@@ -4605,7 +4614,7 @@ function renderFijoDetail(){
 
 window.guardarPagoFijo=async(fijoId)=>{
   const input=document.getElementById('fijoPagoInput_'+fijoId);
-  const monto=parseFloat(input.value);
+  const monto=window.parseMontoInput ? window.parseMontoInput(input) : parseFloat(input.value);
   if(!monto||monto<=0) return showToast('⚠️ Ingresá un monto válido',true);
   const f=fijoData.find(x=>x.id===fijoId);
   if(!f) return;
