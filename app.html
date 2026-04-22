@@ -3339,46 +3339,220 @@ window.guardarConfigTarjeta = async id => {
 };
 
 function getPagosKey(tid,mes,anio){return `${tid}_${mes}_${anio}`;}
+function shiftPeriodoMes(mes, anio, delta){
+  let m = mes + delta, a = anio;
+  while(m < 0){ m += 12; a--; }
+  while(m > 11){ m -= 12; a++; }
+  return { mes: m, anio: a };
+}
+function getMesAnterior(mes, anio){
+  return shiftPeriodoMes(mes, anio, -1);
+}
+function getFechaPeriodoISO(anio, mes, dia){
+  const maxDia = new Date(anio, mes + 1, 0).getDate();
+  const diaSeguro = Math.min(Math.max(parseInt(dia,10) || 1, 1), maxDia);
+  return `${anio}-${String(mes+1).padStart(2,'0')}-${String(diaSeguro).padStart(2,'0')}`;
+}
+function toISODate(date){
+  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+}
+function fmtFechaISOcorta(iso){
+  if(!iso) return '';
+  const [_y,m,d] = iso.split('-').map(Number);
+  return `${d}/${m}`;
+}
+function getDiaDelMesDentroDelPeriodo(dia, desde, hasta){
+  const diaObjetivo = parseInt(dia, 10);
+  if(!diaObjetivo || !desde || !hasta) return null;
+  const inicio = new Date(desde); inicio.setHours(12,0,0,0);
+  const fin = new Date(hasta); fin.setHours(12,0,0,0);
+  let elegido = null;
+  for(let cursor = new Date(inicio); cursor <= fin; cursor.setDate(cursor.getDate()+1)){
+    if(cursor.getDate() === diaObjetivo){
+      elegido = toISODate(cursor);
+    }
+  }
+  return elegido;
+}
+function getTarjetaEstadoPeriodo(tid, mes, anio){
+  const gt = data.filter(d=>{
+    if(d.tipo!=='tarjeta' || d.tarjetaId!==tid) return false;
+    if(d.fecha){
+      const p = getPeriodo(new Date(d.fecha+'T12:00:00'),'tarjeta',tid);
+      return p.mes===mes && p.anio===anio;
+    }
+    return d.mes===mes && d.anio===anio;
+  });
+  const pagos = pagosData[getPagosKey(tid,mes,anio)] || [];
+  const totalG = gt.reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
+  const totalP = pagos.reduce((s,p)=>s+p.monto,0);
+  return { gt, pagos, totalG, totalP, deuda: totalG-totalP };
+}
+async function getPagoTarjetaData(key, pid){
+  const local = (pagosData[key]||[]).find(p=>p.id===pid);
+  if(local) return local;
+  try{
+    const snap = await getDoc(pagoDoc(key,pid));
+    if(snap.exists()) return { id: pid, ...snap.data() };
+  }catch(_){}
+  return null;
+}
+function getPagosTarjetaCargados(tid){
+  const prefix = `${tid}_`;
+  const items = [];
+  Object.entries(pagosData).forEach(([key, pagos])=>{
+    if(!key.startsWith(prefix)) return;
+    const parts = key.slice(prefix.length).split('_');
+    const mes = parseInt(parts[0],10);
+    const anio = parseInt(parts[1],10);
+    (pagos||[]).forEach(pago => items.push({ key, mes, anio, pago }));
+  });
+  return items;
+}
+function findLinkedMovimientoForPago(tid, mes, anio, pago, pid){
+  const candidatos = data.filter(d => d.esPagoTarjeta && d.tarjetaId === tid);
+  if(!candidatos.length) return null;
+  if(pago?.movimientoId){
+    const exacto = candidatos.find(d => d.id === pago.movimientoId);
+    if(exacto) return exacto;
+  }
+  const porPagoId = candidatos.find(d =>
+    d.pagoItemId === pid &&
+    d.pagoPeriodoMes === mes &&
+    d.pagoPeriodoAnio === anio
+  );
+  if(porPagoId) return porPagoId;
+  if(pago?.pagoSyncId){
+    const porSync = candidatos.find(d => d.pagoSyncId === pago.pagoSyncId);
+    if(porSync) return porSync;
+  }
+  const montoPago = Number(pago?.monto || 0);
+  const candidatosMonto = montoPago
+    ? candidatos.filter(d => Number(d.monto||0) === montoPago)
+    : candidatos;
+  if(!candidatosMonto.length) return null;
+  if(!pago?.timestamp) return candidatosMonto[0];
+  return [...candidatosMonto].sort((a,b)=>
+    Math.abs((a.timestamp||0) - pago.timestamp) - Math.abs((b.timestamp||0) - pago.timestamp)
+  )[0] || null;
+}
+function findLinkedPagoForMovimiento(mov){
+  if(!mov?.esPagoTarjeta || !mov?.tarjetaId) return null;
+  if(mov.pagoPeriodoMes != null && mov.pagoPeriodoAnio != null && mov.pagoItemId){
+    const key = getPagosKey(mov.tarjetaId, mov.pagoPeriodoMes, mov.pagoPeriodoAnio);
+    const pago = (pagosData[key]||[]).find(p => p.id === mov.pagoItemId);
+    if(pago) return { key, mes: mov.pagoPeriodoMes, anio: mov.pagoPeriodoAnio, pago };
+  }
+  const candidatos = getPagosTarjetaCargados(mov.tarjetaId);
+  if(mov.pagoSyncId){
+    const porSync = candidatos.find(item => item.pago?.pagoSyncId === mov.pagoSyncId);
+    if(porSync) return porSync;
+  }
+  const montoMov = Number(mov.monto||0);
+  const candidatosMonto = montoMov
+    ? candidatos.filter(item => Number(item.pago?.monto||0) === montoMov)
+    : candidatos;
+  if(!candidatosMonto.length) return null;
+  if(!mov.timestamp) return candidatosMonto[0];
+  return [...candidatosMonto].sort((a,b)=>
+    Math.abs((a.pago?.timestamp||0) - mov.timestamp) - Math.abs((b.pago?.timestamp||0) - mov.timestamp)
+  )[0] || null;
+}
+async function borrarPagoRelacionadoDeMovimiento(mov){
+  if(!mov?.esPagoTarjeta || !mov?.tarjetaId) return;
+  if(mov.pagoPeriodoMes != null && mov.pagoPeriodoAnio != null && mov.pagoItemId){
+    const key = getPagosKey(mov.tarjetaId, mov.pagoPeriodoMes, mov.pagoPeriodoAnio);
+    await deleteDoc(pagoDoc(key, mov.pagoItemId));
+    return;
+  }
+  const linked = findLinkedPagoForMovimiento(mov);
+  if(linked?.pago?.id){
+    await deleteDoc(pagoDoc(linked.key, linked.pago.id));
+  }
+}
+function getTarjetaResumenParaVista(t, mes, anio, periodoDesde, periodoHasta){
+  if(!t) return null;
+  const diaCorte = parseInt(t.diaCorte, 10) || 27;
+  const diaPago = parseInt(t.diaPago, 10) || diaCorte;
+  const fechaPago = getDiaDelMesDentroDelPeriodo(diaPago, periodoDesde, periodoHasta);
+  if(!fechaPago) return null;
+  const estado = getTarjetaEstadoPeriodo(t.id, mes, anio);
+  if(estado.deuda <= 0) return null;
+  return {
+    id: `resumen_tarjeta_${t.id}_${fechaPago}`,
+    tarjetaId: t.id,
+    desc: `Resumen ${t.nombre || 'Tarjeta'}`,
+    tipo: 'credito',
+    fecha: fechaPago,
+    diaPago,
+    diaCorte,
+    periodoMes: mes,
+    periodoAnio: anio,
+    monto: estado.deuda,
+    moneda: 'ARS',
+    totalG: estado.totalG,
+    totalP: estado.totalP,
+    esResumenTarjeta: true
+  };
+}
 function suscribirPagos(tid,mes,anio){
   const key=getPagosKey(tid,mes,anio);
   if(pagosListeners[key]) return;
   const unsub=onSnapshot(pagoCol(key),snap=>{
     pagosData[key]=snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(mes===mesVista&&anio===anioVista){
+    const prevVista = getMesAnterior(mesVista, anioVista);
+    const nextVista = shiftPeriodoMes(mesVista, anioVista, 1);
+    if((mes===mesVista&&anio===anioVista) || (mes===prevVista.mes&&anio===prevVista.anio) || (mes===nextVista.mes&&anio===nextVista.anio)){
       renderResumen();
+      if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
       if(document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva||tid);
     }
   },err=>console.warn('pagos listener:',key,err));
   pagosListeners[key]=unsub;
 }
-function suscribirPagosMesActual(){tarjetas.forEach(t=>suscribirPagos(t.id,mesVista,anioVista));}
+function suscribirPagosMesActual(){
+  const prevVista = getMesAnterior(mesVista, anioVista);
+  const nextVista = shiftPeriodoMes(mesVista, anioVista, 1);
+  tarjetas.forEach(t=>{
+    suscribirPagos(t.id,mesVista,anioVista);
+    suscribirPagos(t.id,prevVista.mes,prevVista.anio);
+    suscribirPagos(t.id,nextVista.mes,nextVista.anio);
+  });
+}
 window.guardarPago=async(tid,mes,anio)=>{
   const input=document.getElementById('pagoInput');
   const monto=parseMontoInput(input);
   if(!monto||monto<=0) return showToast('⚠️ Ingresá un monto válido',true);
   const key=getPagosKey(tid,mes,anio);
   try{
+    const nowTs = Date.now();
+    const pagoSyncId = `pt_${nowTs}_${Math.random().toString(36).slice(2,8)}`;
     // Guardar en pagos_tarjeta (para descontar del total de la tarjeta)
-    await addDoc(pagoCol(key),{monto,timestamp:Date.now(),desc:'Pago'});
+    const pagoRef = await addDoc(pagoCol(key),{monto,timestamp:nowTs,desc:'Pago',pagoSyncId});
     // Crear movimiento de gasto en el tab semanal
     const t=tarjetas.find(x=>x.id===tid);
     const nombreTar=t?t.nombre:'Tarjeta';
     const hoy=new Date();
     const p=getPeriodo(hoy,'gasto',null);
     const fecha=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
-    await addDoc(userCol('movimientos'),{
+    const movRef = await addDoc(userCol('movimientos'),{
       tipo:'gasto',
       desc:'Pago '+nombreTar,
       monto,
       mes:p.mes, anio:p.anio, semana:p.semana,
       moneda:'ARS',
-      timestamp:Date.now(),
+      timestamp:nowTs,
       confirmado:false,
       fecha,
       recordatorio:false,
       esPagoTarjeta:true,
-      tarjetaId:tid
+      tarjetaId:tid,
+      pagoItemId:pagoRef.id,
+      pagoPeriodoMes:mes,
+      pagoPeriodoAnio:anio,
+      pagoSyncId
     });
+    await updateDoc(pagoRef,{movimientoId:movRef.id});
     input.value='';
     showToast('✅ Pago registrado');
   }
@@ -3387,7 +3561,14 @@ window.guardarPago=async(tid,mes,anio)=>{
 window.borrarPago=async(tid,mes,anio,pid)=>{
   if(!confirm('¿Borrar este pago?')) return;
   const key=getPagosKey(tid,mes,anio);
-  try{await deleteDoc(pagoDoc(key,pid));showToast('🗑️ Pago eliminado');}
+  try{
+    const pago = await getPagoTarjetaData(key,pid);
+    const mov = findLinkedMovimientoForPago(tid, mes, anio, pago, pid);
+    const ops = [deleteDoc(pagoDoc(key,pid))];
+    if(mov?.id) ops.push(deleteDoc(userDoc('movimientos', mov.id)));
+    await Promise.all(ops);
+    showToast('🗑️ Pago eliminado');
+  }
   catch(e){showToast('❌ Error',true);}
 };
 
@@ -3422,20 +3603,24 @@ function renderMovPanel(tipo){
   const isOpen  = isIng ? panelIngOpen : panelGasOpen;
   if(!isOpen){ panelEl.style.display='none'; return; }
 
-  const movs = (window._mesMov||[]).filter(d=>d.tipo===(isIng?'ingreso':'gasto')).sort((a,b)=>(a.mes*100+a.semana)-(b.mes*100+b.semana)||(a.timestamp||0)-(b.timestamp||0));
+  const movs = (window._mesMov||[])
+    .filter(d => isIng ? d.tipo==='ingreso' : (d.tipo==='gasto' || d.tipo==='credito'))
+    .sort((a,b)=>(a.mes*100+a.semana)-(b.mes*100+b.semana)||(a.timestamp||0)-(b.timestamp||0));
   if(!movs.length){ panelEl.style.display='none'; return; }
 
   const color  = isIng ? '#00c97a' : 'var(--red)';
-  const titulo = isIng ? '💚 Ingresos del mes' : '🔴 Gastos del mes';
+  const titulo = isIng ? '💚 Ingresos del mes' : '🔴 Gastos y créditos del mes';
   const total  = movs.reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
 
   let rows = movs.map(d=>{
     const usd=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
     const cuota=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif">${d.cuotaNum}/${d.cuotas}</span>`:'';
+    const tipoLabel = isIng ? '💚 Ingreso' : (d.tipo==='credito' ? '🟠 Crédito personal' : '🔴 Gasto');
+    const semLabel = d._semana || d.semana;
     return `<div class="mov-panel-item">
       <div>
         <div style="font-size:14px">${d.desc}${usd}${cuota}</div>
-        <div style="font-size:11px;color:var(--muted)">Sem. ${d.semana}</div>
+        <div style="font-size:11px;color:var(--muted)">${tipoLabel} · Sem. ${semLabel}</div>
       </div>
       <div class="mov-panel-monto" style="color:${color}">${isIng?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</div>
     </div>`;
@@ -3489,8 +3674,23 @@ window.confirmarDuplicar = async (mesD, anioD) => {
   );
   if(!movs.length){ showToast('⚠️ Nada seleccionado',true); return; }
   try{
-    await Promise.all(movs.map(d=>{
-      const n={...d,mes:mesD,anio:anioD,timestamp:Date.now()}; delete n.id;
+    const batchTs = Date.now();
+    const dupGroupIds = new Map();
+    await Promise.all(movs.map((d, idx)=>{
+      const n={...d,mes:mesD,anio:anioD,timestamp:batchTs+idx}; delete n.id;
+      if(d.grupoId){
+        if(!dupGroupIds.has(d.grupoId)){
+          dupGroupIds.set(d.grupoId, `gc_dup_${batchTs}_${dupGroupIds.size+1}`);
+        }
+        n.grupoId = dupGroupIds.get(d.grupoId);
+      }
+      // La vista recalcula el período desde la fecha, así que la movemos también al mes siguiente.
+      if(d.fecha){
+        const fechaDup = addMonthsToISO(d.fecha, 1);
+        n.fecha = fechaDup;
+        const p = getPeriodo(new Date(fechaDup+'T12:00:00'), n.tipo, n.tarjetaId||null);
+        n.mes = p.mes; n.anio = p.anio; n.semana = p.semana;
+      }
       return addDoc(userCol('movimientos'),n);
     }));
     showToast('✅ '+movs.length+' movimientos duplicados!');
@@ -3765,6 +3965,15 @@ function addDaysToISO(isoDate, days){
   base.setDate(base.getDate() + days);
   return base.getFullYear()+'-'+String(base.getMonth()+1).padStart(2,'0')+'-'+String(base.getDate()).padStart(2,'0');
 }
+function addMonthsToISO(isoDate, months){
+  const [y,m,d] = (isoDate||'').split('-').map(Number);
+  if(!y || !m || !d) return isoDate;
+  const target = new Date(y, m - 1 + months, 1);
+  target.setHours(12,0,0,0);
+  const ultimoDia = new Date(target.getFullYear(), target.getMonth()+1, 0).getDate();
+  target.setDate(Math.min(d, ultimoDia));
+  return target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0')+'-'+String(target.getDate()).padStart(2,'0');
+}
 window.copiarMovConfirmar = async id => {
   const fecha = document.getElementById('dupFecha')?.value || null;
   const selectedDays = dupGetSelectedDays();
@@ -3842,19 +4051,7 @@ function renderTarjetaDetail(tid){
   }
   const t=tarjetas.find(x=>x.id===tid);
   if(!t){el.innerHTML='<div class="empty">No encontrada</div>';return;}
-  const gt=data.filter(d=>{
-    if(d.tipo!=='tarjeta'||d.tarjetaId!==tid) return false;
-    if(d.fecha){
-      const p=getPeriodo(new Date(d.fecha+'T12:00:00'),'tarjeta',tid);
-      return p.mes===mesVista && p.anio===anioVista;
-    }
-    return d.mes===mesVista && d.anio===anioVista;
-  });
-  const totalG=gt.reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
-  const key=getPagosKey(tid,mesVista,anioVista);
-  const pagos=pagosData[key]||[];
-  const totalP=pagos.reduce((s,p)=>s+p.monto,0);
-  const deuda=totalG-totalP;
+  const { gt, pagos, totalG, totalP, deuda } = getTarjetaEstadoPeriodo(tid, mesVista, anioVista);
   let html=`<div class="tarjeta-summary-row">
     <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Deuda del mes</div><div class="tarjeta-deuda">${fmtARS(deuda)}</div></div>
     <div style="text-align:right"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total gastos</div><div style="font-family:Arial Black,sans-serif;font-weight:700;color:var(--accent2)">${fmtARS(totalG)}</div><div class="tarjeta-pagado">✅ Pagado: ${fmtARS(totalP)}</div></div>
@@ -4181,6 +4378,7 @@ window.borrarConfirmar = async (id, modo) => {
   if(!mov) return;
   try{
     if(modo === 'sola' || !mov.grupoId){
+      if(mov.esPagoTarjeta) await borrarPagoRelacionadoDeMovimiento(mov);
       await deleteDoc(userDoc('movimientos', id));
     } else {
       let docs;
@@ -4190,7 +4388,10 @@ window.borrarConfirmar = async (id, modo) => {
         const snap = await getDocs(query(userCol('movimientos'), where('grupoId','==',mov.grupoId)));
         docs = snap.docs.map(d=>({id:d.id,...d.data()}));
       }
-      await Promise.all(docs.map(d=>deleteDoc(userDoc('movimientos',d.id))));
+      await Promise.all(docs.map(async d=>{
+        if(d.esPagoTarjeta) await borrarPagoRelacionadoDeMovimiento(d);
+        await deleteDoc(userDoc('movimientos',d.id));
+      }));
     }
     showToast('✅ Borrado!');
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
@@ -4260,6 +4461,9 @@ function renderResumen(){
   const semanas=getSemanas(mesVista,anioVista);
   const movNormal=mesMov.filter(d=>d.tipo!=='tarjeta'); // incluye 'gasto', 'ingreso' y 'credito'
   const frec = userConfig.frecuencia || 'semanal';
+  const periodoDesde = semanas[0]?.desde || null;
+  const periodoHasta = semanas.length ? semanas[semanas.length-1].hasta : null;
+  const tarjetasResumen = tarjetas.map(t=>getTarjetaResumenParaVista(t, mesVista, anioVista, periodoDesde, periodoHasta)).filter(Boolean);
 
   // Armar grupos según frecuencia
   // mensual → 1 grupo con todos los movimientos
@@ -4270,8 +4474,9 @@ function renderResumen(){
     const sI=movNormal.filter(d=>d.tipo==='ingreso').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
     const sG=movNormal.filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&!d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
     const sPag=movNormal.filter(d=>d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
+    const sTar=tarjetasResumen.reduce((a,d)=>a+d.monto,0);
     const _sems=getSemanas(mesVista,anioVista);
-    grupos = [{ id:'mes', label:'Todo el mes', fechas: _sems.length ? `${fmtF(_sems[0].desde)} → ${fmtF(_sems[_sems.length-1].hasta)}` : '', movs: [...movNormal], sI, sG, sPag }];
+    grupos = [{ id:'mes', label:'Todo el mes', fechas: _sems.length ? `${fmtF(_sems[0].desde)} → ${fmtF(_sems[_sems.length-1].hasta)}` : '', movs: [...movNormal], tarjetas: [...tarjetasResumen], sI, sG, sPag, sTar }];
   } else {
     // Inicializar grupos vacíos para todas las semanas/quincenas
     const gruposMap = semanas.map(s => ({
@@ -4280,8 +4485,19 @@ function renderResumen(){
       fechas: `${fmtF(s.desde)} → ${fmtF(s.hasta)}`,
       desde: s.desde,
       hasta: s.hasta,
-      movs: []
+      movs: [],
+      tarjetas: []
     }));
+    const buscarGrupoPorFecha = fechaIso => {
+      if(!gruposMap.length || !fechaIso) return null;
+      const f = new Date(fechaIso+'T12:00:00');
+      for(const g of gruposMap){
+        const hastaFin = new Date(g.hasta); hastaFin.setHours(23,59,59,999);
+        if(f >= g.desde && f <= hastaFin) return g;
+      }
+      if(f < gruposMap[0].desde) return gruposMap[0];
+      return gruposMap[gruposMap.length-1];
+    };
 
     for(const d of movNormal){
       let asignado = false;
@@ -4310,13 +4526,18 @@ function renderResumen(){
         else if(gruposMap.length) gruposMap[0].movs.push(d);
       }
     }
+    for(const deudaTarjeta of tarjetasResumen){
+      const grupo = buscarGrupoPorFecha(deudaTarjeta.fecha);
+      if(grupo) grupo.tarjetas.push(deudaTarjeta);
+    }
 
     for(const g of gruposMap){
       g.movs.sort((a,b)=>({ingreso:0,gasto:1,credito:1}[a.tipo]||0)-({ingreso:0,gasto:1,credito:1}[b.tipo]||0));
       const sI=g.movs.filter(d=>d.tipo==='ingreso').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
       const sG=g.movs.filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&!d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
       const sPag=g.movs.filter(d=>d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
-      grupos.push({...g, sI, sG, sPag});
+      const sTar=g.tarjetas.reduce((a,d)=>a+d.monto,0);
+      grupos.push({...g, sI, sG, sPag, sTar});
     }
   }
 
@@ -4339,14 +4560,29 @@ function renderResumen(){
       </div>
     </div>`;
   }
+  function renderTarjetaResumenItem(d){
+    const _fechaLabel = d.fecha ? ' · '+fmtFechaISOcorta(d.fecha) : '';
+    const pagadoTxt = d.totalP>0 ? ` · Pagado ${fmtARS(d.totalP)}` : '';
+    return `<div class="mov-item">
+      <div>
+        <div class="mov-nombre">${d.desc}</div>
+        <div class="mov-meta">🟠 Crédito tarjeta${_fechaLabel} · Pago día ${d.diaPago}${pagadoTxt}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <div class="mov-monto neg">-${fmtARS(d.monto)}</div>
+      </div>
+    </div>`;
+  }
 
   let html='';
   for(const g of grupos){
     const isOpen = openSemanas.has(g.id);
-    const saldoColor = g.sI-g.sG-g.sPag>=0 ? 'var(--green)' : 'var(--red)';
-    const saldoTxt = g.movs.length ? fmtARS(g.sI-g.sG-g.sPag) : '';
-    const bodyContent = g.movs.length
-      ? g.movs.map(renderMovItem).join('')
+    const saldoGrupo = g.sI-g.sG-g.sPag-(g.sTar||0);
+    const saldoColor = saldoGrupo>=0 ? 'var(--green)' : 'var(--red)';
+    const hasContent = g.movs.length || (g.tarjetas?.length);
+    const saldoTxt = hasContent ? fmtARS(saldoGrupo) : '';
+    const bodyContent = hasContent
+      ? `${(g.tarjetas||[]).map(renderTarjetaResumenItem).join('')}${g.movs.map(renderMovItem).join('')}`
       : '<div style="padding:14px 16px;color:var(--muted);font-size:13px">Sin movimientos</div>';
     html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}">
       <div class="sem-header" onclick="toggleSemana('${g.id}')">
