@@ -253,6 +253,57 @@
   .pago-form input { flex: 1; background: rgba(243,236,255,.5); border: 1.5px solid var(--border); border-radius: 10px; padding: 12px 14px; color: var(--text); font-size: 15px; font-family: 'Arial', sans-serif; outline: none; }
   .pago-form input:focus { border-color: var(--green); }
   .pago-form button { padding: 12px 16px; background: linear-gradient(135deg,var(--button-from,#00ffd5),var(--button-to,#00c97a)); color: #1a1a2e; border: none; border-radius: 10px; font-family: 'Arial Black', sans-serif; font-weight: 800; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .amount-copy-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .amount-copy-wrap > input {
+    width: 100% !important;
+    min-width: 0;
+    padding-right: 46px !important;
+  }
+  .amount-copy-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    border: 1px solid rgba(108,140,255,.22);
+    background: rgba(108,140,255,.08);
+    color: var(--blue);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s, transform .15s;
+    line-height: 1;
+  }
+  .amount-copy-btn:hover {
+    background: rgba(108,140,255,.16);
+    border-color: var(--blue);
+    transform: translateY(calc(-50% - 1px));
+  }
+  .tap-copy-amount {
+    cursor: copy;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tap-copy-amount.amount-copied {
+    opacity: .72;
+    transition: opacity .16s ease;
+  }
+  .monto-cuotas-row .amount-copy-wrap,
+  .pago-form .amount-copy-wrap,
+  .fijo-pago-form .amount-copy-wrap { flex: 1 1 auto; }
+  .modal-group .amount-copy-wrap,
+  .form-group .amount-copy-wrap { width: 100%; }
   .pago-item { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; border-bottom: 1px dotted var(--border); }
   .pago-item:last-child { border: none; }
   .pago-item-monto { color: #00c97a; font-family: 'Arial Black', sans-serif; font-weight: 700; }
@@ -781,12 +832,13 @@
   }
   .config-btn:hover { border-color: var(--blue); transform: rotate(60deg); }
 
-  .notif-btn {
+  .notif-btn, .calc-btn {
     position: relative; background: none; border: none;
     font-size: 20px; cursor: pointer; padding: 4px;
     transition: transform .2s;
+    color: var(--muted);
   }
-  .notif-btn:hover { transform: scale(1.15); }
+  .notif-btn:hover, .calc-btn:hover { transform: scale(1.15); }
   .notif-badge {
     position: absolute; top: -2px; right: -4px;
     background: var(--red); color: #fff;
@@ -822,6 +874,138 @@
   .notif-item-title { font-family: 'Arial Black', sans-serif; font-size: 13px; font-weight: 700; color: var(--text); }
   .notif-item-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
   .notif-empty { padding: 24px; text-align: center; color: var(--muted); font-size: 13px; }
+  .calc-panel {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.45); z-index: 9999;
+  }
+  .calc-panel.open { display: flex; }
+  .calc-panel-inner {
+    background: var(--card, #fff); border: 1.5px solid var(--border);
+    border-radius: 18px; box-shadow: 0 8px 32px rgba(108,80,255,.3);
+    width: 92%; max-width: 360px; padding: 0 0 16px;
+  }
+  .calc-panel.open.minimized {
+    display: flex;
+    z-index: 0;
+    background: transparent;
+    pointer-events: none;
+  }
+  .calc-panel.open.minimized .calc-panel-inner {
+    opacity: 0;
+    transform: scale(.96);
+    pointer-events: none;
+  }
+  .calc-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .calc-header-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: var(--muted);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s ease, color .15s ease;
+  }
+  .calc-header-btn:hover {
+    background: rgba(108,140,255,.08);
+    color: var(--text);
+  }
+  .calc-target {
+    padding: 10px 16px 0;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: Arial Black,sans-serif;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+  }
+  .calc-display {
+    margin: 12px 16px 14px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1.5px solid rgba(108,140,255,.18);
+    background: linear-gradient(135deg,rgba(243,236,255,.7),rgba(232,244,255,.7));
+  }
+  .calc-expression {
+    min-height: 18px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: right;
+    word-break: break-all;
+  }
+  .calc-result {
+    margin-top: 6px;
+    font-family: Arial Black,sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent2);
+    text-align: right;
+    word-break: break-all;
+  }
+  .calc-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 14px;
+  }
+  .calc-action-btn {
+    flex: 1;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: rgba(243,236,255,.5);
+    color: var(--text);
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 11px 12px;
+    cursor: pointer;
+  }
+  .calc-action-btn.primary {
+    border: none;
+    background: var(--button-gradient, linear-gradient(135deg,#00ffd5,#8f6bff));
+    color: #fff;
+  }
+  .calc-action-btn:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+  .calc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    padding: 0 16px;
+  }
+  .calc-key {
+    border: 1.5px solid var(--border);
+    border-radius: 14px;
+    background: rgba(243,236,255,.45);
+    color: var(--text);
+    font-family: Arial Black,sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 14px 0;
+    cursor: pointer;
+    transition: transform .12s, border-color .15s, background .15s;
+  }
+  .calc-key:hover {
+    transform: translateY(-1px);
+    border-color: var(--blue);
+    background: rgba(108,140,255,.08);
+  }
+  .calc-key.op { color: var(--blue); }
+  .calc-key.equal {
+    background: linear-gradient(135deg,#00ffd5,#8f6bff);
+    border: none;
+    color: #fff;
+  }
+  .calc-key.wide { grid-column: span 2; }
 
   /* ── MODAL CONFIG ── */
   .cfg-overlay {
@@ -1456,6 +1640,49 @@
       <div id="notifList"></div>
     </div>
   </div>
+  <div class="calc-panel" id="calcPanel" onclick="if(event.target===this)toggleCalcPanel()">
+    <div class="calc-panel-inner">
+      <div class="notif-panel-header">
+        <span>🧮 Calculadora</span>
+        <div class="calc-header-actions">
+          <button type="button" class="calc-header-btn" onclick="minimizeCalcPanel()" title="Minimizar">—</button>
+          <button type="button" class="calc-header-btn" onclick="toggleCalcPanel()" title="Cerrar">✕</button>
+        </div>
+      </div>
+      <div class="calc-target" id="calcTargetLabel">Campo activo: ninguno</div>
+      <div class="calc-display">
+        <div class="calc-expression" id="calcExpression">0</div>
+        <div class="calc-result" id="calcResult">0</div>
+      </div>
+      <div class="calc-actions">
+        <button type="button" class="calc-action-btn" onclick="calcCopyResult()">Copiar</button>
+        <button type="button" class="calc-action-btn" onclick="calcPasteValue()">Pegar</button>
+        <button type="button" class="calc-action-btn primary" id="calcUseBtn" onclick="calcUseResult()">Usar en monto</button>
+      </div>
+      <div class="calc-grid">
+        <button type="button" class="calc-key op" onclick="calcClear()">C</button>
+        <button type="button" class="calc-key op" onclick="calcBackspace()">⌫</button>
+        <button type="button" class="calc-key op" onclick="calcPress('(')">(</button>
+        <button type="button" class="calc-key op" onclick="calcPress(')')">)</button>
+        <button type="button" class="calc-key" onclick="calcPress('7')">7</button>
+        <button type="button" class="calc-key" onclick="calcPress('8')">8</button>
+        <button type="button" class="calc-key" onclick="calcPress('9')">9</button>
+        <button type="button" class="calc-key op" onclick="calcPress('/')">÷</button>
+        <button type="button" class="calc-key" onclick="calcPress('4')">4</button>
+        <button type="button" class="calc-key" onclick="calcPress('5')">5</button>
+        <button type="button" class="calc-key" onclick="calcPress('6')">6</button>
+        <button type="button" class="calc-key op" onclick="calcPress('*')">×</button>
+        <button type="button" class="calc-key" onclick="calcPress('1')">1</button>
+        <button type="button" class="calc-key" onclick="calcPress('2')">2</button>
+        <button type="button" class="calc-key" onclick="calcPress('3')">3</button>
+        <button type="button" class="calc-key op" onclick="calcPress('-')">−</button>
+        <button type="button" class="calc-key wide" onclick="calcPress('0')">0</button>
+        <button type="button" class="calc-key" onclick="calcPress(',')">,</button>
+        <button type="button" class="calc-key op" onclick="calcPress('+')">+</button>
+        <button type="button" class="calc-key equal wide" onclick="calcEquals()">=</button>
+      </div>
+    </div>
+  </div>
 
   <div class="usd-bar">
     <div class="usd-pills">
@@ -1472,9 +1699,7 @@
     </div>
     <input type="number" id="usdRate" value="1000" style="display:none">
     <div class="usd-bar-right">
-      <button class="notif-btn" id="notifBtn" onclick="toggleNotifPanel()" title="Notificaciones">
-        🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span>
-      </button>
+      <button class="calc-btn" id="calcBtn" onclick="toggleCalcPanel()" title="Calculadora">🧮</button>
       <button class="config-btn" onclick="abrirConfig()" title="Configuración">⚙️</button>
       <span class="usd-fetch-status" id="usdStatus">⏳</span>
     </div>
@@ -3897,6 +4122,454 @@ window.formatMontoInput = el => {
   el.value=formateado;
 };
 window.parseMontoInput = el => parseFloat((el.value||'').replace(/\./g,'').replace(',','.')) || 0;
+function formatMontoToolValue(valor){
+  const num = Number(valor);
+  if(!isFinite(num)) return '';
+  const hasDecimals = Math.abs(num - Math.round(num)) > 0.0001;
+  return num.toLocaleString('es-AR', {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2
+  });
+}
+const DISPLAY_AMOUNT_SELECTOR = [
+  '.sum-card .value',
+  '.fijo-item-monto',
+  '.tarjeta-deuda',
+  '.tarjeta-pagado',
+  '.tarjeta-total-gastos',
+  '.tar-gasto-monto',
+  '.pago-item-monto',
+  '.mov-monto',
+  '.det-mov-monto',
+  '.mov-panel-monto',
+  '.super-total-monto',
+  '#superFooterTotal',
+  '.ir-val',
+  '.det-tar-val',
+  '.mes-card-saldo',
+  '.r-val'
+].join(',');
+function isAmountFieldInput(input){
+  if(!input || input.tagName !== 'INPUT') return false;
+  if(input.dataset.ignoreAmountTools === '1') return false;
+  const id = (input.id||'').toLowerCase();
+  const placeholder = (input.placeholder||'').toLowerCase();
+  if(id.startsWith('dp') || id.includes('fecha') || id.includes('desc') || id.includes('cuotas')) return false;
+  if(/^fijopagoinput_/i.test(input.id||'')) return true;
+  if(id === 'pagoinput') return true;
+  if(id.includes('monto')) return true;
+  if(placeholder.includes('monto')) return true;
+  return false;
+}
+function getAmountFieldLabel(input){
+  const label = input.closest('.form-group, .modal-group, .login-group, .fijo-pago-form, .pago-form')?.querySelector('label');
+  if(label?.textContent) return label.textContent.replace(/\s+/g,' ').trim();
+  if(input.placeholder) return input.placeholder;
+  return input.id || 'Monto';
+}
+async function copyTextPortable(text){
+  if(navigator.clipboard?.writeText){
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly','readonly');
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  document.execCommand('copy');
+  ta.remove();
+}
+async function copyAmountFieldValue(input){
+  const text = (input?.value || '').trim();
+  if(!text){ showToast('⚠️ No hay monto para copiar', true); return; }
+  try{
+    await copyTextPortable(text);
+    showToast('📋 Monto copiado');
+  }catch(_){
+    showToast('❌ No se pudo copiar', true);
+  }
+}
+function decorateDisplayedAmounts(root=document){
+  const amounts = root.querySelectorAll ? root.querySelectorAll(DISPLAY_AMOUNT_SELECTOR) : [];
+  amounts.forEach(el => {
+    if(el.dataset.tapCopyReady === '1') return;
+    el.dataset.tapCopyReady = '1';
+    el.classList.add('tap-copy-amount');
+    if(!el.title) el.title = 'Doble tap para copiar';
+  });
+}
+function getDisplayAmountTarget(target){
+  if(!(target instanceof Element)) return null;
+  return target.closest(DISPLAY_AMOUNT_SELECTOR);
+}
+function extractDisplayedAmountText(el){
+  const text = (el?.textContent || '').replace(/\s+/g,' ').trim();
+  if(!text) return '';
+  const matches = [...text.matchAll(/[+\-−]?\s*\$\s*[\d.]+(?:,\d+)?/g)];
+  if(matches.length) return matches[matches.length - 1][0].replace(/\s+/g,'');
+  return text;
+}
+async function copyDisplayedAmountValue(el){
+  const text = extractDisplayedAmountText(el);
+  if(!text) return;
+  const now = Date.now();
+  const last = window._lastCopiedAmountMeta || {};
+  if(last.el === el && now - (last.ts || 0) < 450) return;
+  window._lastCopiedAmountMeta = { el, ts: now };
+  try{
+    await copyTextPortable(text);
+    el.classList.add('amount-copied');
+    setTimeout(() => el.classList.remove('amount-copied'), 180);
+    showToast('📋 Monto copiado');
+  }catch(_){
+    showToast('❌ No se pudo copiar', true);
+  }
+}
+function decorateAmountFields(root=document){
+  const inputs = root.querySelectorAll ? root.querySelectorAll('input') : [];
+  inputs.forEach(input => {
+    if(!isAmountFieldInput(input) || input.dataset.amountCopyReady === '1') return;
+    input.dataset.amountCopyReady = '1';
+    const parent = input.parentNode;
+    if(!parent) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'amount-copy-wrap';
+    parent.insertBefore(wrap, input);
+    wrap.appendChild(input);
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'amount-copy-btn';
+    btn.title = 'Copiar monto';
+    btn.textContent = '📋';
+    btn.onclick = async e => {
+      e.preventDefault();
+      e.stopPropagation();
+      await copyAmountFieldValue(input);
+    };
+    wrap.appendChild(btn);
+  });
+}
+function setAmountFieldFromCalculator(input, valor){
+  const num = Number(valor);
+  if(!input || !isFinite(num)) return false;
+  if(input.type === 'number'){
+    input.value = String(num);
+  } else {
+    input.value = formatMontoToolValue(num);
+  }
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new Event('change', { bubbles: true }));
+  input.focus();
+  if(input.select) input.select();
+  return true;
+}
+function getCalcTargetField(){
+  return window._calcFocusedAmountField && document.body.contains(window._calcFocusedAmountField)
+    ? window._calcFocusedAmountField
+    : null;
+}
+function initAmountFieldEnhancer(){
+  if(window._amountFieldEnhancerInit) return;
+  window._amountFieldEnhancerInit = true;
+  const root = document.getElementById('app-wrapper') || document.body;
+  decorateAmountFields(document);
+  decorateDisplayedAmounts(document);
+  document.addEventListener('focusin', e => {
+    if(isAmountFieldInput(e.target)){
+      window._calcFocusedAmountField = e.target;
+      if(document.getElementById('calcPanel')?.classList.contains('open')) renderCalcPanel();
+    }
+  });
+  document.addEventListener('dblclick', async e => {
+    const amountEl = getDisplayAmountTarget(e.target);
+    if(!amountEl) return;
+    e.preventDefault();
+    await copyDisplayedAmountValue(amountEl);
+  });
+  document.addEventListener('pointerup', async e => {
+    if(e.pointerType === 'mouse') return;
+    const amountEl = getDisplayAmountTarget(e.target);
+    if(!amountEl) return;
+    const now = Date.now();
+    const lastTap = window._lastAmountTapMeta || {};
+    if(lastTap.el === amountEl && now - (lastTap.ts || 0) < 360){
+      e.preventDefault();
+      window._lastAmountTapMeta = { el: null, ts: 0 };
+      await copyDisplayedAmountValue(amountEl);
+      return;
+    }
+    window._lastAmountTapMeta = { el: amountEl, ts: now };
+  });
+  const observer = new MutationObserver(() => {
+    decorateAmountFields(root);
+    decorateDisplayedAmounts(root);
+  });
+  observer.observe(root, { childList: true, subtree: true });
+}
+const calcState = { expr: '', justEvaluated: false };
+function normalizeCalcExpression(expr){
+  return (expr || '').replace(/,/g,'.').replace(/×/g,'*').replace(/÷/g,'/').replace(/\s+/g,'');
+}
+function formatCalcCurrencyToken(token){
+  if(!token) return '';
+  const num = Number(token);
+  if(!isFinite(num)) return token;
+  return '$' + formatMontoToolValue(num);
+}
+function formatCalcExpression(expr){
+  const source = String(expr || '');
+  if(!source) return '$0';
+  let out = '';
+  let current = '';
+  const flush = () => {
+    if(!current) return;
+    out += formatCalcCurrencyToken(current);
+    current = '';
+  };
+  for(const ch of source){
+    if(/[0-9.]/.test(ch)){
+      current += ch;
+      continue;
+    }
+    flush();
+    if(ch === '*') out += ' × ';
+    else if(ch === '/') out += ' ÷ ';
+    else if(ch === '+') out += ' + ';
+    else if(ch === '-') out += out ? ' - ' : '-';
+    else if(ch === '(') out += '(';
+    else if(ch === ')') out += ')';
+    else if(ch === ',') out += ',';
+    else out += ch;
+  }
+  flush();
+  return out.replace(/\s+/g,' ').trim() || '$0';
+}
+function evaluateCalcExpression(expr){
+  const safe = normalizeCalcExpression(expr);
+  if(!safe) return 0;
+  if(!/^[0-9+\-*/().]+$/.test(safe)) return null;
+  try{
+    const result = Function(`"use strict"; return (${safe})`)();
+    if(typeof result !== 'number' || !isFinite(result)) return null;
+    return Math.round(result * 100) / 100;
+  }catch(_){
+    return null;
+  }
+}
+function evaluateCalcPreviewExpression(expr){
+  let probe = String(expr || '');
+  let result = evaluateCalcExpression(probe);
+  if(result !== null) return result;
+  while(probe && /[+\-*/.(]$/.test(probe)){
+    probe = probe.slice(0, -1);
+    result = evaluateCalcExpression(probe);
+    if(result !== null) return result;
+  }
+  return null;
+}
+function normalizeClipboardNumberToken(token){
+  let value = String(token || '').trim();
+  if(!value) return '';
+  const negative = value.startsWith('-');
+  value = value.replace(/^[+\-]/,'');
+  if(value.includes(',')){
+    value = value.replace(/\./g,'').replace(/,/g,'.');
+  }else if(/^\d{1,3}(\.\d{3})+$/.test(value)){
+    value = value.replace(/\./g,'');
+  }
+  return (negative ? '-' : '') + value;
+}
+function normalizeClipboardCalcText(text){
+  let cleaned = String(text || '')
+    .replace(/\s+/g,'')
+    .replace(/[$€£¥₱₲]/g,'')
+    .replace(/×/g,'*')
+    .replace(/÷/g,'/')
+    .replace(/[^0-9+\-*/().,]/g,'');
+  if(!cleaned) return '';
+  cleaned = cleaned.replace(/^\++/,'');
+  return cleaned.replace(/[+\-]?\d[\d.,]*/g, token => normalizeClipboardNumberToken(token));
+}
+function isTypingIntoEditable(target){
+  if(!(target instanceof Element)) return false;
+  if(target.closest('.calc-panel')) return false;
+  return !!target.closest('input, textarea, select, [contenteditable="true"]');
+}
+function handleCalcKeyboardInput(e){
+  const panel = document.getElementById('calcPanel');
+  if(!panel?.classList.contains('open')) return;
+  if(isTypingIntoEditable(e.target)) return;
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v'){
+    e.preventDefault();
+    window.calcPasteValue?.();
+    return;
+  }
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(/^[0-9]$/.test(e.key)){
+    e.preventDefault();
+    window.calcPress(e.key);
+    return;
+  }
+  if(['+','-','*','/','(',')'].includes(e.key)){
+    e.preventDefault();
+    window.calcPress(e.key);
+    return;
+  }
+  if(e.key === '.' || e.key === ','){
+    e.preventDefault();
+    window.calcPress(',');
+    return;
+  }
+  if(e.key === 'Enter' || e.key === '='){
+    e.preventDefault();
+    window.calcEquals();
+    return;
+  }
+  if(e.key === 'Backspace'){
+    e.preventDefault();
+    window.calcBackspace();
+    return;
+  }
+  if(e.key === 'Delete'){
+    e.preventDefault();
+    window.calcClear();
+    return;
+  }
+  if(e.key === 'Escape'){
+    e.preventDefault();
+    window.toggleCalcPanel();
+  }
+}
+function renderCalcPanel(){
+  const exprEl = document.getElementById('calcExpression');
+  const resultEl = document.getElementById('calcResult');
+  const targetEl = document.getElementById('calcTargetLabel');
+  const useBtn = document.getElementById('calcUseBtn');
+  if(!exprEl || !resultEl || !targetEl || !useBtn) return;
+  const target = getCalcTargetField();
+  const result = evaluateCalcExpression(calcState.expr);
+  const preview = result === null ? evaluateCalcPreviewExpression(calcState.expr) : result;
+  exprEl.textContent = formatCalcExpression(calcState.expr);
+  resultEl.textContent = preview === null ? 'Error' : '$' + formatMontoToolValue(preview);
+  targetEl.textContent = target
+    ? `Campo activo: ${getAmountFieldLabel(target)}`
+    : 'Campo activo: tocá un monto para cargar el resultado';
+  useBtn.disabled = !target || result === null;
+}
+function appendCalcToken(token){
+  let expr = calcState.expr || '';
+  const op = ['+','-','*','/'];
+  token = token === ',' ? '.' : token;
+  if(calcState.justEvaluated && /[0-9.(]/.test(token)) expr = '';
+  calcState.justEvaluated = false;
+  if(token === '.'){
+    const chunk = expr.split(/[+\-*/()]/).pop();
+    if(chunk.includes('.')) return;
+    token = chunk ? '.' : '0.';
+  }
+  if(token === '(' && expr && /[\d.)]$/.test(expr)){
+    expr += '*';
+  }
+  if(op.includes(token)){
+    if(!expr){
+      if(token === '-') calcState.expr = '-';
+      return;
+    }
+    if(/[+\-*/.]$/.test(expr)){
+      expr = expr.slice(0,-1);
+    }
+  }
+  if(token === ')' && !expr) return;
+  calcState.expr = expr + token;
+}
+window.toggleCalcPanel = () => {
+  const panel = document.getElementById('calcPanel');
+  if(!panel) return;
+  if(panel.classList.contains('open') && panel.classList.contains('minimized')){
+    panel.classList.remove('minimized');
+  }else{
+    panel.classList.toggle('open');
+    if(panel.classList.contains('open')) panel.classList.remove('minimized');
+  }
+  renderCalcPanel();
+};
+window.minimizeCalcPanel = () => {
+  const panel = document.getElementById('calcPanel');
+  if(!panel) return;
+  panel.classList.add('open','minimized');
+};
+window.calcPress = token => {
+  appendCalcToken(token);
+  renderCalcPanel();
+};
+window.calcClear = () => {
+  calcState.expr = '';
+  calcState.justEvaluated = false;
+  renderCalcPanel();
+};
+window.calcBackspace = () => {
+  calcState.expr = (calcState.expr || '').slice(0, -1);
+  calcState.justEvaluated = false;
+  renderCalcPanel();
+};
+window.calcEquals = () => {
+  const result = evaluateCalcExpression(calcState.expr);
+  if(result === null){ showToast('⚠️ Cuenta inválida', true); return; }
+  calcState.expr = String(result);
+  calcState.justEvaluated = true;
+  renderCalcPanel();
+};
+window.calcCopyResult = async () => {
+  const result = evaluateCalcExpression(calcState.expr);
+  if(result === null){ showToast('⚠️ Cuenta inválida', true); return; }
+  try{
+    await copyTextPortable(formatMontoToolValue(result));
+    showToast('📋 Resultado copiado');
+  }catch(_){
+    showToast('❌ No se pudo copiar', true);
+  }
+};
+window.calcPasteValue = async () => {
+  if(!navigator.clipboard?.readText){
+    showToast('⚠️ Tu navegador no permite pegar desde portapapeles', true);
+    return;
+  }
+  try{
+    const raw = await navigator.clipboard.readText();
+    const normalized = normalizeClipboardCalcText(raw);
+    if(!normalized){
+      showToast('⚠️ No hay un monto válido para pegar', true);
+      return;
+    }
+    const expr = calcState.expr || '';
+    if(!expr || calcState.justEvaluated){
+      calcState.expr = normalized;
+    }else if(/[+\-*/(]$/.test(expr)){
+      calcState.expr = expr + normalized.replace(/^\+/,'');
+    }else{
+      calcState.expr = normalized;
+    }
+    calcState.justEvaluated = false;
+    renderCalcPanel();
+    showToast('📋 Monto pegado');
+  }catch(_){
+    showToast('❌ No se pudo leer el portapapeles', true);
+  }
+};
+window.calcUseResult = () => {
+  const result = evaluateCalcExpression(calcState.expr);
+  const target = getCalcTargetField();
+  if(result === null){ showToast('⚠️ Cuenta inválida', true); return; }
+  if(!target){ showToast('⚠️ Tocá primero un campo de monto', true); return; }
+  if(setAmountFieldFromCalculator(target, result)){
+    showToast('✅ Resultado cargado');
+    renderCalcPanel();
+  }
+};
+document.addEventListener('keydown', handleCalcKeyboardInput);
 
 window.copiarMov = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
@@ -4054,7 +4727,7 @@ function renderTarjetaDetail(tid){
   const { gt, pagos, totalG, totalP, deuda } = getTarjetaEstadoPeriodo(tid, mesVista, anioVista);
   let html=`<div class="tarjeta-summary-row">
     <div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Deuda del mes</div><div class="tarjeta-deuda">${fmtARS(deuda)}</div></div>
-    <div style="text-align:right"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total gastos</div><div style="font-family:Arial Black,sans-serif;font-weight:700;color:var(--accent2)">${fmtARS(totalG)}</div><div class="tarjeta-pagado">✅ Pagado: ${fmtARS(totalP)}</div></div>
+    <div style="text-align:right"><div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total gastos</div><div class="tarjeta-total-gastos" style="font-family:Arial Black,sans-serif;font-weight:700;color:var(--accent2)">${fmtARS(totalG)}</div><div class="tarjeta-pagado">✅ Pagado: ${fmtARS(totalP)}</div></div>
   </div>`;
   if(gt.length){
     html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Gastos</div><div class="tarjeta-gastos-list">`;
@@ -6261,6 +6934,7 @@ function formBindNav(){
 // Llamar cuando se carga la app
 document.addEventListener('DOMContentLoaded', formBindNav);
 document.addEventListener('DOMContentLoaded', initHelpSystem);
+document.addEventListener('DOMContentLoaded', initAmountFieldEnhancer);
 
 </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
