@@ -792,6 +792,31 @@
     background: rgba(108,140,255,.14);
     box-shadow: 0 3px 10px rgba(108,140,255,.2);
   }
+  .dup-type-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+  .dup-type-btn {
+    border: 1.5px solid var(--border);
+    background: rgba(243,236,255,.55);
+    color: var(--muted);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: Arial Black,sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .dup-type-btn:hover { border-color: var(--blue); color: var(--blue); background: rgba(108,140,255,.08); }
+  .dup-type-btn.active {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: rgba(108,140,255,.14);
+    box-shadow: 0 3px 10px rgba(108,140,255,.18);
+  }
   .dup-modal-box {
     width: 100%;
     max-width: 420px;
@@ -1788,7 +1813,7 @@
           <div class="monto-modo-btn" id="modoCuota" onclick="setMontoCuotasModo('cuota')">Por cuota</div>
         </div>
         <div class="monto-cuotas-row">
-          <input type="text" id="fMonto" inputmode="numeric" placeholder="0" oninput="fMontoInput(this)" style="text-align:left">
+          <input type="text" id="fMonto" inputmode="text" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
           <div class="cuotas-input-wrap" id="cuotasWrap">
             <label>Cuotas</label>
             <input type="number" id="fCuotas" placeholder="" min="1" max="60" oninput="actualizarPreviewCuotas()">
@@ -3940,7 +3965,7 @@ window.editarMov = id => {
       </div>
       <div class="modal-group">
         <label>Monto</label>
-        <input id="editMonto" type="text" inputmode="numeric" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)">
+        <input id="editMonto" type="text" inputmode="text" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
       </div>
       <div class="modal-group">
         <label>Fecha</label>
@@ -4109,8 +4134,44 @@ window.dpModParseText = (ns, val, hiddenId, textId, popupId, confirm=false) => {
 };
 
 // ── Módulo Monto ──
+function amountInputHasExpression(raw){
+  return /[+\-*\/()×÷]/.test(String(raw || ''));
+}
+function normalizeAmountExpression(raw){
+  let cleaned = String(raw || '')
+    .replace(/\s+/g,'')
+    .replace(/[$€£¥₱₲]/g,'')
+    .replace(/×/g,'*')
+    .replace(/÷/g,'/')
+    .replace(/[^0-9+\-*/().,]/g,'');
+  if(!cleaned) return '';
+  return cleaned.replace(/[+\-]?\d[\d.,]*/g, token => {
+    let value = String(token || '').trim();
+    if(!value) return '';
+    const sign = value.startsWith('-') ? '-' : (value.startsWith('+') ? '+' : '');
+    value = value.replace(/^[+\-]/,'');
+    if(value.includes(',')){
+      value = value.replace(/\./g,'').replace(/,/g,'.');
+    }else if(/^\d{1,3}(\.\d{3})+(\.\d+)?$/.test(value)){
+      value = value.replace(/\./g,'');
+    }
+    return sign + value;
+  });
+}
+function evaluateAmountExpression(raw){
+  const safe = normalizeAmountExpression(raw);
+  if(!safe || !/^[0-9+\-*/().]+$/.test(safe)) return null;
+  try{
+    const result = Function(`"use strict"; return (${safe})`)();
+    if(typeof result !== 'number' || !isFinite(result)) return null;
+    return Math.round(result * 100) / 100;
+  }catch(_){
+    return null;
+  }
+}
 window.formatMontoInput = el => {
   const raw=el.value;
+  if(amountInputHasExpression(raw)) return;
   const enProgreso=raw.endsWith(',')||raw.endsWith(',0')||/,\d$/.test(raw);
   if(enProgreso) return;
   const partes=raw.replace(/\./g,'').split(',');
@@ -4121,7 +4182,31 @@ window.formatMontoInput = el => {
   if(decimal!==null) formateado+=','+decimal;
   el.value=formateado;
 };
-window.parseMontoInput = el => parseFloat((el.value||'').replace(/\./g,'').replace(',','.')) || 0;
+window.parseMontoInput = el => {
+  const raw = el?.value || '';
+  if(amountInputHasExpression(raw)){
+    const result = evaluateAmountExpression(raw);
+    return result === null ? NaN : result;
+  }
+  return parseFloat(raw.replace(/\./g,'').replace(',','.')) || 0;
+};
+window.resolveMontoExpressionInput = el => {
+  if(!el || !amountInputHasExpression(el.value)) return;
+  const result = evaluateAmountExpression(el.value);
+  if(result === null){
+    showToast('⚠️ Cuenta inválida', true);
+    return;
+  }
+  el.value = formatMontoToolValue(result);
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+};
+window.handleMontoExpressionEnter = (event, el) => {
+  if(event.key !== 'Enter') return;
+  event.preventDefault();
+  resolveMontoExpressionInput(el);
+  el?.blur?.();
+};
 function formatMontoToolValue(valor){
   const num = Number(valor);
   if(!isFinite(num)) return '';
@@ -4311,7 +4396,7 @@ function initAmountFieldEnhancer(){
 }
 const calcState = { expr: '', justEvaluated: false };
 function normalizeCalcExpression(expr){
-  return (expr || '').replace(/,/g,'.').replace(/×/g,'*').replace(/÷/g,'/').replace(/\s+/g,'');
+  return normalizeAmountExpression(expr);
 }
 function formatCalcCurrencyToken(token){
   if(!token) return '';
@@ -4574,7 +4659,12 @@ document.addEventListener('keydown', handleCalcKeyboardInput);
 window.copiarMov = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
+  mostrarFormularioDuplicado(mov);
+  return;
   const fechaMovimiento = mov.fecha || null;
+  const puedeCambiarTipoDup = mov.tipo === 'ingreso' || mov.tipo === 'gasto';
+  const tipoDupInicial = mov.tipo === 'ingreso' ? 'ingreso' : 'gasto';
+  const montoDupInicial = mov.monto ? formatMontoToolValue(mov.monto) : '';
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   ov.innerHTML = `
@@ -4599,6 +4689,19 @@ window.copiarMov = id => {
         <input type="hidden" id="dupFecha" value="">
       </div>
       <div class="modal-group" style="text-align:left;margin-top:2px">
+        <label>Monto a duplicar</label>
+        <input id="dupMonto" type="text" inputmode="text" value="${montoDupInicial}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
+      </div>
+      ${puedeCambiarTipoDup ? `
+      <div class="modal-group" style="text-align:left;margin-top:2px">
+        <label>Duplicar como</label>
+        <input type="hidden" id="dupTipo" value="${tipoDupInicial}">
+        <div class="dup-type-toggle">
+          <button type="button" class="dup-type-btn ${tipoDupInicial === 'ingreso' ? 'active' : ''}" data-tipo="ingreso" onclick="dupSetTipo('ingreso')">💚 Ingreso</button>
+          <button type="button" class="dup-type-btn ${tipoDupInicial === 'gasto' ? 'active' : ''}" data-tipo="gasto" onclick="dupSetTipo('gasto')">🔴 Gasto</button>
+        </div>
+      </div>` : ''}
+      <div class="modal-group" style="text-align:left;margin-top:2px">
         <div class="dup-days-head" id="dupDaysHead">
           <div class="dup-days-label">Días a duplicar</div>
         </div>
@@ -4622,6 +4725,14 @@ window.copiarMov = id => {
   dpModInit('dup', fechaMovimiento);
 };
 
+window.dupSetTipo = tipo => {
+  if(tipo !== 'ingreso' && tipo !== 'gasto') return;
+  const input = document.getElementById('dupTipo');
+  if(input) input.value = tipo;
+  document.querySelectorAll('.dup-type-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tipo === tipo);
+  });
+};
 window.dupToggleChip = el => {
   if(!el) return;
   el.classList.toggle('active');
@@ -4649,10 +4760,16 @@ function addMonthsToISO(isoDate, months){
 }
 window.copiarMovConfirmar = async id => {
   const fecha = document.getElementById('dupFecha')?.value || null;
+  const tipoDuplicado = document.getElementById('dupTipo')?.value || null;
+  const montoDuplicado = parseMontoInput(document.getElementById('dupMonto'));
   const selectedDays = dupGetSelectedDays();
-  document.querySelector('.modal-overlay')?.remove();
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
+  if(isNaN(montoDuplicado) || montoDuplicado <= 0){
+    showToast('⚠️ Ingresá un monto válido', true);
+    return;
+  }
+  document.querySelector('.modal-overlay')?.remove();
   const fechasDuplicado = [];
   if(selectedDays.length){
     if(!mov.fecha){
@@ -4671,6 +4788,10 @@ window.copiarMovConfirmar = async id => {
     for(let i=0;i<fechasDuplicado.length;i++){
       const fechaDup = fechasDuplicado[i];
       const d = {...mov}; delete d.id; delete d.grupoId;
+      d.monto = montoDuplicado;
+      if((mov.tipo === 'ingreso' || mov.tipo === 'gasto') && (tipoDuplicado === 'ingreso' || tipoDuplicado === 'gasto')){
+        d.tipo = tipoDuplicado;
+      }
       d.timestamp = Date.now() + i;
       if(fechaDup){
         d.fecha = fechaDup;
@@ -4857,6 +4978,7 @@ window.editMontoInput = el => formatMontoInput(el);
 
 window.fMontoInput = (el) => {
   const raw = el.value;
+  if(amountInputHasExpression(raw)){ actualizarPreviewCuotas(); return; }
   // Permitir coma decimal al final o número incompleto (ej: "1.000,")
   const enProgreso = raw.endsWith(',') || raw.endsWith(',0') || /,\d$/.test(raw);
   if(enProgreso){ actualizarPreviewCuotas(); return; }
@@ -4877,6 +4999,10 @@ window.fMontoInput = (el) => {
 window.fMontoGetValue = () => {
   const el = document.getElementById('fMonto');
   if(!el) return 0;
+  if(amountInputHasExpression(el.value)){
+    const result = evaluateAmountExpression(el.value);
+    return result === null ? NaN : result;
+  }
   // formato es-AR: puntos = miles, coma = decimal
   return parseFloat(el.value.replace(/\./g,'').replace(',','.')) || 0;
 };
@@ -6168,7 +6294,7 @@ function aplicarNotificacionesCompartidasLista(rows = []) {
   actualizarBadge();
   renderNotifPanel();
 
-  if(gastosComp.length === 0 && document.getElementById('modalCompartidoForm')){
+  if(gastosComp.length === 0 && document.getElementById('modalCompartidoForm') && window._compartidoPendiente?.modo !== 'duplicar'){
     cfCerrarPopup();
   }
 
@@ -6259,11 +6385,16 @@ function cfFormatMontoValor(valor) {
 function cfMontoGetValue() {
   const el = document.getElementById('cfMonto');
   if(!el) return 0;
+  if(amountInputHasExpression(el.value)){
+    const result = evaluateAmountExpression(el.value);
+    return result === null ? NaN : result;
+  }
   return parseFloat(el.value.replace(/\./g,'').replace(',','.')) || 0;
 }
 
 window.cfMontoInput = el => {
   const raw = el.value;
+  if(amountInputHasExpression(raw)){ cfActualizarPreviewCuotas(); return; }
   const enProgreso = raw.endsWith(',') || raw.endsWith(',0') || /,\d$/.test(raw);
   if(enProgreso){ cfActualizarPreviewCuotas(); return; }
   const partes = raw.replace(/\./g,'').split(',');
@@ -6466,19 +6597,23 @@ function cfNormalizarFechaISO(valor) {
   return '';
 }
 
-function cfConstruirPopupHTML(g, resto) {
+function cfConstruirPopupHTML(g, resto, opts = {}) {
+  const titulo = opts.titulo || `🤝 De ${(g.compartidoPor||'un amigo').split('@')[0]}`;
+  const subtitulo = opts.subtitulo || (resto > 0 ? `+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}` : '');
+  const mostrarRechazar = opts.mostrarRechazar !== false;
+  const textoGuardar = opts.textoGuardar || 'Cargar movimiento';
   return `
     <div class="modal-overlay" id="modalCompartidoForm" style="z-index:600">
       <div style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:0;animation:popIn .25s ease both">
         <div class="form-card" style="border-radius:24px;padding:18px 18px 20px;margin:0">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
             <div>
-              <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">🤝 De ${(g.compartidoPor||'un amigo').split('@')[0]}</div>
-              ${resto > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">+${resto} gasto${resto>1?'s':''} más pendiente${resto>1?'s':''}</div>` : ''}
+              <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">${titulo}</div>
+              ${subtitulo ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">${subtitulo}</div>` : ''}
             </div>
             <div style="display:flex;gap:8px;align-items:center">
               <button onclick="cfCerrarPopup()" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--muted);font-weight:700">Cerrar</button>
-              <button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>
+              ${mostrarRechazar ? `<button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>` : ''}
             </div>
           </div>
 
@@ -6523,7 +6658,7 @@ function cfConstruirPopupHTML(g, resto) {
               <div class="monto-modo-btn" id="cf-modoCuota" onclick="cfSetMontoCuotasModo('cuota')">Por cuota</div>
             </div>
             <div class="monto-cuotas-row">
-              <input type="text" id="cfMonto" inputmode="numeric" placeholder="0" oninput="cfMontoInput(this)" style="text-align:left">
+              <input type="text" id="cfMonto" inputmode="text" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
               <div class="cuotas-input-wrap" id="cfCuotasWrap">
                 <label>Cuotas</label>
                 <input type="number" id="cfCuotas" min="1" max="60" oninput="cfActualizarPreviewCuotas()">
@@ -6570,7 +6705,21 @@ function cfConstruirPopupHTML(g, resto) {
             </label>
           </div>
 
-          <button class="btn-submit" id="cfBtnGuardar" onclick="cfGuardarCompartido()">Cargar movimiento</button>
+          ${opts.mostrarDuplicarDias ? `
+          <div class="form-group" style="margin-top:2px">
+            <div class="dup-days-head" id="cfDupDaysHead">
+              <div class="dup-days-label">Duplicar también en</div>
+            </div>
+            <div class="dup-days-chips" id="cfDupDiasChips">
+              <button type="button" class="dup-day-chip" data-days="7" onclick="dupToggleChip(this)">+7</button>
+              <button type="button" class="dup-day-chip" data-days="14" onclick="dupToggleChip(this)">+14</button>
+              <button type="button" class="dup-day-chip" data-days="21" onclick="dupToggleChip(this)">+21</button>
+              <button type="button" class="dup-day-chip" data-days="28" onclick="dupToggleChip(this)">+28</button>
+              <button type="button" class="dup-day-chip" data-period="next" onclick="dupToggleChip(this)">Misma fecha próximo periodo</button>
+            </div>
+          </div>` : ''}
+
+          <button class="btn-submit" id="cfBtnGuardar" onclick="cfGuardarCompartido()">${textoGuardar}</button>
         </div>
       </div>
     </div>`;
@@ -6715,6 +6864,77 @@ function mostrarFormularioCompartido(gastos) {
   cfAplicarTipoUI();
 }
 
+function mostrarFormularioDuplicado(mov) {
+  if(!mov || document.getElementById('modalCompartidoForm')) return;
+
+  const g = {
+    ...mov,
+    id: mov.id || ('dup_' + Date.now()),
+    tipoOrigen: mov.tipo || 'gasto',
+    montoCompartido: mov.monto || 0,
+    compartidoPor: '',
+    _tipo: 'duplicado'
+  };
+
+  window._compartidoPendiente = {
+    modo: 'duplicar',
+    origenId: mov.id || null,
+    fechaOrigen: cfNormalizarFechaISO(mov.fecha),
+    compartidoPor: ''
+  };
+  cfPopupState = cfCrearEstadoPopup(g);
+
+  document.body.insertAdjacentHTML('beforeend', cfConstruirPopupHTML(g, 0, {
+    titulo: '📋 Duplicar movimiento',
+    subtitulo: mov.desc || '',
+    mostrarRechazar: false,
+    textoGuardar: 'Duplicar movimiento',
+    mostrarDuplicarDias: true
+  }));
+
+  const desc = document.getElementById('cfDesc');
+  const monto = document.getElementById('cfMonto');
+  const rec = document.getElementById('cfRecordatorio');
+  const fecha = document.getElementById('cfFecha');
+  const fechaTxt = document.getElementById('cfDpText');
+
+  if(desc) desc.value = mov.desc || '';
+  if(monto) monto.value = cfFormatMontoValor(mov.monto || 0);
+  if(rec) rec.checked = !!mov.recordatorio;
+
+  const fechaDup = cfNormalizarFechaISO(mov.fecha);
+  if(fecha) fecha.value = fechaDup || '';
+  if(fechaTxt && fechaDup) {
+    const [y, m, d] = fechaDup.split('-');
+    fechaTxt.value = `${parseInt(d,10)}/${parseInt(m,10)}/${y}`;
+  }
+  if(typeof dpModInit === 'function') dpModInit('cf', fechaDup || null);
+
+  const cuotas = parseInt(mov.cuotas, 10);
+  if(cuotas > 1) {
+    const fc = document.getElementById('cfCuotas');
+    if(fc) fc.value = cuotas;
+  }
+
+  cfAplicarTipoUI();
+  syncHelpVisibility(document.getElementById('modalCompartidoForm'));
+}
+
+function cfDupGetSelectedDates(fechaManual) {
+  const base = window._compartidoPendiente?.fechaOrigen || fechaManual || null;
+  const chips = Array.from(document.querySelectorAll('#cfDupDiasChips .dup-day-chip.active'));
+  if(!chips.length) return [fechaManual || null];
+  if(!base) return null;
+
+  const fechas = [];
+  chips.forEach(chip => {
+    const days = parseInt(chip.dataset.days, 10);
+    if(!isNaN(days) && days > 0) fechas.push(addDaysToISO(base, days));
+    if(chip.dataset.period === 'next') fechas.push(addMonthsToISO(base, 1));
+  });
+  return [...new Set(fechas)];
+}
+
 window.cfGuardarCompartido = async () => {
   if(!cfPopupState || !window._compartidoPendiente) return;
 
@@ -6723,6 +6943,7 @@ window.cfGuardarCompartido = async () => {
   const fechaVal = document.getElementById('cfFecha')?.value || null;
   const recordatorio = !!document.getElementById('cfRecordatorio')?.checked;
   const btn = document.getElementById('cfBtnGuardar');
+  const esDuplicado = window._compartidoPendiente?.modo === 'duplicar';
 
   if(!desc || isNaN(montoRaw) || montoRaw <= 0){
     showToast('⚠️ Completá todos los campos', true);
@@ -6734,8 +6955,11 @@ window.cfGuardarCompartido = async () => {
     return;
   }
 
-  const fechaBase = fechaVal ? new Date(fechaVal + 'T12:00:00') : new Date();
-  const p = getPeriodo(fechaBase, cfPopupState.tipoActual, cfPopupState.tarjetaId || null);
+  const fechasDuplicado = esDuplicado ? cfDupGetSelectedDates(fechaVal) : [fechaVal];
+  if(esDuplicado && !fechasDuplicado){
+    showToast('Atencion: este movimiento no tiene fecha para aplicar +dias', true);
+    return;
+  }
   const monto = Math.abs(montoRaw);
 
   if(btn){ btn.disabled = true; btn.textContent = 'Guardando...'; }
@@ -6743,79 +6967,106 @@ window.cfGuardarCompartido = async () => {
 
   try {
     if(cfPopupState.tipoActual === 'fijo_medeben' || cfPopupState.tipoActual === 'fijo_debo'){
-      await addDoc(fijoCol(), {
-        desc,
-        monto,
-        subtipo: cfPopupState.tipoActual === 'fijo_medeben' ? 'me_deben' : 'debo',
-        moneda: cfPopupState.moneda,
-        timestamp: Date.now()
-      });
-      await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
-      showToast('✅ Mov. fijo guardado!');
+      const repeticiones = esDuplicado ? fechasDuplicado.length : 1;
+      await Promise.all(Array.from({ length: repeticiones }, (_, i) => addDoc(fijoCol(), {
+          desc,
+          monto,
+          subtipo: cfPopupState.tipoActual === 'fijo_medeben' ? 'me_deben' : 'debo',
+          moneda: cfPopupState.moneda,
+          timestamp: Date.now() + i
+        }))
+      );
+      if(esDuplicado){
+        cfCerrarPopup();
+        showToast(repeticiones > 1 ? `✅ ${repeticiones} mov. fijos duplicados!` : '✅ Mov. fijo duplicado!');
+      }else{
+        await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+        showToast('✅ Mov. fijo guardado!');
+      }
     } else {
       const cuotasActual = parseInt(document.getElementById('cfCuotas')?.value || '1', 10) || 1;
       const esConCuotas = (cfPopupState.tipoActual === 'tarjeta' || cfPopupState.tipoActual === 'credito') && cuotasActual > 1;
       const esModoTotal = cfPopupState.montoModo !== 'cuota';
       const cuotaMonto = esConCuotas ? (esModoTotal ? Math.round(monto / cuotasActual) : monto) : monto;
       const montoTotal = esConCuotas ? (esModoTotal ? monto : monto * cuotasActual) : monto;
-      const grupoId = esConCuotas ? 'gc_' + Date.now() : null;
+      const fechasGuardar = esDuplicado ? fechasDuplicado : [fechaVal];
 
       if(esConCuotas){
         const promesas = [];
-        for(let i=0; i<cuotasActual; i++){
-          let mC = p.mes + i, aC = p.anio;
-          while(mC > 11){ mC -= 12; aC++; }
-          const semC = i === 0 ? p.semana : 1;
-          let fechaCuota = null;
-          if(fechaVal){
-            const [_fy,_fm,_fd] = fechaVal.split('-').map(Number);
-            let nm = _fm - 1 + i, ny = _fy;
-            while(nm > 11){ nm -= 12; ny++; }
-            fechaCuota = `${ny}-${String(nm+1).padStart(2,'0')}-${String(_fd).padStart(2,'0')}`;
+        fechasGuardar.forEach((fechaDestino, fechaIdx) => {
+          const fechaBase = fechaDestino ? new Date(fechaDestino + 'T12:00:00') : new Date();
+          const p = getPeriodo(fechaBase, cfPopupState.tipoActual, cfPopupState.tarjetaId || null);
+          const grupoId = 'gc_' + Date.now() + '_' + fechaIdx;
+          for(let i=0; i<cuotasActual; i++){
+            let mC = p.mes + i, aC = p.anio;
+            while(mC > 11){ mC -= 12; aC++; }
+            const semC = i === 0 ? p.semana : 1;
+            let fechaCuota = null;
+            if(fechaDestino){
+              const [_fy,_fm,_fd] = fechaDestino.split('-').map(Number);
+              let nm = _fm - 1 + i, ny = _fy;
+              while(nm > 11){ nm -= 12; ny++; }
+              fechaCuota = `${ny}-${String(nm+1).padStart(2,'0')}-${String(_fd).padStart(2,'0')}`;
+            }
+            const docData = {
+              tipo: cfPopupState.tipoActual,
+              tarjetaId: cfPopupState.tipoActual === 'tarjeta' ? cfPopupState.tarjetaId : null,
+              desc: `${desc} (${i+1}/${cuotasActual})`,
+              monto: cuotaMonto,
+              semana: semC,
+              mes: mC,
+              anio: aC,
+              moneda: cfPopupState.moneda,
+              timestamp: Date.now() + (fechaIdx * cuotasActual) + i,
+              cuotas: cuotasActual,
+              cuotaNum: i + 1,
+              montoTotal,
+              grupoId,
+              confirmado: true,
+              fecha: fechaCuota,
+              recordatorio,
+              ...(esDuplicado ? {} : { compartidoPor: window._compartidoPendiente.compartidoPor || '' })
+            };
+            promesas.push(addDoc(userCol('movimientos'), docData));
           }
+        });
+        await Promise.all(promesas);
+        if(esDuplicado){
+          cfCerrarPopup();
+          showToast(`✅ ${promesas.length} movimientos duplicados!`);
+        }else{
+          await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+          showToast(`✅ ${cuotasActual} cuotas guardadas!`);
+        }
+      } else {
+        const promesas = fechasGuardar.map((fechaDestino, i) => {
+          const fechaBase = fechaDestino ? new Date(fechaDestino + 'T12:00:00') : new Date();
+          const p = getPeriodo(fechaBase, cfPopupState.tipoActual, cfPopupState.tarjetaId || null);
           const docData = {
             tipo: cfPopupState.tipoActual,
-            tarjetaId: cfPopupState.tipoActual === 'tarjeta' ? cfPopupState.tarjetaId : null,
-            desc: `${desc} (${i+1}/${cuotasActual})`,
-            monto: cuotaMonto,
-            semana: semC,
-            mes: mC,
-            anio: aC,
+            desc,
+            monto,
+            semana: p.semana,
+            mes: p.mes,
+            anio: p.anio,
             moneda: cfPopupState.moneda,
-            timestamp: Date.now(),
-            cuotas: cuotasActual,
-            cuotaNum: i + 1,
-            montoTotal,
-            grupoId,
+            timestamp: Date.now() + i,
             confirmado: true,
-            fecha: fechaCuota,
+            fecha: fechaDestino || null,
             recordatorio,
-            compartidoPor: window._compartidoPendiente.compartidoPor || ''
+            ...(esDuplicado ? {} : { compartidoPor: window._compartidoPendiente.compartidoPor || '' })
           };
-          promesas.push(addDoc(userCol('movimientos'), docData));
-        }
+          if(cfPopupState.tipoActual === 'tarjeta') docData.tarjetaId = cfPopupState.tarjetaId;
+          return addDoc(userCol('movimientos'), docData);
+        });
         await Promise.all(promesas);
-        await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
-        showToast(`✅ ${cuotasActual} cuotas guardadas!`);
-      } else {
-        const docData = {
-          tipo: cfPopupState.tipoActual,
-          desc,
-          monto,
-          semana: p.semana,
-          mes: p.mes,
-          anio: p.anio,
-          moneda: cfPopupState.moneda,
-          timestamp: Date.now(),
-          confirmado: true,
-          fecha: fechaVal || null,
-          recordatorio,
-          compartidoPor: window._compartidoPendiente.compartidoPor || ''
-        };
-        if(cfPopupState.tipoActual === 'tarjeta') docData.tarjetaId = cfPopupState.tarjetaId;
-        await addDoc(userCol('movimientos'), docData);
-        await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
-        showToast('✅ Guardado!');
+        if(esDuplicado){
+          cfCerrarPopup();
+          showToast(promesas.length > 1 ? `✅ ${promesas.length} duplicados!` : '✅ Duplicado!');
+        }else{
+          await cfAceptar(window._compartidoPendiente.docId, { cerrarPopup: true, mostrarToast: false });
+          showToast('✅ Guardado!');
+        }
       }
     }
   } catch(e) {
@@ -6823,7 +7074,7 @@ window.cfGuardarCompartido = async () => {
     showToast('❌ Error al guardar', true);
     setSyncStatus('offline');
   } finally {
-    if(btn){ btn.disabled = false; btn.textContent = 'Cargar movimiento'; }
+    if(btn){ btn.disabled = false; btn.textContent = esDuplicado ? 'Duplicar movimiento' : 'Cargar movimiento'; }
   }
 }
 
