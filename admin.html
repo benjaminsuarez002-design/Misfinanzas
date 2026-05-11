@@ -466,7 +466,7 @@
       <div class="gate-copy">Iniciá sesión con tu cuenta de Firebase. Si tu mail coincide con el admin, después te va a pedir el PIN para habilitar acciones sensibles.</div>
       <div class="field">
         <label>Email</label>
-        <input id="loginEmail" type="email" placeholder="Tu email admin">
+        <input id="loginEmail" type="email" placeholder="Tu email admin" autocomplete="email">
       </div>
       <div class="field">
         <label>Contraseña</label>
@@ -566,9 +566,20 @@
     </div>
   </div>
 
+  <div id="loginAsModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-title">Entrar como usuario</div>
+      <div id="loginAsCopy" class="modal-copy">Vas a abrir app.html con esta cuenta.</div>
+      <div class="actions">
+        <button id="loginAsConfirmBtn" class="btn btn-primary">Entrar a app.html</button>
+        <button id="loginAsCancelBtn" class="btn btn-dark">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, signInWithCustomToken, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const firebaseConfig = {
@@ -601,7 +612,9 @@ let adminUnlocked = false;
 let currentUsers = [];
 let filteredUsers = [];
 let renameTarget = null;
+let loginAsTarget = null;
 let supabaseAliasReady = false;
+let loginAsInProgress = false;
 
 const $ = id => document.getElementById(id);
 
@@ -820,6 +833,18 @@ function closeRenameModal(){
   $('renameModal').classList.remove('show');
 }
 
+function openLoginAsModal(uid, email, btn){
+  loginAsTarget = { uid, email, btn };
+  $('loginAsCopy').textContent = `Vas a salir del panel admin y abrir app.html como ${email || uid}.`;
+  $('loginAsModal').classList.add('show');
+}
+
+function closeLoginAsModal(){
+  if(loginAsInProgress) return;
+  loginAsTarget = null;
+  $('loginAsModal').classList.remove('show');
+}
+
 async function saveRenamedUserName(value){
   if(!renameTarget) return;
   const cleanName = String(value || '').trim();
@@ -879,7 +904,10 @@ async function adminFetch(path, options = {}){
   let data = null;
   try { data = await res.json(); } catch { data = null; }
   if(!res.ok || (data && data.ok === false)){
-    throw new Error(data?.error || `Error ${res.status}`);
+    const error = new Error(data?.error || `Error ${res.status}`);
+    error.status = res.status;
+    error.data = data;
+    throw error;
   }
   return data;
 }
@@ -964,6 +992,7 @@ function renderUsers(list = []){
         ${item.disabled
           ? `<button class="btn btn-green" onclick="window.adminEnable('${escapeHtml(item.uid || '')}','${escapeHtml(item.email || '')}')">Habilitar</button>`
           : `<button class="btn btn-yellow" onclick="window.adminDisable('${escapeHtml(item.uid || '')}','${escapeHtml(item.email || '')}')">Deshabilitar</button>`}
+        <button class="btn btn-dark" onclick="window.adminLoginAs('${escapeHtml(item.uid || '')}','${escapeHtml(item.email || '')}', this)">Entrar</button>
         <button class="btn btn-red" onclick="window.adminDelete('${escapeHtml(item.uid || '')}','${escapeHtml(item.email || '')}')">Borrar</button>
       </div>
     </div>
@@ -1053,7 +1082,6 @@ window.adminReject = async (id) => {
 };
 
 window.adminDisable = async (uid, email) => {
-  if(!confirm(`¿Deshabilitar ${email || uid}?`)) return;
   try{
     await adminFetch('/admin/users/disable', {
       method: 'POST',
@@ -1066,7 +1094,6 @@ window.adminDisable = async (uid, email) => {
 };
 
 window.adminEnable = async (uid, email) => {
-  if(!confirm(`¿Habilitar ${email || uid}?`)) return;
   try{
     await adminFetch('/admin/users/enable', {
       method: 'POST',
@@ -1079,7 +1106,6 @@ window.adminEnable = async (uid, email) => {
 };
 
 window.adminDelete = async (uid, email) => {
-  if(!confirm(`¿Borrar ${email || uid}? Esta acción no se puede deshacer.`)) return;
   try{
     await adminFetch('/admin/users/delete', {
       method: 'POST',
@@ -1089,6 +1115,79 @@ window.adminDelete = async (uid, email) => {
   }catch(err){
     showMsg('dashMsg', err.message || 'No se pudo borrar');
   }
+};
+
+async function requestLoginAsToken(uid, email){
+  const res = await fetch(`${REGISTRO_WORKER_URL}/admin/users/login-as`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${currentIdToken || await getFreshToken()}`,
+      ...(adminPin ? { 'x-admin-pin': adminPin } : {})
+    },
+    body: JSON.stringify({ uid, email })
+  });
+  let data = null;
+  try { data = await res.json(); } catch { data = null; }
+  if(!res.ok || data?.ok === false){
+    if(res.status === 404){
+      throw new Error('Falta el endpoint /admin/users/login-as en el worker.');
+    }
+    throw new Error(data?.error || `No se pudo iniciar como usuario (${res.status}).`);
+  }
+  const token = data?.customToken || data?.firebaseCustomToken || data?.token;
+  if(!token) throw new Error('El worker no devolvio el customToken.');
+  return token;
+}
+
+async function performAdminLoginAs(uid, email, btn){
+  showMsg('dashMsg', '');
+  if(!uid){
+    showMsg('dashMsg', 'No se encontro el UID de este usuario.');
+    return;
+  }
+  const originalText = btn?.textContent || 'Entrar';
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+  }
+  $('loginAsConfirmBtn').disabled = true;
+  $('loginAsConfirmBtn').textContent = 'Entrando...';
+  $('loginAsCancelBtn').disabled = true;
+  setBoot(true, 'Abriendo app.html con esa cuenta');
+  try{
+    await getFreshToken();
+    const customToken = await requestLoginAsToken(uid, email);
+    loginAsInProgress = true;
+    await setPersistence(auth, browserSessionPersistence);
+    await signInWithCustomToken(auth, customToken);
+    window.location.href = 'app.html';
+  }catch(err){
+    loginAsInProgress = false;
+    setBoot(false);
+    showMsg('dashMsg', err.message || 'No se pudo entrar con esa cuenta.');
+    $('loginAsModal').classList.remove('show');
+    loginAsTarget = null;
+  }finally{
+    if(btn && !loginAsInProgress){
+      btn.disabled = false;
+      btn.textContent = originalText;
+    }
+    if(!loginAsInProgress){
+      $('loginAsConfirmBtn').disabled = false;
+      $('loginAsConfirmBtn').textContent = 'Entrar a app.html';
+      $('loginAsCancelBtn').disabled = false;
+    }
+  }
+}
+
+window.adminLoginAs = (uid, email, btn) => {
+  showMsg('dashMsg', '');
+  if(!uid){
+    showMsg('dashMsg', 'No se encontro el UID de este usuario.');
+    return;
+  }
+  openLoginAsModal(uid, email, btn);
 };
 
 window.adminRename = (uid, email) => {
@@ -1170,6 +1269,13 @@ $('renameCancelBtn').addEventListener('click', () => {
   closeRenameModal();
 });
 
+$('loginAsConfirmBtn').addEventListener('click', () => {
+  if(!loginAsTarget) return;
+  performAdminLoginAs(loginAsTarget.uid, loginAsTarget.email, loginAsTarget.btn);
+});
+
+$('loginAsCancelBtn').addEventListener('click', closeLoginAsModal);
+
 $('renameInput').addEventListener('keydown', (event) => {
   if(event.key === 'Enter'){
     event.preventDefault();
@@ -1184,6 +1290,18 @@ $('renameInput').addEventListener('keydown', (event) => {
 $('renameModal').addEventListener('click', (event) => {
   if(event.target === $('renameModal')){
     closeRenameModal();
+  }
+});
+
+$('loginAsModal').addEventListener('click', (event) => {
+  if(event.target === $('loginAsModal')){
+    closeLoginAsModal();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if(event.key === 'Escape'){
+    closeLoginAsModal();
   }
 });
 
@@ -1213,6 +1331,10 @@ onAuthStateChanged(auth, async user => {
   }
   currentIdToken = await user.getIdToken();
   if((user.email || '').toLowerCase() !== ADMIN_EMAIL){
+    if(loginAsInProgress){
+      window.location.href = 'app.html';
+      return;
+    }
     showMsg('loginMsg', 'Esta cuenta no tiene acceso al panel admin.');
     await signOut(auth);
     return;
@@ -1226,6 +1348,7 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
+$('loginEmail').addEventListener('keydown', e => { if(e.key === 'Enter') $('loginPass').focus(); });
 $('loginPass').addEventListener('keydown', e => { if(e.key === 'Enter') $('loginBtn').click(); });
 $('pinInput').addEventListener('keydown', e => { if(e.key === 'Enter') $('pinBtn').click(); });
 </script>

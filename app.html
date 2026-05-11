@@ -4345,12 +4345,13 @@ function decorateAmountFields(root=document){
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'amount-copy-btn';
-    btn.title = 'Copiar monto';
-    btn.textContent = '📋';
-    btn.onclick = async e => {
+    btn.title = 'Abrir calculadora';
+    btn.setAttribute('aria-label', 'Abrir calculadora');
+    btn.textContent = '🧮';
+    btn.onclick = e => {
       e.preventDefault();
       e.stopPropagation();
-      await copyAmountFieldValue(input);
+      openCalcForAmountField(input, { seed: true });
     };
     wrap.appendChild(btn);
   });
