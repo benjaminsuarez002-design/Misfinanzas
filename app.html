@@ -1813,7 +1813,7 @@
           <div class="monto-modo-btn" id="modoCuota" onclick="setMontoCuotasModo('cuota')">Por cuota</div>
         </div>
         <div class="monto-cuotas-row">
-          <input type="text" id="fMonto" inputmode="none" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
+          <input type="text" id="fMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
           <div class="cuotas-input-wrap" id="cuotasWrap">
             <label>Cuotas</label>
             <input type="number" id="fCuotas" placeholder="" min="1" max="60" oninput="actualizarPreviewCuotas()">
@@ -4375,14 +4375,17 @@ function getCalcTargetField(){
     : null;
 }
 function shouldAutoOpenCalcForAmountField(input){
-  return isAmountFieldInput(input);
+  return false;
 }
 function prepareAmountFieldForCalculator(input){
   if(!input || input.dataset.amountCalcReady === '1') return;
   input.dataset.amountCalcReady = '1';
-  input.setAttribute('inputmode', 'none');
+  if(input.type !== 'number'){
+    input.setAttribute('inputmode', 'numeric');
+    input.setAttribute('pattern', '[0-9.,+*/()-]*');
+    input.setAttribute('enterkeyhint', 'done');
+  }
   input.setAttribute('autocomplete', 'off');
-  input.readOnly = true;
 }
 function seedCalcFromAmountField(input){
   const normalized = normalizeClipboardCalcText(input?.value || '');
@@ -4626,11 +4629,18 @@ function appendCalcToken(token){
 window.toggleCalcPanel = () => {
   const panel = document.getElementById('calcPanel');
   if(!panel) return;
+  let opened = false;
   if(panel.classList.contains('open') && panel.classList.contains('minimized')){
     panel.classList.remove('minimized');
+    opened = true;
   }else{
     panel.classList.toggle('open');
-    if(panel.classList.contains('open')) panel.classList.remove('minimized');
+    opened = panel.classList.contains('open');
+    if(opened) panel.classList.remove('minimized');
+  }
+  if(opened){
+    const target = getCalcTargetField();
+    if(target) seedCalcFromAmountField(target);
   }
   renderCalcPanel();
 };
@@ -6715,7 +6725,7 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
               <div class="monto-modo-btn" id="cf-modoCuota" onclick="cfSetMontoCuotasModo('cuota')">Por cuota</div>
             </div>
             <div class="monto-cuotas-row">
-              <input type="text" id="cfMonto" inputmode="none" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
+              <input type="text" id="cfMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
               <div class="cuotas-input-wrap" id="cfCuotasWrap">
                 <label>Cuotas</label>
                 <input type="number" id="cfCuotas" min="1" max="60" oninput="cfActualizarPreviewCuotas()">
