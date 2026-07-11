@@ -857,13 +857,13 @@
   }
   .config-btn:hover { border-color: var(--blue); transform: rotate(60deg); }
 
-  .notif-btn, .calc-btn {
+  .notif-btn, .calc-btn, .mov-selector-btn {
     position: relative; background: none; border: none;
     font-size: 20px; cursor: pointer; padding: 4px;
     transition: transform .2s;
     color: var(--muted);
   }
-  .notif-btn:hover, .calc-btn:hover { transform: scale(1.15); }
+  .notif-btn:hover, .calc-btn:hover, .mov-selector-btn:hover { transform: scale(1.15); }
   .notif-badge {
     position: absolute; top: -2px; right: -4px;
     background: var(--red); color: #fff;
@@ -1031,6 +1031,74 @@
     color: #fff;
   }
   .calc-key.wide { grid-column: span 2; }
+
+  /* ── SELECTOR Y SUMADOR DE MOVIMIENTOS ── */
+  .mov-selector-panel {
+    position: fixed; inset: 0; z-index: 10000; display: none;
+    align-items: center; justify-content: center; padding: 18px;
+    background: rgba(25,20,48,.48); backdrop-filter: blur(7px);
+  }
+  .mov-selector-panel.open { display: flex; }
+  .mov-selector-inner {
+    width: min(720px, 100%); max-height: min(86vh, 760px);
+    display: flex; flex-direction: column; overflow: hidden;
+    background: var(--card,#fff); border: 1.5px solid var(--border);
+    border-radius: 22px; box-shadow: 0 24px 70px rgba(64,45,120,.3);
+    animation: popIn .2s ease both;
+  }
+  .mov-selector-head { padding: 16px 18px 12px; border-bottom: 1px solid var(--border); }
+  .mov-selector-title-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .mov-selector-title { font-family:Arial Black,sans-serif; font-size:16px; color:var(--text); }
+  .mov-selector-subtitle { margin-top:3px; font-size:12px; color:var(--muted); }
+  .mov-selector-close { border:0; background:rgba(108,140,255,.08); color:var(--muted); width:32px; height:32px; border-radius:10px; cursor:pointer; font-size:18px; }
+  .mov-filter-chips { display:flex; gap:7px; overflow-x:auto; padding-top:13px; scrollbar-width:none; }
+  .mov-filter-chips::-webkit-scrollbar { display:none; }
+  .mov-filter-chip { flex:0 0 auto; border:1.5px solid var(--border); background:rgba(243,236,255,.48); color:var(--muted); border-radius:999px; padding:8px 13px; font-family:Arial Black,sans-serif; font-size:11px; cursor:pointer; transition:.15s ease; }
+  .mov-filter-chip.active { color:#fff; border-color:transparent; background:linear-gradient(135deg,#6c8cff,#a56cff); box-shadow:0 5px 14px rgba(108,108,255,.25); }
+  .mov-selector-table-wrap { overflow:auto; flex:1; padding:12px; background:rgba(246,242,255,.42); }
+  .mov-week-card { overflow:hidden; margin-bottom:10px; border:1.5px solid var(--border); border-radius:15px; background:rgba(255,255,255,.94); box-shadow:0 5px 18px rgba(108,80,255,.07); }
+  .mov-week-card:last-child { margin-bottom:0; }
+  .mov-week-header { width:100%; border:0; background:transparent; padding:13px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; cursor:pointer; text-align:left; color:var(--text); }
+  .mov-week-header:hover { background:rgba(108,140,255,.045); }
+  .mov-week-title { font-family:Arial Black,sans-serif; font-size:13px; font-weight:800; }
+  .mov-week-dates { display:block; margin-top:3px; color:var(--muted); font-size:10px; }
+  .mov-week-summary { display:flex; align-items:center; gap:9px; flex:0 0 auto; }
+  .mov-week-count { padding:4px 8px; border-radius:999px; background:rgba(108,140,255,.1); color:var(--blue); font-family:Arial Black,sans-serif; font-size:10px; }
+  .mov-week-chevron { color:var(--muted); font-size:13px; transition:transform .18s ease; }
+  .mov-week-card.open .mov-week-chevron { transform:rotate(180deg); }
+  .mov-week-body { display:none; border-top:1px solid var(--border); }
+  .mov-week-card.open .mov-week-body { display:block; animation:fadeSlideIn .18s ease both; }
+  .mov-selector-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+  .mov-selector-table th { position:sticky; top:0; z-index:1; padding:10px 12px; background:#f8f5ff; color:var(--muted); font-size:10px; letter-spacing:.7px; text-transform:uppercase; text-align:left; }
+  .mov-selector-table th:first-child { width:48px; }
+  .mov-selector-table th:last-child { width:142px; text-align:right; }
+  .mov-select-row { cursor:pointer; border-bottom:1px solid rgba(227,220,255,.65); transition:background .12s; }
+  .mov-select-row:hover { background:rgba(108,140,255,.055); }
+  .mov-select-row.selected { background:rgba(108,140,255,.1); }
+  .mov-select-row td { padding:12px; vertical-align:middle; }
+  .mov-select-check { appearance:none; width:20px; height:20px; border:2px solid #c9c0ea; border-radius:6px; display:grid; place-content:center; pointer-events:none; }
+  .mov-select-check:checked { background:linear-gradient(135deg,#00dca0,#6c8cff); border-color:transparent; }
+  .mov-select-check:checked::after { content:'✓'; color:white; font-size:13px; font-weight:900; }
+  .mov-select-desc { font-weight:700; font-size:13px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mov-select-meta { font-size:11px; color:var(--muted); margin-top:3px; }
+  .mov-select-amount { text-align:right; font-family:Arial Black,sans-serif; font-size:13px; white-space:nowrap; }
+  .mov-select-amount.pos { color:#00b978; }
+  .mov-select-amount.neg { color:var(--red); }
+  .mov-selector-empty { padding:45px 20px; text-align:center; color:var(--muted); font-size:13px; }
+  .mov-selector-footer { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:15px 18px; border-top:1px solid var(--border); background:linear-gradient(135deg,#faf8ff,#f2f7ff); }
+  .mov-selector-count { font-size:12px; color:var(--muted); }
+  .mov-selector-total-label { font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.8px; text-align:right; }
+  .mov-selector-total { font-family:Arial Black,sans-serif; font-size:24px; color:var(--blue); text-align:right; }
+  .mov-selector-total.negative { color:var(--red); }
+  @media (max-width:560px){
+    .mov-selector-panel { padding:8px; align-items:flex-end; }
+    .mov-selector-inner { max-height:91vh; border-radius:22px 22px 12px 12px; }
+    .mov-selector-table-wrap { padding:9px; }
+    .mov-selector-table th:last-child { width:112px; }
+    .mov-select-row td { padding:11px 8px; }
+    .mov-selector-footer { padding:13px 14px; }
+    .mov-selector-total { font-size:21px; }
+  }
 
   /* ── MODAL CONFIG ── */
   .cfg-overlay {
@@ -1709,6 +1777,34 @@
     </div>
   </div>
 
+  <div class="mov-selector-panel" id="movSelectorPanel" onclick="if(event.target===this)toggleMovSelector()">
+    <div class="mov-selector-inner" role="dialog" aria-modal="true" aria-labelledby="movSelectorTitle">
+      <div class="mov-selector-head">
+        <div class="mov-selector-title-row">
+          <div>
+            <div class="mov-selector-title" id="movSelectorTitle">🧮 Sumar movimientos</div>
+            <div class="mov-selector-subtitle" id="movSelectorSubtitle">Movimientos del mes</div>
+          </div>
+          <button type="button" class="mov-selector-close" onclick="toggleMovSelector()" aria-label="Cerrar">✕</button>
+        </div>
+        <div class="mov-filter-chips" id="movFilterChips">
+          <button type="button" class="mov-filter-chip active" data-filter="todos" onclick="setMovSelectorFilter('todos')">Todos</button>
+          <button type="button" class="mov-filter-chip" data-filter="gasto" onclick="setMovSelectorFilter('gasto')">🔴 Gastos</button>
+          <button type="button" class="mov-filter-chip" data-filter="ingreso" onclick="setMovSelectorFilter('ingreso')">🟢 Ingresos</button>
+          <button type="button" class="mov-filter-chip" data-filter="tarjeta" onclick="setMovSelectorFilter('tarjeta')">💳 Tarjeta de crédito</button>
+        </div>
+      </div>
+      <div class="mov-selector-table-wrap" id="movSelectorTableWrap"></div>
+      <div class="mov-selector-footer">
+        <div class="mov-selector-count" id="movSelectorCount">0 seleccionados</div>
+        <div>
+          <div class="mov-selector-total-label">Total seleccionado</div>
+          <div class="mov-selector-total" id="movSelectorTotal">$0</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="usd-bar">
     <div class="usd-pills">
       <div class="usd-pill active" id="pillOficial" onclick="setUsdTipo('oficial')">
@@ -1724,7 +1820,7 @@
     </div>
     <input type="number" id="usdRate" value="1000" style="display:none">
     <div class="usd-bar-right">
-      <button class="calc-btn" id="calcBtn" onclick="toggleCalcPanel()" title="Calculadora">🧮</button>
+      <button class="mov-selector-btn" id="movSelectorBtn" onclick="toggleMovSelector()" title="Sumar movimientos del mes" aria-label="Sumar movimientos del mes">☑️</button>
       <button class="config-btn" onclick="abrirConfig()" title="Configuración">⚙️</button>
       <span class="usd-fetch-status" id="usdStatus">⏳</span>
     </div>
@@ -4649,6 +4745,138 @@ window.minimizeCalcPanel = () => {
   const panel = document.getElementById('calcPanel');
   if(!panel) return;
   panel.classList.add('open','minimized');
+};
+
+const movSelectorState = { filters:new Set(['todos']), selected:new Set(), expandedWeeks:new Set() };
+function movSelectorType(d){
+  if(d.tipo === 'ingreso' || d.tipo === 'fijo_medeben') return 'ingreso';
+  if(d.tipo === 'tarjeta') return 'tarjeta';
+  return 'gasto';
+}
+function movSelectorSignedAmount(d){
+  const amount = toARS(Number(d.monto)||0, d.moneda);
+  return movSelectorType(d) === 'ingreso' ? amount : -amount;
+}
+function movSelectorTypeLabel(d){
+  if(d.tipo === 'tarjeta') return '💳 Tarjeta de crédito';
+  if(d.tipo === 'ingreso') return '🟢 Ingreso';
+  if(d.tipo === 'credito') return '🟠 Crédito';
+  if(d.tipo === 'fijo_medeben') return '📌 Cobro fijo';
+  if(d.tipo === 'fijo_debo') return '📌 Pago fijo';
+  return '🔴 Gasto';
+}
+function escapeMovSelectorHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function updateMovSelectorTotals(){
+  const all = window._mesMov || [];
+  const selectedMovs = all.filter(d => movSelectorState.selected.has(String(d.id)));
+  const total = selectedMovs.reduce((sum,d)=>sum+movSelectorSignedAmount(d),0);
+  const count = document.getElementById('movSelectorCount');
+  const totalEl = document.getElementById('movSelectorTotal');
+  if(count) count.textContent = `${selectedMovs.length} seleccionado${selectedMovs.length===1?'':'s'}`;
+  if(totalEl){
+    totalEl.textContent = `${total<0?'−':''}${fmtARS(Math.abs(total))}`;
+    totalEl.classList.toggle('negative', total < 0);
+  }
+}
+function renderMovSelector(){
+  const wrap = document.getElementById('movSelectorTableWrap');
+  if(!wrap) return;
+  const all = window._mesMov || [];
+  const allFilterActive = movSelectorState.filters.has('todos');
+  const visible = allFilterActive ? all : all.filter(d => movSelectorState.filters.has(movSelectorType(d)));
+  document.querySelectorAll('#movFilterChips .mov-filter-chip').forEach(chip => {
+    const active = movSelectorState.filters.has(chip.dataset.filter);
+    chip.classList.toggle('active', active);
+    chip.setAttribute('aria-pressed', String(active));
+  });
+  const subtitle = document.getElementById('movSelectorSubtitle');
+  if(subtitle) subtitle.textContent = `${MESES[mesVista]} ${anioVista} · ${all.length} movimiento${all.length===1?'':'s'}`;
+  if(!visible.length){
+    wrap.innerHTML = '<div class="mov-selector-empty">No hay movimientos para este filtro.</div>';
+  }else{
+    const semanasVista = getSemanas(mesVista, anioVista);
+    const weekMap = new Map();
+    visible.forEach(d => {
+      const weekNumber = Number(d._semana || d.semana || 1);
+      if(!weekMap.has(weekNumber)) weekMap.set(weekNumber, []);
+      weekMap.get(weekNumber).push(d);
+    });
+    weekMap.forEach(movs => movs.sort((a,b) => {
+      const typeOrder = (movSelectorType(a) === 'ingreso' ? 0 : 1) - (movSelectorType(b) === 'ingreso' ? 0 : 1);
+      if(typeOrder) return typeOrder;
+      const dateA = a.fecha || '9999-12-31';
+      const dateB = b.fecha || '9999-12-31';
+      return dateA.localeCompare(dateB);
+    }));
+    const renderRows = movs => `<table class="mov-selector-table"><thead><tr><th></th><th>Movimiento</th><th>Monto</th></tr></thead><tbody>${movs.map(d=>{
+      const selected = movSelectorState.selected.has(String(d.id));
+      const signed = movSelectorSignedAmount(d);
+      const fecha = d.fecha ? d.fecha.split('-').reverse().join('/') : 'Sin fecha';
+      return `<tr class="mov-select-row ${selected?'selected':''}" onclick="toggleMovSelectorRow('${escapeMovSelectorHtml(String(d.id))}',this)">
+        <td><input class="mov-select-check" type="checkbox" ${selected?'checked':''} tabindex="-1" aria-hidden="true"></td>
+        <td><div class="mov-select-desc">${escapeMovSelectorHtml(d.desc || 'Sin descripción')}</div><div class="mov-select-meta">${movSelectorTypeLabel(d)} · ${fecha}</div></td>
+        <td class="mov-select-amount ${signed>=0?'pos':'neg'}">${signed>=0?'+':'−'}${fmtARS(Math.abs(signed))}</td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+    const formatWeekDate = value => value instanceof Date
+      ? value.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})
+      : '';
+    wrap.innerHTML = [...weekMap.entries()].sort((a,b)=>a[0]-b[0]).map(([weekNumber,movs])=>{
+      const weekInfo = semanasVista.find(s => Number(s.num) === weekNumber);
+      const open = movSelectorState.expandedWeeks.has(String(weekNumber));
+      const dates = weekInfo ? `${formatWeekDate(weekInfo.desde)} → ${formatWeekDate(weekInfo.hasta)}` : '';
+      return `<section class="mov-week-card ${open?'open':''}">
+        <button type="button" class="mov-week-header" onclick="toggleMovSelectorWeek('${weekNumber}')" aria-expanded="${open}">
+          <span><span class="mov-week-title">Semana ${weekNumber}</span>${dates?`<span class="mov-week-dates">${dates}</span>`:''}</span>
+          <span class="mov-week-summary"><span class="mov-week-count">${movs.length} mov.</span><span class="mov-week-chevron">▼</span></span>
+        </button>
+        <div class="mov-week-body">${renderRows(movs)}</div>
+      </section>`;
+    }).join('');
+  }
+  updateMovSelectorTotals();
+}
+window.toggleMovSelector = () => {
+  const panel = document.getElementById('movSelectorPanel');
+  if(!panel) return;
+  const opening = !panel.classList.contains('open');
+  panel.classList.toggle('open', opening);
+  if(opening){
+    movSelectorState.selected.clear();
+    movSelectorState.expandedWeeks.clear();
+    renderMovSelector();
+  }
+};
+window.setMovSelectorFilter = filter => {
+  if(filter === 'todos'){
+    movSelectorState.filters.clear();
+    movSelectorState.filters.add('todos');
+  }else{
+    movSelectorState.filters.delete('todos');
+    if(movSelectorState.filters.has(filter)) movSelectorState.filters.delete(filter);
+    else movSelectorState.filters.add(filter);
+  }
+  renderMovSelector();
+};
+window.toggleMovSelectorWeek = weekNumber => {
+  const key = String(weekNumber);
+  if(movSelectorState.expandedWeeks.has(key)) movSelectorState.expandedWeeks.delete(key);
+  else movSelectorState.expandedWeeks.add(key);
+  renderMovSelector();
+};
+window.toggleMovSelectorRow = (id, row) => {
+  const key = String(id);
+  if(movSelectorState.selected.has(key)) movSelectorState.selected.delete(key);
+  else movSelectorState.selected.add(key);
+  const selected = movSelectorState.selected.has(key);
+  if(row){
+    row.classList.toggle('selected', selected);
+    const checkbox = row.querySelector('.mov-select-check');
+    if(checkbox) checkbox.checked = selected;
+  }
+  updateMovSelectorTotals();
 };
 window.calcPress = token => {
   appendCalcToken(token);
