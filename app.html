@@ -1679,6 +1679,183 @@
     background: rgba(108,140,255,.12);
   }
 
+  /* ── DASHBOARD RESPONSIVE PC / CELULAR ── */
+  :root {
+    --rubro-1: var(--blue); --rubro-2: var(--accent); --rubro-3: var(--green);
+    --rubro-4: var(--yellow); --rubro-5: var(--red); --rubro-6: var(--accent2);
+    --rubro-7: color-mix(in srgb,var(--blue) 55%,var(--accent2));
+    --rubro-8: color-mix(in srgb,var(--green) 55%,var(--blue));
+    --rubro-9: color-mix(in srgb,var(--yellow) 55%,var(--red));
+    --rubro-10: var(--muted);
+  }
+  .desktop-sidebar { display:none; }
+  .dashboard-heading { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:18px; }
+  .dashboard-heading h2 { font-family:'Arial Black',sans-serif; font-size:24px; color:var(--text); }
+  .dashboard-eyebrow { color:var(--blue); font-family:'Arial Black',sans-serif; font-size:9px; letter-spacing:1.3px; text-transform:uppercase; margin-bottom:4px; }
+  .dashboard-heading .mes-nav { margin:0; gap:18px; min-width:250px; }
+  .dashboard-heading .mes-nav span { min-width:120px; text-align:center; }
+  .dashboard-main { display:grid; grid-template-columns:minmax(0,2fr) minmax(330px,1.08fr); gap:18px; align-items:start; }
+  .dashboard-left-column,.dashboard-right-column { display:grid; gap:18px; min-width:0; }
+  .dashboard-panel { background:color-mix(in srgb,var(--card) 91%,transparent); border:1.5px solid var(--border); border-radius:16px; box-shadow:0 8px 26px var(--surface-shadow); overflow:hidden; backdrop-filter:blur(12px); }
+  .dashboard-panel-header { min-height:48px; padding:12px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid color-mix(in srgb,var(--border) 65%,transparent); }
+  .dashboard-panel-header h3 { font-family:'Arial Black',sans-serif; font-size:14px; color:var(--text); flex:1; }
+  .dashboard-panel-icon { width:25px; height:25px; border-radius:8px; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 12%,transparent); color:var(--blue); font-weight:900; }
+  .panel-link { border:1px solid var(--border); border-radius:8px; background:var(--card2); color:var(--blue); padding:5px 10px; font-size:10px; font-weight:800; cursor:pointer; }
+  .weekly-movements-header { gap:10px; }
+  .week-selector { display:grid; grid-template-columns:28px minmax(112px,auto) 28px; gap:7px; align-items:center; }
+  .week-selector>button { width:28px; height:28px; border:1px solid var(--border); border-radius:8px; background:var(--card2); color:var(--blue); font-size:16px; cursor:pointer; }
+  .week-selector>button:disabled { opacity:.35; cursor:not-allowed; }
+  .week-selector>span { display:flex; min-width:112px; flex-direction:column; align-items:center; line-height:1.15; }
+  .week-selector strong { color:var(--text); font-family:'Arial Black',sans-serif; font-size:10px; white-space:nowrap; }
+  .week-selector small { color:var(--muted); font-size:8px; margin-top:2px; white-space:nowrap; }
+  .weekly-dashboard-panel #movPorSemana { padding:0 12px 10px; }
+  .weekly-dashboard-panel .sem-group-row { margin:0; }
+  .weekly-dashboard-panel .sem-group { margin:8px 0 0; border:1px solid var(--border); border-radius:11px; box-shadow:none; background:var(--card2); }
+  .weekly-dashboard-panel .sem-header { min-height:52px; display:grid; grid-template-columns:minmax(150px,200px) minmax(100px,1fr) minmax(90px,130px); gap:18px; padding:8px 12px; background:transparent; }
+  .sem-calendar { width:28px; height:28px; border:1px solid var(--border); border-radius:8px; display:grid; place-items:center; color:var(--blue); background:var(--card); }
+  .weekly-dashboard-panel .sem-chevron { display:none; }
+  .weekly-dashboard-panel .sem-title { font-size:12px; }
+  .weekly-dashboard-panel .sem-fechas { font-size:9px; margin-top:2px; }
+  .sem-balance-track { height:6px; border-radius:999px; background:color-mix(in srgb,var(--border) 58%,transparent); overflow:hidden; }
+  .sem-balance-track span { display:block; height:100%; border-radius:inherit; box-shadow:0 0 8px currentColor; }
+  .weekly-dashboard-panel .sem-saldo { padding:0; font-size:12px; text-align:right; }
+  .weekly-dashboard-panel .sem-info-side-btn { display:none; }
+  .rubro-chart-layout { display:grid; grid-template-columns:145px minmax(0,1fr); gap:14px; align-items:center; padding:20px 16px 16px; }
+  .rubro-donut { width:138px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent); }
+  .rubro-donut>div { width:72px; aspect-ratio:1; border-radius:50%; background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 0 0 1px var(--border); }
+  .rubro-donut small { color:var(--muted); font-size:10px; }
+  .rubro-donut strong { font-family:'Arial Black',sans-serif; color:var(--text); font-size:12px; margin-top:3px; }
+  .rubro-legend { min-width:0; }
+  .rubro-legend-row { display:grid; grid-template-columns:8px minmax(70px,1fr) auto 28px; gap:7px; align-items:center; min-height:25px; font-size:10px; }
+  .rubro-dot { width:8px; height:8px; border-radius:50%; }
+  .rubro-legend-name { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rubro-legend-row strong { color:var(--text); font-size:10px; }
+  .rubro-legend-row small { color:var(--muted); text-align:right; }
+  .upcoming-row { width:100%; display:grid; grid-template-columns:38px minmax(0,1fr) 42px auto; gap:8px; align-items:center; padding:9px 12px; border:0; border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+  .upcoming-row:last-child { border-bottom:0; }
+  .upcoming-row:hover,.recent-row:hover { background:color-mix(in srgb,var(--blue) 6%,transparent); }
+  .upcoming-icon { width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 12%,transparent); color:var(--blue); font-weight:900; }
+  .upcoming-copy { min-width:0; display:flex; flex-direction:column; }
+  .upcoming-copy strong { font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .upcoming-copy small,.upcoming-date { color:var(--muted); font-size:9px; }
+  .upcoming-amount { font-family:'Arial Black',sans-serif; font-size:10px; white-space:nowrap; }
+  .pos { color:var(--green)!important; } .neg { color:var(--red)!important; }
+  .recent-table { overflow-x:auto; }
+  .recent-head,.recent-row { min-width:680px; display:grid; grid-template-columns:90px minmax(150px,1.3fr) minmax(120px,1fr) 90px 120px; gap:10px; align-items:center; }
+  .recent-head { padding:8px 14px; color:var(--muted); font-size:9px; border-bottom:1px solid var(--border); }
+  .recent-row { width:100%; border:0; border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent); padding:8px 14px; background:transparent; color:var(--muted); text-align:left; font-size:10px; cursor:pointer; }
+  .recent-row:last-child { border-bottom:0; }
+  .recent-desc { color:var(--text); font-weight:700; }
+  .recent-row>strong { text-align:right; font-family:'Arial Black',sans-serif; font-size:10px; }
+  .recent-type { display:inline-block; border:1px solid currentColor; border-radius:999px; padding:2px 7px; font-style:normal; font-size:8px; }
+  .dashboard-empty { min-height:140px; display:flex; align-items:center; justify-content:center; gap:8px; padding:20px; text-align:center; color:var(--muted); font-size:12px; }
+  .rubro-field { display:none; } .rubro-field.visible { display:block; }
+  .cfg-rubros-list { display:grid; gap:8px; margin:14px 0; }
+  .cfg-rubro-row { display:grid; grid-template-columns:12px 34px minmax(0,1fr) auto auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--card2); }
+  .cfg-rubro-row.is-hidden { opacity:.5; }
+  .cfg-rubro-color { width:10px; height:30px; border-radius:999px; background:var(--blue); }
+  .cfg-rubro-row:nth-child(2n) .cfg-rubro-color { background:var(--accent); }
+  .cfg-rubro-row:nth-child(3n) .cfg-rubro-color { background:var(--green); }
+  .cfg-rubro-row .cfg-rubro-icon { width:34px; height:34px; padding:0; display:grid; place-items:center; border:1px solid var(--border); border-radius:10px; background:color-mix(in srgb,var(--blue) 9%,var(--card)); color:var(--text); font-size:17px; line-height:1; cursor:pointer; transition:transform .15s, border-color .15s, background .15s; }
+  .cfg-rubro-row .cfg-rubro-icon:hover,.cfg-rubro-row .cfg-rubro-icon:focus-visible { transform:translateY(-1px); border-color:var(--blue); background:color-mix(in srgb,var(--blue) 16%,var(--card)); outline:none; }
+  .cfg-rubro-name { font-weight:700; color:var(--text); font-size:13px; }
+  .cfg-rubro-row button,.cfg-add-rubro { border:1px solid var(--border); border-radius:9px; padding:7px 9px; background:var(--card); color:var(--blue); font-size:10px; font-weight:800; cursor:pointer; }
+  .cfg-add-rubro { width:100%; padding:11px; background:color-mix(in srgb,var(--blue) 9%,var(--card)); }
+  .cfg-icon-editor-overlay { position:fixed; inset:0; z-index:720; display:grid; place-items:center; padding:16px; background:color-mix(in srgb,var(--text) 20%,transparent); backdrop-filter:blur(5px); }
+  .cfg-icon-editor { width:min(92vw,380px); padding:20px; border:1.5px solid var(--border); border-radius:18px; background:color-mix(in srgb,var(--card) 97%,transparent); box-shadow:0 22px 60px var(--surface-shadow); color:var(--text); }
+  .cfg-icon-editor h3 { margin:0 0 5px; font-family:'Arial Black',sans-serif; font-size:16px; }
+  .cfg-icon-editor>p { margin:0 0 15px; color:var(--muted); font-size:11px; line-height:1.4; }
+  .cfg-icon-grid { display:grid; grid-template-columns:repeat(8,1fr); gap:7px; margin-bottom:15px; }
+  .cfg-icon-grid button { aspect-ratio:1; min-width:0; padding:0; border:1px solid var(--border); border-radius:10px; background:var(--card2); color:var(--text); font-size:19px; cursor:pointer; transition:transform .15s,border-color .15s,background .15s; }
+  .cfg-icon-grid button:hover,.cfg-icon-grid button.active { transform:translateY(-1px); border-color:var(--blue); background:color-mix(in srgb,var(--blue) 15%,var(--card)); }
+  .cfg-icon-custom-label { display:block; margin-bottom:6px; color:var(--muted); font-size:10px; font-weight:700; }
+  .cfg-icon-custom-input { width:100%; height:44px; padding:0 12px; border:1.5px solid var(--border); border-radius:11px; background:var(--card2); color:var(--text); font-size:20px; outline:none; }
+  .cfg-icon-custom-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 12%,transparent); }
+  .cfg-icon-editor-actions { display:grid; grid-template-columns:1fr 1.5fr; gap:9px; margin-top:15px; }
+  .cfg-icon-editor-actions button { height:42px; border-radius:11px; border:1px solid var(--border); background:var(--card2); color:var(--muted); font-family:'Arial Black',sans-serif; font-size:11px; cursor:pointer; }
+  .cfg-icon-editor-actions .primary { border:0; background:var(--button-gradient); color:#fff; box-shadow:0 7px 18px var(--button-shadow); }
+
+  @media (min-width: 1000px) {
+    .top-collapsible { height:0; }
+    header { position:fixed; z-index:180; left:0; top:0; width:208px; height:46px; padding:0 16px; background:color-mix(in srgb,var(--card) 94%,transparent); border-right:1px solid var(--border); border-bottom:0; backdrop-filter:none; -webkit-backdrop-filter:none; }
+    header h1 { font-size:20px; white-space:nowrap; }
+    header .header-right { display:block; }
+    header .sync-label { position:fixed; z-index:190; left:14px; bottom:143px; font-size:10px; }
+    header .user-badge { position:fixed; z-index:190; left:14px; bottom:113px; width:178px; max-width:178px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    header .logout-btn { display:none; }
+    .usd-bar { position:fixed; z-index:170; left:0; top:46px; width:208px; height:69px; min-height:0; margin:0; padding:0 10px 9px; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:0; overflow:visible; background:color-mix(in srgb,var(--card) 86%,transparent); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .usd-pills { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+    .usd-pill { min-width:0; width:100%; padding:6px 4px; }
+    .usd-pill-label { font-size:8px; letter-spacing:.6px; }
+    .usd-pill-val { font-size:12px; }
+    .usd-pill-sub { font-size:8px; }
+    .usd-bar-right { display:none; }
+    .desktop-sidebar { display:flex; position:fixed; z-index:150; left:0; top:0; bottom:0; width:208px; height:100vh; flex-direction:column; padding:133px 14px 20px; background:color-mix(in srgb,var(--card) 82%,transparent); border-right:1px solid var(--border); backdrop-filter:blur(18px); }
+    .desktop-nav { display:grid; gap:8px; }
+    .desktop-nav-item { width:100%; display:flex; align-items:center; gap:13px; border:0; border-left:4px solid transparent; border-radius:0 12px 12px 0; padding:13px 14px; background:transparent; color:var(--muted); font-family:'Arial Black',sans-serif; font-size:12px; text-align:left; cursor:pointer; }
+    .desktop-nav-item span { width:22px; color:var(--blue); font-size:18px; }
+    .desktop-nav-item.active { color:var(--blue); border-left-color:var(--blue); background:color-mix(in srgb,var(--blue) 10%,transparent); }
+    .desktop-new-mov { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:32px; padding:13px 10px; border:0; border-radius:10px; background:var(--button-gradient); box-shadow:0 8px 18px var(--button-shadow); color:#fff; font-family:'Arial Black',sans-serif; font-size:11px; cursor:pointer; }
+    .desktop-calc-row.desktop-nav-item { height:52px; min-height:52px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:nowrap; }
+    .desktop-calc-row.desktop-nav-item span { width:16px; }
+    .desktop-calc-row.desktop-nav-item:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,transparent); }
+    .desktop-bottom-actions { position:fixed; z-index:190; right:16px; bottom:64px; width:auto; display:flex; justify-content:flex-end; gap:10px; }
+    .desktop-bottom-actions button { height:32px; padding:0 14px; border:1px solid var(--border); border-radius:9px; background:var(--card); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:11px; font-weight:800; cursor:pointer; }
+    .desktop-bottom-actions button:first-child { width:46px; padding:0; font-size:15px; }
+    .desktop-help { position:fixed; z-index:190; left:14px; bottom:14px; width:178px; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:12px; padding:11px; background:var(--card2); color:var(--blue); text-align:left; cursor:pointer; }
+    .desktop-help>span:first-child { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 15%,transparent); font-weight:900; }
+    .desktop-help strong,.desktop-help small { display:block; font-size:9px; }
+    .desktop-help small { margin-top:3px; color:var(--muted); }
+    .tabs { display:none; }
+    .page { width:calc(100% - 208px); max-width:none; margin-left:208px; padding:18px 18px 40px; }
+    #tab-resumen.page.active { display:block; }
+    #tab-resumen .dashboard-heading { position:relative; min-height:48px; margin-bottom:0; }
+    #tab-resumen .dashboard-heading .mes-nav { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
+    #tab-resumen .summary-grid .app-help-inline-btn { display:none; }
+    .summary-grid { grid-template-columns:repeat(6,minmax(0,1fr)); gap:18px; margin-bottom:18px; }
+    .sum-card { min-width:0; min-height:78px; border-radius:14px; padding:11px 16px; border-color:var(--border); box-shadow:0 7px 22px var(--surface-shadow); }
+    .sum-card .label { font-size:9px; margin-bottom:8px; }
+    .sum-card .value { font-size:clamp(17px,1.55vw,23px); white-space:nowrap; letter-spacing:-.5px; }
+    .sum-card.fijo .value { font-size:clamp(14px,1.25vw,19px); }
+    .sum-card.ing .value { color:var(--green); }.sum-card.gas .value { color:var(--red); }.sum-card.tar .value { color:var(--blue); }.sum-card.sal .value,.sum-card.pre .value { color:var(--accent2); }
+    .sum-card.tar .sub-label { display:none; }
+    .weekly-dashboard-panel .sem-header { min-height:43px; }
+    .weekly-dashboard-panel .sem-group { margin-top:6px; }
+    .dashboard-left-column { gap:10px; }
+    #ingPanel,#gasPanel,#tarjetasPanel,#fijoPanel { max-width:none; }
+    #tab-cargar { max-width:900px; margin-right:auto; }
+    #tab-informe { max-width:none; }
+    .btn-duplicar-mes { max-width:460px; margin-left:auto; margin-right:auto; }
+  }
+
+  @media (max-width: 999px) {
+    .page { max-width:560px; }
+    .dashboard-main { grid-template-columns:1fr; }
+    .dashboard-right-column { order:2; }
+    .recent-dashboard-panel { order:0; }
+  }
+
+  @media (max-width: 600px) {
+    header { padding:12px 14px; } header h1 { font-size:17px; white-space:nowrap; }
+    .header-right { gap:7px; }.sync-label { font-size:0; }.sync-dot { margin-right:0; }.user-badge { display:none; }.logout-btn { padding:6px 10px; }
+    .usd-bar { padding:8px 10px; }.usd-pill { min-width:74px; padding:6px 8px; }.usd-pill-val { font-size:13px; }.usd-bar-right { gap:6px; }
+    .tab { padding:12px 6px; font-size:12px; }.page { padding:14px 12px 32px; }
+    .dashboard-heading { align-items:flex-end; margin-bottom:14px; }.dashboard-heading h2 { font-size:18px; }.dashboard-eyebrow { display:none; }
+    .dashboard-heading .mes-nav { min-width:0; gap:8px; }.dashboard-heading .mes-nav span { min-width:82px; font-size:12px; }.mes-nav button { width:30px; height:30px; }
+    .summary-grid { gap:9px; margin-bottom:14px; }.sum-card { min-width:0; min-height:88px; border-radius:15px; padding:14px 12px; }
+    .sum-card .label { font-size:9px; letter-spacing:.65px; margin-bottom:7px; }.sum-card .value { font-size:clamp(17px,5.2vw,21px); overflow-wrap:anywhere; }.sum-card.fijo .value { font-size:clamp(14px,4.1vw,18px); }.sum-card .sub-label { font-size:9px; }
+    .dashboard-main,.dashboard-left-column,.dashboard-right-column { gap:12px; }.dashboard-panel { border-radius:14px; }
+    .weekly-movements-header { flex-wrap:wrap; }.weekly-movements-header h3 { min-width:170px; }.week-selector { margin-left:auto; }
+    .weekly-dashboard-panel .sem-header { grid-template-columns:minmax(128px,1fr) auto; gap:8px; padding:9px; }.sem-balance-track { display:none; }
+    .sem-group-row { margin-right:4px; }.sem-header-left { gap:7px; min-width:0; }.weekly-dashboard-panel .sem-title { font-size:12px; }.weekly-dashboard-panel .sem-fechas { font-size:8px; }.weekly-dashboard-panel .sem-saldo { font-size:11px; white-space:nowrap; }
+    .rubro-chart-layout { grid-template-columns:120px 1fr; padding:16px 12px; }.rubro-donut { width:116px; }.rubro-donut>div { width:62px; }.rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 25px; font-size:9px; }
+    .upcoming-row { grid-template-columns:36px minmax(0,1fr) 38px auto; padding:9px; }.upcoming-amount { font-size:9px; }
+    .mov-item { align-items:flex-start; gap:10px; padding:13px 12px; }.mov-item>div:first-child { min-width:0; }.mov-item>div:last-child { flex-wrap:wrap; justify-content:flex-end; }.mov-nombre { font-size:13px; overflow-wrap:anywhere; }.mov-monto { font-size:13px; white-space:nowrap; }.action-btn { padding:4px; }
+    .cfg-rubro-row { grid-template-columns:10px 34px minmax(0,1fr) auto; }.cfg-rubro-row .cfg-rubro-icon { grid-column:2; grid-row:1; }.cfg-rubro-row .cfg-rubro-action-rename { grid-column:2/4; grid-row:2; }.cfg-rubro-row .cfg-rubro-action-toggle { grid-column:4; grid-row:2; }
+    .cfg-icon-editor { padding:17px; }.cfg-icon-grid { grid-template-columns:repeat(6,1fr); gap:6px; }
+    .btn-duplicar-mes { margin-top:14px; }
+  }
+
 </style>
 </head>
 <body>
@@ -1827,6 +2004,21 @@
   </div>
   </div><!-- /top-collapsible -->
 
+  <aside class="desktop-sidebar" aria-label="Navegación principal">
+    <nav class="desktop-nav">
+      <button class="desktop-nav-item active" data-tab="resumen" onclick="goTab('resumen')"><span>▥</span> Resumen</button>
+      <button class="desktop-nav-item" data-tab="cargar" onclick="goTab('cargar')"><span>＋</span> Cargar</button>
+      <button class="desktop-nav-item" data-tab="informe" onclick="goTab('informe')"><span>🛒</span> Compras</button>
+    </nav>
+    <button class="desktop-new-mov" onclick="goTab('cargar')"><span>＋</span> Nuevo movimiento</button>
+    <button class="desktop-calc-row desktop-nav-item" onclick="toggleMovSelector()"><span>☑</span> Calcular movimientos</button>
+    <div class="desktop-bottom-actions">
+      <button onclick="abrirConfig()" title="Configuración">⚙️</button>
+      <button onclick="doLogout()">Salir</button>
+    </div>
+    <button class="desktop-help" onclick="mostrarAyuda('tab_resumen')"><span>?</span><span><strong>¿Necesitás ayuda?</strong><small>Ver guía rápida</small></span></button>
+  </aside>
+
   <div class="tabs sticky-bar">
     <div class="tab active" onclick="goTab('resumen')">Resumen</div>
     <div class="tab" onclick="goTab('cargar')">+ Cargar</div>
@@ -1835,10 +2027,16 @@
 
   <!-- RESUMEN -->
   <div class="page active" id="tab-resumen">
-    <div class="mes-nav">
-      <button onclick="cambiarMes(-1)">‹</button>
-      <span id="mesActualLabel">—</span>
-      <button onclick="cambiarMes(1)">›</button>
+    <div class="dashboard-heading">
+      <div>
+        <div class="dashboard-eyebrow">Panel general</div>
+        <h2>Resumen financiero</h2>
+      </div>
+      <div class="mes-nav">
+        <button onclick="cambiarMes(-1)" aria-label="Mes anterior">‹</button>
+        <span id="mesActualLabel">—</span>
+        <button onclick="cambiarMes(1)" aria-label="Mes siguiente">›</button>
+      </div>
     </div>
     <div class="summary-grid">
       <div class="sum-card ing clickable" onclick="toggleMovPanel('ing')"><div class="label">Ingresos ▾</div><div class="value" id="sumIng">$0</div></div>
@@ -1846,7 +2044,6 @@
       <div class="sum-card tar clickable" onclick="toggleTarjetasPanel()">
         <div class="label">Tarjetas 💳</div>
         <div class="value" id="sumTar">$0</div>
-        <div class="sub-label" id="sumTarSub">—</div>
       </div>
       <div class="sum-card sal"><div class="label">Saldo</div><div class="value" id="sumSal">$0</div></div>
       <div class="sum-card pre"><div class="label">Presupuesto Est.</div><div class="value" id="sumPre">$0</div></div>
@@ -1869,7 +2066,35 @@
       </div>
       <div id="fijoDetail"></div>
     </div>
-    <div id="movPorSemana"></div>
+    <div class="dashboard-main">
+      <div class="dashboard-left-column">
+        <section class="dashboard-panel recent-dashboard-panel">
+          <div class="dashboard-panel-header weekly-movements-header">
+            <span class="dashboard-panel-icon">▤</span><h3>Movimientos de la semana</h3>
+            <div class="week-selector" title="Selector semanal">
+              <button onclick="cambiarSemanaDashboard(-1)" aria-label="Semana anterior">‹</button>
+              <span><strong id="dashboardWeekLabel">Semana —</strong><small id="dashboardWeekDates">Selector semanal</small></span>
+              <button onclick="cambiarSemanaDashboard(1)" aria-label="Semana siguiente">›</button>
+            </div>
+          </div>
+          <div id="recentMovements"></div>
+        </section>
+        <section class="dashboard-panel weekly-dashboard-panel">
+          <div class="dashboard-panel-header"><span class="dashboard-panel-icon">▦</span><h3>Balance por semana</h3></div>
+          <div id="movPorSemana"></div>
+        </section>
+      </div>
+      <aside class="dashboard-right-column">
+        <section class="dashboard-panel rubro-dashboard-panel">
+          <div class="dashboard-panel-header"><span class="dashboard-panel-icon">◔</span><h3>Distribución de gastos</h3></div>
+          <div id="rubroChart"></div>
+        </section>
+        <section class="dashboard-panel upcoming-dashboard-panel">
+          <div class="dashboard-panel-header"><span class="dashboard-panel-icon">▣</span><h3>Próximos movimientos</h3></div>
+          <div id="upcomingMovements"></div>
+        </section>
+      </aside>
+    </div>
     <button class="btn-duplicar-mes" onclick="duplicarMes()">📋 Duplicar este mes al siguiente</button>
   </div>
 
@@ -1902,6 +2127,10 @@
         <div class="tarjeta-chips" id="tarjetaChips"></div>
       </div>
       <div class="form-group"><label>Descripción</label><input type="text" id="fDesc" placeholder="Ej: Sueldo, Comida, Luz..."></div>
+      <div class="form-group rubro-field" id="rubroWrap">
+        <label>Rubro</label>
+        <select id="fRubro"></select>
+      </div>
       <div class="form-group">
         <label id="labelMonto">Monto Total</label>
         <div class="monto-modo-toggle" id="montoModoToggle">
@@ -2060,8 +2289,22 @@ const SUPABASE_GASTOS_TABLE = 'gastos_compartidos';
 const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes('PEGA_TU_'))
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
+const visualTestMode = location.hostname === '127.0.0.1' && new URLSearchParams(location.search).has('visualTest');
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DEFAULT_RUBROS = [
+  { id:'alimentacion', label:'Alimentación', icon:'🛒' },
+  { id:'vivienda', label:'Vivienda', icon:'⌂' },
+  { id:'transporte', label:'Transporte', icon:'🚗' },
+  { id:'servicios', label:'Servicios', icon:'⌁' },
+  { id:'salud', label:'Salud', icon:'✚' },
+  { id:'educacion', label:'Educación', icon:'▤' },
+  { id:'entretenimiento', label:'Entretenimiento', icon:'★' },
+  { id:'impuestos', label:'Impuestos', icon:'▧' },
+  { id:'compras', label:'Compras', icon:'◈' },
+  { id:'otros', label:'Otros', icon:'•••' }
+];
+const RUBRO_ICON_OPTIONS = ['🛒','🏠','🚗','🚌','🍽️','🍎','💡','💧','📱','🩺','💊','📚','🎓','🎬','🎮','🎵','🏋️','🐾','👕','🎁','🧾','💳','🔧','✈️','☕','🧹','💰','📦','⭐','◆'];
 
 let currentUser = null;
 let data = [], pagosData = {}, pagosListeners = {}, movListener = null, tarjetas = [];
@@ -2070,6 +2313,8 @@ let tipoActual = 'ingreso', subtipoActual = 'personal', subtipoFijoActual = 'me_
 let tarjetaSeleccionada = null, tarjetaPanelActiva = null;
 const now = new Date();
 let mesVista = now.getMonth(), anioVista = now.getFullYear();
+let semanaDashboardVista = null;
+let semanaDashboardPeriodoVista = '';
 
 const usdRateEl = document.getElementById('usdRate');
 let usdTipoActivo = 'oficial'; // 'oficial' | 'tarjeta' | 'manual'
@@ -2125,6 +2370,7 @@ async function fetchDolar() {
 fetchDolar();
 
 onAuthStateChanged(auth, user => {
+  if(visualTestMode){ iniciarVisualTest(); return; }
   if(user) {
     currentUser = user;
     document.getElementById('loginScreen').style.display = 'none';
@@ -2136,6 +2382,37 @@ onAuthStateChanged(auth, user => {
     window.location.href = 'index.html';  // ← el nombre de tu archivo de login
   }
 });
+
+function iniciarVisualTest(){
+  if(window.__visualTestReady) return;
+  window.__visualTestReady=true;
+  currentUser={uid:'visual-test',email:'benjaminsuarez002@preview.local'};
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appScreen').style.display='block';
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  document.getElementById('userBadge').textContent='benjaminsuarez002';
+  document.getElementById('syncLabel').textContent='Sincronizado';
+  document.getElementById('syncDot').classList.add('ok');
+  userConfig={...userConfig,frecuencia:'semanal',diaCorte:11,diaCobro:5,rubrosCustom:[],rubrosHidden:[],rubroAliases:{},rubroIcons:{}};
+  mesVista=6; anioVista=2026; usdValOficial=1510; usdValTarjeta=1963;
+  document.getElementById('valOficial').textContent='$1.510'; document.getElementById('valTarjeta').textContent='$1.963';
+  tarjetas=[{id:'visa',nombre:'Tarjeta Visa',diaCierre:28,diaPago:7}];
+  fijoData=[{id:'f1',desc:'Préstamo familiar',monto:1116500,subtipo:'me_deben',moneda:'ARS'}];
+  fijoPagosData={}; pagosData={};
+  const mov=(id,tipo,desc,monto,fecha,rubro,extra={})=>({id,tipo,desc,monto,fecha,rubro,moneda:'ARS',timestamp:new Date(fecha+'T12:00:00').getTime(),confirmado:true,...extra});
+  data=[
+    mov('v1','ingreso','Sueldo',1850000,'2026-07-11',null),
+    mov('v2','ingreso','Freelance proyecto',247879,'2026-07-27',null),
+    mov('v3','gasto','Alquiler',451240,'2026-07-12','vivienda'),
+    mov('v4','gasto','Combustible y transporte',254830,'2026-07-18','transporte'),
+    mov('v5','gasto','Supermercado',232150,'2026-07-21','alimentacion'),
+    mov('v6','gasto','Servicios del hogar',180300,'2026-07-25','servicios'),
+    mov('v7','gasto','Salidas y entretenimiento',100210,'2026-07-29','entretenimiento'),
+    mov('v8','gasto','Otros gastos',69801,'2026-07-31','otros'),
+    mov('v9','tarjeta','Consumos Tarjeta Visa',751072,'2026-07-22','compras',{tarjetaId:'visa'})
+  ];
+  refrescarSelectoresRubros(); renderResumen();
+}
 
 window.doLogin = async () => {
   const email = document.getElementById('loginEmail').value.trim();
@@ -2176,10 +2453,14 @@ function limpiarApp() {
     diaCobro: 5,
     ayudas: true,
     configTab: 'general',
+    rubrosCustom: [],
+    rubrosHidden: [],
+    rubroAliases: {},
+    rubroIcons: {},
     personalizacion: window.MisFinanzasTheme?.getCurrent?.() || null
   };
 }
-function iniciarApp() { initMesSelect(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); }
+function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); }
 
 
 // ── CONFIG ──────────────────────────────────────────
@@ -2189,6 +2470,10 @@ let userConfig = {
   diaCobro: 5,
   ayudas: true,
   configTab: 'general',
+  rubrosCustom: [],
+  rubrosHidden: [],
+  rubroAliases: {},
+  rubroIcons: {},
   personalizacion: window.MisFinanzasTheme?.getCurrent?.() || null
 }; // diaCobro: 0=Lu..6=Do
 
@@ -2432,6 +2717,120 @@ window.dpParseText = (val, confirm=false) => {
   }
 };
 
+function getRubros({ incluirOcultos = false } = {}) {
+  const custom = Array.isArray(userConfig.rubrosCustom) ? userConfig.rubrosCustom : [];
+  const hidden = new Set(Array.isArray(userConfig.rubrosHidden) ? userConfig.rubrosHidden : []);
+  const aliases = userConfig.rubroAliases || {};
+  const icons = userConfig.rubroIcons || {};
+  return [...DEFAULT_RUBROS, ...custom]
+    .filter((r, idx, all) => all.findIndex(x => x.id === r.id) === idx)
+    .map(r => ({ ...r, label: aliases[r.id] || r.label, icon: icons[r.id] || r.icon, hidden: hidden.has(r.id) }))
+    .filter(r => incluirOcultos || !r.hidden);
+}
+
+function getRubro(id) {
+  return getRubros({ incluirOcultos:true }).find(r => r.id === id) || { id:'sin_rubro', label:'Sin rubro', icon:'?' };
+}
+
+function rubroOptionsHTML(selected = 'otros', incluirVacio = false) {
+  const options = getRubros().map(r => `<option value="${r.id}" ${r.id===selected?'selected':''}>${r.icon} ${r.label}</option>`).join('');
+  const sinRubro = selected==='sin_rubro' ? '<option value="sin_rubro" selected>? Sin rubro</option>' : '';
+  return `${incluirVacio?'<option value="">Seleccionar rubro</option>':''}${sinRubro}${options}`;
+}
+
+function refrescarSelectoresRubros() {
+  const principal = document.getElementById('fRubro');
+  if(principal){ const actual=principal.value||'otros'; principal.innerHTML=rubroOptionsHTML(actual); if([...principal.options].some(o=>o.value===actual)) principal.value=actual; }
+}
+
+function escapeRubroConfigHtml(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+function renderCfgRubros() {
+  const list = document.getElementById('cfgRubrosList');
+  if(!list) return;
+  list.innerHTML = getRubros({ incluirOcultos:true }).map((r, i) => `
+    <div class="cfg-rubro-row ${r.hidden?'is-hidden':''}">
+      <span class="cfg-rubro-color" style="--rubro-index:${i}"></span>
+      <button type="button" class="cfg-rubro-icon" onclick="cambiarIconoRubroConfig('${r.id}')" title="Cambiar icono de ${escapeRubroConfigHtml(r.label)}" aria-label="Cambiar icono de ${escapeRubroConfigHtml(r.label)}">${escapeRubroConfigHtml(r.icon)}</button>
+      <span class="cfg-rubro-name">${escapeRubroConfigHtml(r.label)}</span>
+      <button type="button" class="cfg-rubro-action-rename" onclick="renombrarRubroConfig('${r.id}')">Renombrar</button>
+      <button type="button" class="cfg-rubro-action-toggle" onclick="toggleRubroConfig('${r.id}')">${r.hidden?'Mostrar':'Ocultar'}</button>
+    </div>`).join('');
+}
+
+window.cambiarIconoRubroConfig = id => {
+  const rubro=getRubro(id);
+  document.getElementById('cfgIconEditorOverlay')?.remove();
+  const overlay=document.createElement('div');
+  overlay.id='cfgIconEditorOverlay';
+  overlay.className='cfg-icon-editor-overlay';
+  overlay.dataset.rubroId=id;
+  overlay.setAttribute('role','dialog');
+  overlay.setAttribute('aria-modal','true');
+  overlay.setAttribute('aria-label',`Cambiar icono de ${rubro.label}`);
+  overlay.onclick=e=>{ if(e.target===overlay) window.cerrarIconoRubroConfig(); };
+  overlay.innerHTML=`<form class="cfg-icon-editor" onsubmit="guardarIconoRubroConfig();return false">
+    <h3>Cambiar icono</h3>
+    <p>Elegí uno para <strong>${escapeRubroConfigHtml(rubro.label)}</strong> o escribí otro emoji o símbolo.</p>
+    <div class="cfg-icon-grid">${RUBRO_ICON_OPTIONS.map(icon=>`<button type="button" class="${icon===rubro.icon?'active':''}" data-icon="${escapeRubroConfigHtml(icon)}" onclick="seleccionarIconoRubroConfig(this.dataset.icon)" aria-label="Usar ${escapeRubroConfigHtml(icon)}">${escapeRubroConfigHtml(icon)}</button>`).join('')}</div>
+    <label class="cfg-icon-custom-label" for="cfgRubroIconInput">Otro emoji o símbolo</label>
+    <input class="cfg-icon-custom-input" id="cfgRubroIconInput" value="${escapeRubroConfigHtml(rubro.icon)}" maxlength="16" autocomplete="off">
+    <div class="cfg-icon-editor-actions"><button type="button" onclick="cerrarIconoRubroConfig()">Cancelar</button><button type="submit" class="primary">Aplicar icono</button></div>
+  </form>`;
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>document.getElementById('cfgRubroIconInput')?.focus());
+};
+
+window.seleccionarIconoRubroConfig = icon => {
+  const input=document.getElementById('cfgRubroIconInput');
+  if(input) input.value=icon;
+  document.querySelectorAll('#cfgIconEditorOverlay .cfg-icon-grid button').forEach(btn=>btn.classList.toggle('active',btn.dataset.icon===icon));
+};
+
+window.cerrarIconoRubroConfig = () => document.getElementById('cfgIconEditorOverlay')?.remove();
+
+window.guardarIconoRubroConfig = () => {
+  const overlay=document.getElementById('cfgIconEditorOverlay');
+  if(!overlay) return;
+  const id=overlay.dataset.rubroId;
+  const icon=(document.getElementById('cfgRubroIconInput')?.value||'').replace(/\s+/g,' ').trim();
+  if(!icon){ showToast('Escribí un emoji o símbolo',true); return; }
+  if(/[<>&"'`]/.test(icon)){ showToast('Ese símbolo no es válido',true); return; }
+  if([...icon].length>8){ showToast('Usá un emoji o símbolo corto',true); return; }
+  userConfig.rubroIcons={...(userConfig.rubroIcons||{}),[id]:icon};
+  window.cerrarIconoRubroConfig();
+  renderCfgRubros();
+  refrescarSelectoresRubros();
+  renderResumen();
+  showToast('Icono actualizado. Tocá Guardar para conservarlo.');
+};
+
+window.agregarRubroConfig = () => {
+  const label = prompt('Nombre del nuevo rubro:')?.trim();
+  if(!label) return;
+  const idBase = label.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'') || ('rubro_'+Date.now());
+  const usados = new Set(getRubros({ incluirOcultos:true }).map(r=>r.id));
+  let id=idBase, n=2; while(usados.has(id)) id=idBase+'_'+n++;
+  userConfig.rubrosCustom = [...(userConfig.rubrosCustom||[]), { id, label, icon:'◆' }];
+  renderCfgRubros(); refrescarSelectoresRubros();
+};
+
+window.renombrarRubroConfig = id => {
+  const rubro=getRubro(id); const label=prompt('Nuevo nombre del rubro:',rubro.label)?.trim();
+  if(!label) return;
+  userConfig.rubroAliases={...(userConfig.rubroAliases||{}),[id]:label};
+  renderCfgRubros(); refrescarSelectoresRubros();
+};
+
+window.toggleRubroConfig = id => {
+  const hidden=new Set(userConfig.rubrosHidden||[]);
+  if(hidden.has(id)) hidden.delete(id); else hidden.add(id);
+  if(getRubros({ incluirOcultos:true }).filter(r=>!hidden.has(r.id)).length<1){ showToast('Debe quedar al menos un rubro activo',true); return; }
+  userConfig.rubrosHidden=[...hidden]; renderCfgRubros(); refrescarSelectoresRubros();
+};
+
 window.abrirConfig = () => {
   // cerrar si ya está abierto
   const existing = document.getElementById('cfgOverlay');
@@ -2448,11 +2847,19 @@ window.abrirConfig = () => {
     <div class="cfg-box ${userConfig.configTab==='personalizacion'?'cfg-box-personal':''}">
       <div class="cfg-title">⚙️ Configuración</div>
       <div class="cfg-top-tabs">
-        <button type="button" id="cfgTabGeneral" class="cfg-tab-chip ${userConfig.configTab!=='personalizacion'?'active':''}" onclick="setCfgConfigTab('general')">Configuración general</button>
+        <button type="button" id="cfgTabGeneral" class="cfg-tab-chip ${userConfig.configTab==='general'?'active':''}" onclick="setCfgConfigTab('general')">Configuración general</button>
+        <button type="button" id="cfgTabRubros" class="cfg-tab-chip ${userConfig.configTab==='rubros'?'active':''}" onclick="setCfgConfigTab('rubros')">Rubros</button>
         <button type="button" id="cfgTabPersonal" class="cfg-tab-chip ${userConfig.configTab==='personalizacion'?'active':''}" onclick="setCfgConfigTab('personalizacion')">Personalización</button>
       </div>
 
-      <div id="cfgPanelGeneral" class="cfg-panel ${userConfig.configTab!=='personalizacion'?'active':''}">
+      <div id="cfgPanelRubros" class="cfg-panel ${userConfig.configTab==='rubros'?'active':''}">
+        <div class="cfg-section-title">◔ Rubros de movimientos</div>
+        <div class="cfg-section-note">Se usan para clasificar gastos y construir el gráfico de distribución. Tocá el emoji para cambiarlo; también podés renombrar, ocultar o sumar rubros.</div>
+        <div id="cfgRubrosList" class="cfg-rubros-list"></div>
+        <button type="button" class="cfg-add-rubro" onclick="agregarRubroConfig()">＋ Agregar rubro</button>
+      </div>
+
+      <div id="cfgPanelGeneral" class="cfg-panel ${userConfig.configTab==='general'?'active':''}">
         <div style="margin-bottom:18px">
           <div class="cfg-section-title">📅 Frecuencia de cobro</div>
           <label class="cfg-option ${userConfig.frecuencia==='mensual'?'active':''}" onclick="setCfgFrec('mensual')">
@@ -2521,6 +2928,7 @@ window.abrirConfig = () => {
       </div>
     </div>`;
   document.body.appendChild(overlay);
+  renderCfgRubros();
   window.removeEventListener('resize', cfgResizeHandler);
   window.addEventListener('resize', cfgResizeHandler);
   // marcar día de cobro activo
@@ -2986,10 +3394,12 @@ window.syncCfgConfigLayoutMode = () => {
 };
 
 window.setCfgConfigTab = tab => {
-  userConfig.configTab = tab === 'personalizacion' ? 'personalizacion' : 'general';
+  userConfig.configTab = ['general','rubros','personalizacion'].includes(tab) ? tab : 'general';
   document.getElementById('cfgTabGeneral')?.classList.toggle('active', userConfig.configTab === 'general');
+  document.getElementById('cfgTabRubros')?.classList.toggle('active', userConfig.configTab === 'rubros');
   document.getElementById('cfgTabPersonal')?.classList.toggle('active', userConfig.configTab === 'personalizacion');
   document.getElementById('cfgPanelGeneral')?.classList.toggle('active', userConfig.configTab === 'general');
+  document.getElementById('cfgPanelRubros')?.classList.toggle('active', userConfig.configTab === 'rubros');
   document.getElementById('cfgPanelPersonal')?.classList.toggle('active', userConfig.configTab === 'personalizacion');
   syncCfgConfigLayoutMode();
   requestAnimationFrame(window.fitConfigBoxToViewport);
@@ -3519,6 +3929,7 @@ function initHelpSystem(){
 window.cerrarConfig = () => {
   window.removeEventListener('resize', cfgResizeHandler);
   cerrarCfgThemePicker?.();
+  window.cerrarIconoRubroConfig?.();
   const o = document.getElementById('cfgOverlay'); if(o) o.remove();
 };
 
@@ -3526,6 +3937,7 @@ window.guardarConfigYCerrar = async () => {
   cerrarConfig();
   await guardarConfig();
   syncHelpVisibility(document);
+  semanaDashboardVista=null;
   renderResumen();
   showToast('✅ Configuración guardada!');
 };
@@ -3902,6 +4314,7 @@ window.guardarPago=async(tid,mes,anio)=>{
       timestamp:nowTs,
       confirmado:false,
       fecha,
+      rubro: esMeDeben ? null : 'otros',
       recordatorio:false,
       esPagoTarjeta:true,
       tarjetaId:tid,
@@ -4075,6 +4488,7 @@ window.editarMov = id => {
         <label>Monto</label>
         <input id="editMonto" type="text" inputmode="text" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
       </div>
+      ${mov.tipo!=='ingreso' ? `<div class="modal-group"><label>Rubro</label><select id="editRubro">${rubroOptionsHTML(mov.rubro||'sin_rubro')}</select></div>` : ''}
       <div class="modal-group">
         <label>Fecha</label>
         <div class="date-picker-wrap" id="editDpWrap">
@@ -4119,6 +4533,7 @@ window.guardarEdicion = async id => {
   const monto = parseMontoInput(document.getElementById('editMonto'));
   const fecha = document.getElementById('editFecha').value || null;
   const recordatorio = !!document.getElementById('editRecordatorio')?.checked;
+  const rubro = document.getElementById('editRubro')?.value || null;
   console.log('guardando recordatorio:', recordatorio, 'checkbox:', document.getElementById('editRecordatorio'));
   if(!desc || isNaN(monto)){ showToast('⚠️ Datos inválidos',true); return; }
   // Capturar todo ANTES de cerrar el modal
@@ -4131,7 +4546,7 @@ window.guardarEdicion = async id => {
       const p = getPeriodo(f, movActual?.tipo||'gasto', movActual?.tarjetaId||null);
       extra = { mes: p.mes, anio: p.anio, semana: p.semana };
     }
-    await updateDoc(userDoc('movimientos',id),{ desc, monto, fecha, recordatorio, ...extra });
+    await updateDoc(userDoc('movimientos',id),{ desc, monto, fecha, recordatorio, ...(rubro?{rubro}:{}), ...extra });
     showToast('✅ Editado!');
   }catch(e){ showToast('❌ Error al editar',true); }
 };
@@ -5171,6 +5586,7 @@ function renderTarjetaDetail(tid){
 
 window.goTab=t=>{
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.desktop-nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   ['resumen','cargar','informe'].forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('active');});
   document.getElementById('tab-'+t).classList.add('active');
@@ -5197,6 +5613,7 @@ window.setTipo=t=>{
   document.getElementById('cuotasWrap').classList.toggle('visible', esCredito);
   document.getElementById('montoModoToggle').classList.toggle('visible', esCredito);
   document.getElementById('recordatorioWrap').style.display = (t==='gasto'||esCredito) ? 'block' : 'none';
+  document.getElementById('rubroWrap')?.classList.toggle('visible', t==='gasto'||esCredito);
   if(!esCredito){
     const fc=document.getElementById('fCuotas');if(fc)fc.value='';
     document.getElementById('cuotaPreview').classList.remove('visible');
@@ -5237,6 +5654,7 @@ window.setPeriodo=p=>{
 window.cambiarMes=d=>{
   mesVista+=d;
   if(mesVista>11){mesVista=0;anioVista++;} if(mesVista<0){mesVista=11;anioVista--;}
+  semanaDashboardVista=null;
   suscribirPagosMesActual(); renderResumen();
   if(document.getElementById('tarjetasPanel').style.display!=='none'){renderTarjetaTabs();if(tarjetaPanelActiva) renderTarjetaDetail(tarjetaPanelActiva);}
 };
@@ -5317,6 +5735,7 @@ window.actualizarPreviewCuotas = () => {
 window.guardar=async()=>{
   const desc=document.getElementById('fDesc').value.trim();
   const montoRaw = fMontoGetValue();
+  const rubro = document.getElementById('fRubro')?.value || 'otros';
   const confirmadoInicial = document.getElementById('fConfirmado')?.checked !== false;
   let semana, mes, anio;
   {
@@ -5384,6 +5803,7 @@ window.guardar=async()=>{
           cuotas: cuotasActual, cuotaNum: i+1,
           montoTotal: montoTotal, grupoId,
           confirmado: confirmadoInicial, fecha: fechaCuota,
+          rubro,
           recordatorio: document.getElementById('fRecordatorio').checked,
           ...(window._compartidoPendiente ? {compartidoPor: window._compartidoPendiente.compartidoPor} : {})
         };
@@ -5393,7 +5813,7 @@ window.guardar=async()=>{
       showToast(`✅ ${cuotasActual} cuotas guardadas!`);
     } else {
       const _fdVal=document.getElementById('fFecha').value;
-      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:confirmadoInicial,fecha:_fdVal||null,recordatorio:document.getElementById('fRecordatorio').checked,...(window._compartidoPendiente?{compartidoPor:window._compartidoPendiente.compartidoPor}:{})};
+      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:confirmadoInicial,fecha:_fdVal||null,rubro,recordatorio:document.getElementById('fRecordatorio').checked,...(window._compartidoPendiente?{compartidoPor:window._compartidoPendiente.compartidoPor}:{})};
       if(tipoGuardado==='tarjeta') docData.tarjetaId=tarjetaSeleccionada;
       await addDoc(userCol('movimientos'),docData);
       showToast('✅ Guardado!');
@@ -5495,6 +5915,87 @@ window.borrarConfirmar = async (id, modo) => {
 window.toggleMes=key=>document.getElementById('mescard-'+key).classList.toggle('open');
 window.toggleSemana=id=>{ const el=document.getElementById('semgroup-'+id); if(el) el.classList.toggle('open'); };
 
+function renderDistribucionRubros(mesMov){
+  const el=document.getElementById('rubroChart'); if(!el) return;
+  const gastos=mesMov.filter(d=>['gasto','credito'].includes(d.tipo)&&!d.esPagoTarjeta);
+  const grupos=new Map();
+  gastos.forEach(d=>{ const id=d.rubro||'sin_rubro'; grupos.set(id,(grupos.get(id)||0)+toARS(d.monto,d.moneda)); });
+  const total=[...grupos.values()].reduce((a,b)=>a+b,0);
+  if(!total){ el.innerHTML='<div class="dashboard-empty"><span>◔</span>Asigná rubros a tus gastos para ver la distribución.</div>'; return; }
+  const items=[...grupos.entries()].map(([id,monto])=>({rubro:getRubro(id),monto})).sort((a,b)=>b.monto-a.monto);
+  let cursor=0;
+  const segmentos=items.map((item,i)=>{ const ini=cursor; cursor+=item.monto/total*100; return `var(--rubro-${(i%10)+1}) ${ini.toFixed(2)}% ${cursor.toFixed(2)}%`; }).join(',');
+  el.innerHTML=`<div class="rubro-chart-layout">
+    <div class="rubro-donut" style="background:conic-gradient(${segmentos})"><div><small>Total</small><strong>${fmtARS(total)}</strong></div></div>
+    <div class="rubro-legend">${items.slice(0,7).map((item,i)=>`<div class="rubro-legend-row"><span class="rubro-dot" style="background:var(--rubro-${(i%10)+1})"></span><span class="rubro-legend-name">${item.rubro.label}</span><strong>${fmtARS(item.monto)}</strong><small>${Math.round(item.monto/total*100)}%</small></div>`).join('')}</div>
+  </div>`;
+}
+
+function getSemanaActualDashboard(semanas){
+  const hoy=new Date(); hoy.setHours(12,0,0,0);
+  return semanas.find(s=>{
+    const desde=new Date(s.desde); desde.setHours(0,0,0,0);
+    const hasta=new Date(s.hasta); hasta.setHours(23,59,59,999);
+    return hoy>=desde&&hoy<=hasta;
+  })||null;
+}
+
+function movimientoEnSemanaDashboard(d,semana){
+  if(d.fecha){
+    const f=new Date(d.fecha+'T12:00:00');
+    const desde=new Date(semana.desde); desde.setHours(0,0,0,0);
+    const hasta=new Date(semana.hasta); hasta.setHours(23,59,59,999);
+    return f>=desde&&f<=hasta;
+  }
+  return Number(d._semana||d.semana||1)===Number(semana.num);
+}
+
+function renderMovimientosSemana(mesMov){
+  const el=document.getElementById('recentMovements'); if(!el) return;
+  const periodoKey=`${anioVista}-${mesVista}`;
+  if(semanaDashboardPeriodoVista!==periodoKey){
+    semanaDashboardPeriodoVista=periodoKey;
+    semanaDashboardVista=null;
+  }
+  const semanas=getSemanas(mesVista,anioVista);
+  if(!semanas.length){ el.innerHTML='<div class="dashboard-empty">Este período no tiene semanas configuradas.</div>'; return; }
+  const actual=getSemanaActualDashboard(semanas);
+  if(semanaDashboardVista===null||!semanas.some(s=>Number(s.num)===Number(semanaDashboardVista))) semanaDashboardVista=Number(actual?.num??semanas[0].num);
+  const semana=semanas.find(s=>Number(s.num)===Number(semanaDashboardVista))||semanas[0];
+  const indice=semanas.indexOf(semana);
+  const esActual=actual&&Number(actual.num)===Number(semana.num);
+  const label=document.getElementById('dashboardWeekLabel'); if(label) label.textContent=`${semana.label||`Semana ${semana.num}`}${esActual?' (actual)':''}`;
+  const fechas=document.getElementById('dashboardWeekDates'); if(fechas) fechas.textContent=`Selector semanal · ${fmtF(semana.desde)} → ${fmtF(semana.hasta)}`;
+  const botones=document.querySelectorAll('.week-selector>button');
+  if(botones[0]) botones[0].disabled=indice===0;
+  if(botones[1]) botones[1].disabled=indice===semanas.length-1;
+  const items=[...mesMov].filter(d=>!d.esPagoTarjeta&&movimientoEnSemanaDashboard(d,semana)).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.timestamp||0)-(a.timestamp||0));
+  if(!items.length){ el.innerHTML='<div class="dashboard-empty">Sin movimientos en esta semana.</div>'; return; }
+  el.innerHTML=`<div class="recent-table"><div class="recent-head"><span>Fecha</span><span>Descripción</span><span>Rubro</span><span>Tipo</span><span>Monto</span></div>${items.map(d=>{
+    const rubro=d.tipo==='ingreso'?{label:'Ingresos',icon:'↓'}:getRubro(d.rubro||'sin_rubro');
+    const positivo=d.tipo==='ingreso';
+    return `<button class="recent-row" onclick="editarMov('${d.id}')"><span>${d.fecha?fmtFechaISOcorta(d.fecha):'—'}</span><span class="recent-desc">${d.desc}</span><span>${rubro.icon} ${rubro.label}</span><span><i class="recent-type ${positivo?'pos':'neg'}">${positivo?'Ingreso':'Gasto'}</i></span><strong class="${positivo?'pos':'neg'}">${positivo?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`;
+  }).join('')}</div>`;
+}
+
+window.cambiarSemanaDashboard=dir=>{
+  const semanas=getSemanas(mesVista,anioVista); if(!semanas.length) return;
+  let indice=semanas.findIndex(s=>Number(s.num)===Number(semanaDashboardVista));
+  if(indice<0) indice=0;
+  indice=Math.max(0,Math.min(semanas.length-1,indice+dir));
+  semanaDashboardVista=Number(semanas[indice].num);
+  renderMovimientosSemana(window._mesMov||[]);
+};
+
+function renderProximosMovimientos(mesMov){
+  const el=document.getElementById('upcomingMovements'); if(!el) return;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  let items=mesMov.filter(d=>d.fecha&&!d.esPagoTarjeta&&new Date(d.fecha+'T12:00:00')>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
+  if(!items.length) items=mesMov.filter(d=>d.fecha&&!d.esPagoTarjeta).sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
+  if(!items.length){ el.innerHTML='<div class="dashboard-empty">Sin próximos movimientos.</div>'; return; }
+  el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${d.desc}</strong><small>${d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
+}
+
 function renderResumen(){
   const container=document.getElementById('movPorSemana');
   const openSemanas=container.innerHTML?new Set([...container.querySelectorAll('.sem-group.open')].map(el=>el.id.replace('semgroup-',''))):new Set();
@@ -5547,9 +6048,10 @@ function renderResumen(){
   document.getElementById('sumFijoDeben').textContent=fmtARS(totalMeDeben);
   document.getElementById('sumFijoDebo').textContent=fmtARS(totalDebo);
 
-  const tarConDeuda=tarjetas.filter(t=>mesMov.some(d=>d.tipo==='tarjeta'&&d.tarjetaId===t.id));
-  document.getElementById('sumTarSub').textContent=tarConDeuda.length?`${tarConDeuda.length} tarjeta${tarConDeuda.length>1?'s':''} con deuda`:'Sin deuda';
   window._mesMov = mesMov;
+  renderDistribucionRubros(mesMov);
+  renderMovimientosSemana(mesMov);
+  renderProximosMovimientos(mesMov);
   // re-render paneles si están abiertos
   if(panelIngOpen) renderMovPanel('ing');
   if(panelGasOpen) renderMovPanel('gas');
@@ -5643,8 +6145,9 @@ function renderResumen(){
     const cuotaTag=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif;font-weight:700">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const _fmtFecha = f => { if(!f) return ''; const p=f.split('-'); return p[2]+'/'+p[1]; };
     const _fechaLabel = d.fecha ? ' · '+_fmtFecha(d.fecha) : '';
+    const _rubroLabel = d.tipo==='ingreso'||d.esPagoTarjeta ? '' : ` · ${getRubro(d.rubro||'sin_rubro').label}`;
     return `<div class="mov-item">
-      <div><div class="mov-nombre">${d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_fechaLabel}</div></div>
+      <div><div class="mov-nombre">${d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
       <div style="display:flex;align-items:center;gap:4px">
         ${confirmBtn}
         <div class="mov-monto ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'-'}${fmtARS(toARS(d.monto,d.moneda))}</div>
@@ -5670,20 +6173,23 @@ function renderResumen(){
   }
 
   let html='';
+  const maxSaldo=Math.max(1,...grupos.map(g=>Math.abs(g.sI-g.sG-g.sPag-(g.sTar||0))));
   for(const g of grupos){
     const isOpen = openSemanas.has(g.id);
     const saldoGrupo = g.sI-g.sG-g.sPag-(g.sTar||0);
     const saldoColor = saldoGrupo>=0 ? 'var(--green)' : 'var(--red)';
     const hasContent = g.movs.length || (g.tarjetas?.length);
     const saldoTxt = hasContent ? fmtARS(saldoGrupo) : '';
+    const saldoPct = hasContent ? Math.max(4,Math.round(Math.abs(saldoGrupo)/maxSaldo*100)) : 0;
     const bodyContent = hasContent
       ? `${(g.tarjetas||[]).map(renderTarjetaResumenItem).join('')}${g.movs.map(renderMovItem).join('')}`
       : '<div style="padding:14px 16px;color:var(--muted);font-size:13px">Sin movimientos</div>';
     html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}">
       <div class="sem-header" onclick="toggleSemana('${g.id}')">
-        <div class="sem-header-left"><span class="sem-chevron">▾</span>
-          <div><div class="sem-title">${g.label}</div><div class="sem-fechas">📅 ${g.fechas}</div></div>
+        <div class="sem-header-left"><span class="sem-calendar">▦</span><span class="sem-chevron">▾</span>
+          <div><div class="sem-title">${g.label}</div><div class="sem-fechas">${g.fechas}</div></div>
         </div>
+        <div class="sem-balance-track"><span style="width:${saldoPct}%;background:${saldoColor}"></span></div>
         <div class="sem-saldo" style="color:${saldoColor}">${saldoTxt}</div>
       </div>
       <div class="sem-body mov-list">${bodyContent}</div>
@@ -6132,6 +6638,7 @@ window.superAgregarAGastos = () => {
         <input id="superNombreGasto" type="text" value="${nombre}"
           style="width:100%;background:rgba(243,236,255,.5);border:1.5px solid var(--border);border-radius:12px;padding:12px 16px;color:var(--text);font-size:15px;outline:none;">
       </div>
+      <div class="modal-group" style="text-align:left;margin-bottom:12px"><label>Rubro</label><select id="superRubro">${rubroOptionsHTML('compras')}</select></div>
       <div class="modal-group" style="text-align:left;margin-bottom:16px">
         <label>Fecha</label>
         <div class="date-picker-wrap" id="superDpWrap">
@@ -6159,6 +6666,7 @@ window.superAgregarAGastos = () => {
 
 window.superConfirmarGasto = async (total, nombre) => {
   const fecha = document.getElementById('superFecha')?.value || null;
+  const rubro = document.getElementById('superRubro')?.value || 'compras';
   document.querySelector('.modal-overlay')?.remove();
   try{
     const f = fecha ? new Date(fecha+'T12:00:00') : new Date();
@@ -6166,7 +6674,7 @@ window.superConfirmarGasto = async (total, nombre) => {
     await addDoc(userCol('movimientos'), {
       tipo: 'gasto', desc: nombre, monto: total,
       mes: p.mes, anio: p.anio, semana: p.semana,
-      moneda: 'ARS', timestamp: Date.now(), confirmado: false,
+      moneda: 'ARS', timestamp: Date.now(), confirmado: false, rubro,
       fecha: fecha,
       recordatorio: false
     });
@@ -6751,6 +7259,7 @@ function cfAplicarTipoUI() {
   document.getElementById('cfMontoModoToggle')?.classList.toggle('visible', esCredito);
   const recWrap = document.getElementById('cfRecordatorioWrap');
   if(recWrap) recWrap.style.display = (tipoBase === 'gasto' || esCredito) ? 'block' : 'none';
+  document.getElementById('cfRubroWrap')?.classList.toggle('visible', tipoBase === 'gasto' || esCredito);
 
   document.getElementById('cf-btn-sub-personal')?.classList.toggle('active', cfPopupState.subtipoActual === 'personal');
   document.getElementById('cf-btn-sub-tarjeta')?.classList.toggle('active', cfPopupState.subtipoActual === 'tarjeta');
@@ -6946,6 +7455,8 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
             <label>Descripción</label>
             <input type="text" id="cfDesc" placeholder="Ej: Comida, Luz, Cuota...">
           </div>
+
+          <div class="form-group rubro-field" id="cfRubroWrap"><label>Rubro</label><select id="cfRubro">${rubroOptionsHTML(g.rubro||'otros')}</select></div>
 
           <div class="form-group">
             <label id="cfLabelMonto">Monto Total</label>
@@ -7238,6 +7749,7 @@ window.cfGuardarCompartido = async () => {
   const montoRaw = cfMontoGetValue();
   const fechaVal = document.getElementById('cfFecha')?.value || null;
   const recordatorio = !!document.getElementById('cfRecordatorio')?.checked;
+  const rubro = document.getElementById('cfRubro')?.value || 'otros';
   const btn = document.getElementById('cfBtnGuardar');
   const esDuplicado = window._compartidoPendiente?.modo === 'duplicar';
 
@@ -7320,6 +7832,7 @@ window.cfGuardarCompartido = async () => {
               grupoId,
               confirmado: true,
               fecha: fechaCuota,
+              rubro,
               recordatorio,
               ...(esDuplicado ? {} : { compartidoPor: window._compartidoPendiente.compartidoPor || '' })
             };
@@ -7349,6 +7862,7 @@ window.cfGuardarCompartido = async () => {
             timestamp: Date.now() + i,
             confirmado: true,
             fecha: fechaDestino || null,
+            rubro,
             recordatorio,
             ...(esDuplicado ? {} : { compartidoPor: window._compartidoPendiente.compartidoPor || '' })
           };

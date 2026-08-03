@@ -527,7 +527,7 @@ window.doLogin = async () => {
   try {
     await setPersistence(auth, browserLocalPersistence);
     await signInWithEmailAndPassword(auth, email, pass);
-    window.location.href = '/app';
+    window.location.href = 'app.html';
   } catch(e) {
     const errores = {
       'auth/invalid-credential': 'Email o contraseña incorrectos',
@@ -654,7 +654,7 @@ function showMsg(el, txt, tipo) {
   el.className = 'msg ' + tipo;
 }
 
-window.olvidoPass = () => { window.location.href = '/reset'; };
+window.olvidoPass = () => { window.location.href = 'reset.html'; };
 </script>
 
 </body>
