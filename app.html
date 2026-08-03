@@ -693,6 +693,40 @@
   }
   .mov-panel-item:last-child { border-bottom: none; }
   .mov-panel-monto { font-family: Arial Black,sans-serif; font-weight: 700; font-size: 14px; }
+  body.summary-fullscreen-open { overflow:hidden; }
+  .summary-fullscreen-panel {
+    position:fixed; inset:auto; top:50%; left:50%; z-index:420;
+    width:min(900px,calc(100vw - 48px)); max-width:none !important;
+    height:min(720px,calc(100dvh - 72px)); margin:0 !important;
+    border:1px solid var(--border) !important; border-radius:22px !important;
+    background:color-mix(in srgb,var(--bg) 74%,var(--card));
+    box-shadow:0 24px 70px var(--surface-shadow) !important;
+    overflow-x:hidden !important; overflow-y:auto !important; overscroll-behavior:contain;
+    transform:translate(-50%,-50%); animation:tarjetasPopupIn .2s ease both !important;
+  }
+  @keyframes summaryFullscreenIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .summary-panel-backdrop { position:fixed; inset:0; z-index:410; background:rgba(30,24,58,.3); backdrop-filter:blur(8px); animation:fadeSlideIn .18s ease both; }
+  @keyframes tarjetasPopupIn {
+    from { opacity:0; transform:translate(-50%,calc(-50% + 12px)) scale(.985); }
+    to { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  }
+  .summary-fullscreen-panel>.mov-panel-header,
+  .summary-fullscreen-panel>.tarjetas-panel-header,
+  .summary-fullscreen-panel>.fijo-panel-header {
+    position:sticky; top:0; z-index:3; min-height:62px;
+    padding:max(14px,env(safe-area-inset-top)) max(20px,env(safe-area-inset-right)) 14px max(20px,env(safe-area-inset-left));
+    background:color-mix(in srgb,var(--card) 88%,transparent); backdrop-filter:blur(16px);
+    box-shadow:0 1px 0 var(--border),0 8px 24px var(--surface-shadow);
+  }
+  .summary-fullscreen-panel>.mov-panel-header .mov-panel-title,
+  .summary-fullscreen-panel>.tarjetas-panel-header .tarjetas-panel-title,
+  .summary-fullscreen-panel>.fijo-panel-header .fijo-panel-title { font-size:18px; }
+  .detail-panel-close {
+    width:38px; height:38px; padding:0; flex-shrink:0; display:grid; place-items:center;
+    border:1px solid var(--border); border-radius:11px; background:var(--card2); color:var(--muted);
+    font-size:18px; line-height:1; cursor:pointer; transition:background .15s,border-color .15s,color .15s,transform .15s;
+  }
+  .detail-panel-close:hover { border-color:var(--red); background:color-mix(in srgb,var(--red) 10%,var(--card)); color:var(--red); transform:scale(1.04); }
   /* ── BOTÓN DUPLICAR MES ── */
   .btn-duplicar-mes {
     display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -719,6 +753,23 @@
   .action-btn.copy:hover  { color: #00c97a; }
   .action-btn.del2:hover  { color: var(--red); }
   .action-btn.share:hover { color: #ff8c00; }
+  .mov-actions-trigger { display:flex; align-items:center; justify-content:flex-end; gap:5px; flex-wrap:nowrap !important; }
+  .mov-more-btn {
+    width:30px; height:28px; padding:0 0 7px; border:1px solid transparent; border-radius:9px;
+    background:transparent; color:var(--muted); cursor:pointer; font-family:Arial Black,sans-serif;
+    font-size:19px; line-height:1; letter-spacing:1px; transition:background .15s,border-color .15s,color .15s;
+  }
+  .mov-more-btn:hover,.mov-more-btn[aria-expanded="true"] { background:rgba(108,140,255,.1); border-color:var(--border); color:var(--blue); }
+  .mov-actions-popover {
+    position:fixed; z-index:6200; display:flex; flex-direction:column; align-items:stretch; gap:2px; min-width:168px; padding:7px;
+    border:1px solid var(--border); border-radius:12px; background:var(--card,#fff);
+    box-shadow:0 12px 32px rgba(56,43,112,.2); animation:fadeSlideIn .14s ease both;
+  }
+  .mov-actions-popover .action-btn { width:100%; height:38px; padding:0 11px; display:flex; align-items:center; justify-content:flex-start; gap:9px; font-size:14px; text-align:left; }
+  .mov-actions-popover .mov-action-icon { width:20px; display:inline-flex; justify-content:center; flex-shrink:0; }
+  .mov-actions-popover .mov-action-label { color:var(--text); font-size:13px; font-weight:700; }
+  .mov-actions-popover .action-btn.del2 { margin-top:2px; border-top:1px solid var(--border); border-radius:0 0 8px 8px; }
+  .mov-actions-popover .action-btn.del2 .mov-action-label { color:var(--red); }
 
 
   /* ── MODAL ── */
@@ -1720,6 +1771,41 @@
   .sem-balance-track span { display:block; height:100%; border-radius:inherit; box-shadow:0 0 8px currentColor; }
   .weekly-dashboard-panel .sem-saldo { padding:0; font-size:12px; text-align:right; }
   .weekly-dashboard-panel .sem-info-side-btn { display:none; }
+  .balance-panel-header { gap:10px; }
+  .balance-panel-header h3 { min-width:150px; white-space:nowrap; }
+  .balance-view-toggle { display:flex; align-items:center; gap:2px; padding:3px; border:1px solid var(--border); border-radius:11px; background:var(--card2); }
+  .balance-view-btn { min-width:64px; height:30px; padding:0 9px; border:1px solid transparent; border-radius:8px; background:transparent; color:var(--muted); font-size:11px; font-weight:800; cursor:pointer; transition:background .15s,border-color .15s,color .15s,box-shadow .15s; }
+  .balance-view-btn:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 8%,transparent); }
+  .balance-view-btn.active { color:var(--blue); border-color:color-mix(in srgb,var(--blue) 35%,var(--border)); background:color-mix(in srgb,var(--blue) 14%,var(--card)); box-shadow:0 4px 12px color-mix(in srgb,var(--blue) 18%,transparent); }
+  .balance-week-picker { display:flex; align-items:center; gap:4px; }
+  .balance-week-picker[hidden] { display:none; }
+  .dashboard-heading .mes-nav>button,
+  .balance-week-picker>button { width:30px; height:30px; padding:0; border:1px solid var(--border); border-radius:9px; background:var(--card2); color:var(--blue); font-size:17px; cursor:pointer; box-shadow:none; transition:background .15s,border-color .15s,opacity .15s; }
+  .dashboard-heading .mes-nav>button { flex:0 0 30px; }
+  .dashboard-heading .mes-nav>button:hover:not(:disabled),
+  .balance-week-picker>button:hover:not(:disabled) { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 10%,var(--card)); box-shadow:none; }
+  .dashboard-heading .mes-nav>button:disabled,
+  .balance-week-picker>button:disabled { opacity:.35; cursor:not-allowed; }
+  .balance-week-copy { min-width:68px; display:flex; flex-direction:column; align-items:center; line-height:1.12; }
+  .balance-week-copy strong { color:var(--blue); font-family:Arial Black,sans-serif; font-size:11px; white-space:nowrap; }
+  .balance-week-copy small { color:var(--muted); font-size:8px; margin-top:3px; white-space:nowrap; }
+  .balance-week-saldo { min-width:74px; padding:7px 7px; border-radius:8px; background:var(--card2); font-family:Arial Black,sans-serif; font-size:11px; text-align:center; white-space:nowrap; }
+  .balance-selection-summary { display:inline-flex; align-items:center; gap:6px; min-height:30px; margin-right:auto; padding:5px 9px; border:1px solid color-mix(in srgb,var(--blue) 38%,var(--border)); border-radius:9px; background:color-mix(in srgb,var(--blue) 11%,var(--card)); color:var(--blue); white-space:nowrap; }
+  .balance-selection-summary[hidden] { display:none; }
+  .balance-selection-summary span { font-size:11px; font-weight:800; }
+  .balance-selection-summary strong { font-family:'Arial Black',sans-serif; font-size:12px; }
+  .balance-selection-summary.positive strong { color:var(--green); }
+  .balance-selection-summary.negative strong { color:var(--red); }
+  .weekly-dashboard-panel.balance-week-mode #movPorSemana { padding-top:0; }
+  .balance-week-detail { margin-top:8px; border:1px solid var(--border); border-radius:11px; overflow:hidden; background:var(--card2); }
+  .balance-selectable { -webkit-touch-callout:none; user-select:none; }
+  .balance-mov-copy { min-width:0; flex:1; }
+  .balance-select-check { width:0; height:24px; flex:0 0 0; display:grid; place-items:center; overflow:hidden; opacity:0; border:1.5px solid var(--border); border-radius:6px; background:var(--card); color:#fff; font-family:'Arial Black',sans-serif; font-size:13px; transform:scale(.75); transition:width .16s,flex-basis .16s,opacity .16s,transform .16s,background .16s,border-color .16s; pointer-events:none; }
+  .weekly-dashboard-panel.balance-selection-mode .balance-select-check { width:24px; flex-basis:24px; opacity:1; transform:scale(1); }
+  .weekly-dashboard-panel.balance-selection-mode .balance-selectable { cursor:pointer; touch-action:pan-y; }
+  .weekly-dashboard-panel.balance-selection-mode .balance-selectable.balance-selected { background:color-mix(in srgb,var(--blue) 10%,var(--card2)); }
+  .balance-selectable.balance-selected .balance-select-check { border-color:var(--blue); background:linear-gradient(135deg,var(--blue),var(--accent)); box-shadow:0 4px 12px color-mix(in srgb,var(--blue) 28%,transparent); }
+  .balance-selectable.balance-long-pressing { background:color-mix(in srgb,var(--blue) 7%,var(--card2)); }
   .rubro-chart-layout { display:grid; grid-template-columns:145px minmax(0,1fr); gap:14px; align-items:center; padding:20px 16px 16px; }
   .rubro-donut { width:138px; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--border) 55%,transparent); }
   .rubro-donut>div { width:72px; aspect-ratio:1; border-radius:50%; background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 0 0 1px var(--border); }
@@ -1727,10 +1813,26 @@
   .rubro-donut strong { font-family:'Arial Black',sans-serif; color:var(--text); font-size:12px; margin-top:3px; }
   .rubro-legend { min-width:0; }
   .rubro-legend-row { display:grid; grid-template-columns:8px minmax(70px,1fr) auto 28px; gap:7px; align-items:center; min-height:25px; font-size:10px; }
+  .rubro-legend-btn { width:100%; padding:3px 5px; border:0; border-radius:8px; background:transparent; color:inherit; font-family:inherit; text-align:left; cursor:pointer; transition:background .15s,transform .15s; }
+  .rubro-legend-btn:hover,.rubro-legend-btn:focus-visible { background:color-mix(in srgb,var(--blue) 9%,transparent); outline:none; transform:translateX(2px); }
   .rubro-dot { width:8px; height:8px; border-radius:50%; }
   .rubro-legend-name { color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .rubro-legend-row strong { color:var(--text); font-size:10px; }
   .rubro-legend-row small { color:var(--muted); text-align:right; }
+  .rubro-detail-modal { max-width:580px; padding:0; overflow:hidden; }
+  .rubro-detail-head { display:flex; align-items:center; gap:11px; padding:18px 18px 14px; border-bottom:1px solid var(--border); background:color-mix(in srgb,var(--card) 88%,transparent); }
+  .rubro-detail-icon { width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 12%,transparent); color:var(--blue); font-size:17px; }
+  .rubro-detail-copy { min-width:0; flex:1; }
+  .rubro-detail-copy strong { display:block; color:var(--text); font-family:Arial Black,sans-serif; font-size:15px; }
+  .rubro-detail-copy small { display:block; margin-top:2px; color:var(--muted); font-size:10px; }
+  .rubro-detail-list { max-height:min(62vh,520px); overflow:auto; }
+  .rubro-detail-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px; align-items:center; padding:12px 18px; border-bottom:1px solid color-mix(in srgb,var(--border) 62%,transparent); cursor:context-menu; }
+  .rubro-detail-row:last-child { border-bottom:0; }
+  .rubro-detail-row-copy { min-width:0; }
+  .rubro-detail-row-copy strong { display:block; color:var(--text); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .rubro-detail-row-copy small { display:block; margin-top:3px; color:var(--muted); font-size:10px; }
+  .rubro-detail-amount { color:var(--red); font-family:Arial Black,sans-serif; font-size:12px; white-space:nowrap; }
+  .rubro-detail-total { display:flex; justify-content:space-between; gap:12px; padding:14px 18px; border-top:1px solid var(--border); background:var(--card2); color:var(--text); font-family:Arial Black,sans-serif; font-size:13px; }
   .upcoming-row { width:100%; display:grid; grid-template-columns:38px minmax(0,1fr) 42px auto; gap:8px; align-items:center; padding:9px 12px; border:0; border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
   .upcoming-row:last-child { border-bottom:0; }
   .upcoming-row:hover,.recent-row:hover { background:color-mix(in srgb,var(--blue) 6%,transparent); }
@@ -1840,20 +1942,49 @@
     .header-right { gap:7px; }.sync-label { font-size:0; }.sync-dot { margin-right:0; }.user-badge { display:none; }.logout-btn { padding:6px 10px; }
     .usd-bar { padding:8px 10px; }.usd-pill { min-width:74px; padding:6px 8px; }.usd-pill-val { font-size:13px; }.usd-bar-right { gap:6px; }
     .tab { padding:12px 6px; font-size:12px; }.page { padding:14px 12px 32px; }
-    .dashboard-heading { align-items:flex-end; margin-bottom:14px; }.dashboard-heading h2 { font-size:18px; }.dashboard-eyebrow { display:none; }
-    .dashboard-heading .mes-nav { min-width:0; gap:8px; }.dashboard-heading .mes-nav span { min-width:82px; font-size:12px; }.mes-nav button { width:30px; height:30px; }
-    .summary-grid { gap:9px; margin-bottom:14px; }.sum-card { min-width:0; min-height:88px; border-radius:15px; padding:14px 12px; }
-    .sum-card .label { font-size:9px; letter-spacing:.65px; margin-bottom:7px; }.sum-card .value { font-size:clamp(17px,5.2vw,21px); overflow-wrap:anywhere; }.sum-card.fijo .value { font-size:clamp(14px,4.1vw,18px); }.sum-card .sub-label { font-size:9px; }
+    .dashboard-heading { align-items:flex-end; gap:8px; margin-bottom:14px; }.dashboard-heading h2 { font-size:18px; white-space:nowrap; }.dashboard-eyebrow { display:none; }
+    .dashboard-heading .mes-nav { min-width:0; gap:6px; }.dashboard-heading .mes-nav span { min-width:74px; font-size:12px; }
+    .dashboard-heading .mes-nav>button,.balance-week-picker>button { width:28px; height:28px; }
+    .dashboard-heading .mes-nav>button { flex-basis:28px; }
+    .summary-grid { gap:7px; margin-bottom:12px; }.sum-card { min-width:0; min-height:68px; border-radius:13px; padding:10px 11px; }
+    .sum-card .label { font-size:9px; line-height:1.15; letter-spacing:.55px; margin-bottom:4px; }.sum-card .value { font-size:clamp(16px,5vw,20px); line-height:1.12; overflow-wrap:anywhere; }.sum-card.fijo .value { font-size:clamp(14px,4vw,17px); }.sum-card .sub-label { margin-top:2px; font-size:9px; }
     .dashboard-main,.dashboard-left-column,.dashboard-right-column { gap:12px; }.dashboard-panel { border-radius:14px; }
     .weekly-movements-header { flex-wrap:wrap; }.weekly-movements-header h3 { min-width:170px; }.week-selector { margin-left:auto; }
+    .balance-panel-header { align-items:center; justify-content:center; flex-wrap:wrap; gap:8px 4px; padding:10px; }
+    .balance-panel-header::after { content:""; order:2; flex-basis:100%; height:0; }
+    .balance-panel-header .dashboard-panel-icon { order:1; }
+    .balance-panel-header h3 { order:1; min-width:0; flex:0 0 auto; font-size:13px; }
+    .balance-week-picker { order:3; width:auto; justify-content:center; gap:3px; }
+    .balance-week-copy { min-width:58px; }
+    .balance-week-copy strong { font-size:10px; }
+    .balance-week-copy small { font-size:7px; }
+    .balance-week-saldo { min-width:68px; padding:6px 5px; font-size:10px; }
+    .balance-selection-summary { order:1; min-height:27px; margin-right:0; padding:4px 7px; gap:4px; }
+    .balance-selection-summary span { font-size:9px; }
+    .balance-selection-summary strong { font-size:10px; }
+    .balance-view-toggle { order:4; margin-left:auto; padding:2px; }
+    .balance-view-btn { min-width:62px; height:32px; padding:0 7px; font-size:10px; }
+    .summary-panel-backdrop { display:none; }
+    .summary-fullscreen-panel {
+      inset:0; top:0; left:0; width:100%; height:100dvh; border:0 !important; border-radius:0 !important;
+      box-shadow:none !important; transform:none; animation:summaryFullscreenIn .2s ease both !important;
+    }
     .weekly-dashboard-panel .sem-header { grid-template-columns:minmax(128px,1fr) auto; gap:8px; padding:9px; }.sem-balance-track { display:none; }
     .sem-group-row { margin-right:4px; }.sem-header-left { gap:7px; min-width:0; }.weekly-dashboard-panel .sem-title { font-size:12px; }.weekly-dashboard-panel .sem-fechas { font-size:8px; }.weekly-dashboard-panel .sem-saldo { font-size:11px; white-space:nowrap; }
     .rubro-chart-layout { grid-template-columns:120px 1fr; padding:16px 12px; }.rubro-donut { width:116px; }.rubro-donut>div { width:62px; }.rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 25px; font-size:9px; }
     .upcoming-row { grid-template-columns:36px minmax(0,1fr) 38px auto; padding:9px; }.upcoming-amount { font-size:9px; }
-    .mov-item { align-items:flex-start; gap:10px; padding:13px 12px; }.mov-item>div:first-child { min-width:0; }.mov-item>div:last-child { flex-wrap:wrap; justify-content:flex-end; }.mov-nombre { font-size:13px; overflow-wrap:anywhere; }.mov-monto { font-size:13px; white-space:nowrap; }.action-btn { padding:4px; }
+    .mov-item { align-items:flex-start; gap:10px; padding:13px 12px; }.mov-item>.balance-mov-copy { min-width:0; }.mov-item>div:last-child { flex-wrap:wrap; justify-content:flex-end; }.mov-nombre { font-size:13px; overflow-wrap:anywhere; }.mov-monto { font-size:13px; white-space:nowrap; }.action-btn { padding:4px; }
     .cfg-rubro-row { grid-template-columns:10px 34px minmax(0,1fr) auto; }.cfg-rubro-row .cfg-rubro-icon { grid-column:2; grid-row:1; }.cfg-rubro-row .cfg-rubro-action-rename { grid-column:2/4; grid-row:2; }.cfg-rubro-row .cfg-rubro-action-toggle { grid-column:4; grid-row:2; }
     .cfg-icon-editor { padding:17px; }.cfg-icon-grid { grid-template-columns:repeat(6,1fr); gap:6px; }
     .btn-duplicar-mes { margin-top:14px; }
+  }
+
+  @media (max-width: 340px) {
+    .dashboard-heading h2 { font-size:16px; }
+    .dashboard-heading .mes-nav { gap:4px; }
+    .dashboard-heading .mes-nav span { min-width:70px; }
+    .balance-week-picker { width:100%; }
+    .balance-view-toggle { margin-left:0; }
   }
 
 </style>
@@ -2049,38 +2180,40 @@
       <div class="sum-card pre"><div class="label">Presupuesto Est.</div><div class="value" id="sumPre">$0</div></div>
       <div class="sum-card fijo clickable" onclick="toggleFijoPanel()"><div class="label">Mov. Fijos 📌</div><div class="value"><span class="fijo-deben" id="sumFijoDeben">$0</span><span class="fijo-sep">/</span><span class="fijo-debo" id="sumFijoDebo">$0</span></div></div>
     </div>
-    <div class="mov-panel" id="ingPanel" style="display:none;"></div>
-    <div class="mov-panel" id="gasPanel" style="display:none;"></div>
-    <div class="tarjetas-panel" id="tarjetasPanel" style="display:none;">
+    <div class="mov-panel summary-fullscreen-panel" id="ingPanel" role="dialog" aria-modal="true" aria-label="Ingresos del mes" style="display:none;"></div>
+    <div class="mov-panel summary-fullscreen-panel" id="gasPanel" role="dialog" aria-modal="true" aria-label="Gastos del mes" style="display:none;"></div>
+    <div class="tarjetas-panel summary-fullscreen-panel" id="tarjetasPanel" role="dialog" aria-modal="true" aria-label="Tarjetas del mes" style="display:none;">
       <div class="tarjetas-panel-header">
         <span class="tarjetas-panel-title">💳 Tarjetas del mes</span>
-        <span style="color:var(--muted);font-size:12px;cursor:pointer" onclick="toggleTarjetasPanel()">✕ Cerrar</span>
+        <button type="button" class="detail-panel-close" onclick="closeSummaryFullscreen()" aria-label="Cerrar detalle">✕</button>
       </div>
       <div class="tarjeta-tabs" id="tarjetaTabs"></div>
       <div class="tarjeta-detail" id="tarjetaDetail"></div>
     </div>
-    <div class="fijo-panel" id="fijoPanel" style="display:none;">
+    <div class="fijo-panel summary-fullscreen-panel" id="fijoPanel" role="dialog" aria-modal="true" aria-label="Movimientos fijos" style="display:none;">
       <div class="fijo-panel-header">
         <span class="fijo-panel-title">📌 Movimientos Fijos</span>
-        <span style="color:var(--muted);font-size:12px;cursor:pointer" onclick="toggleFijoPanel()">✕ Cerrar</span>
+        <button type="button" class="detail-panel-close" onclick="closeSummaryFullscreen()" aria-label="Cerrar detalle">✕</button>
       </div>
       <div id="fijoDetail"></div>
     </div>
     <div class="dashboard-main">
       <div class="dashboard-left-column">
-        <section class="dashboard-panel recent-dashboard-panel">
-          <div class="dashboard-panel-header weekly-movements-header">
-            <span class="dashboard-panel-icon">▤</span><h3>Movimientos de la semana</h3>
-            <div class="week-selector" title="Selector semanal">
-              <button onclick="cambiarSemanaDashboard(-1)" aria-label="Semana anterior">‹</button>
-              <span><strong id="dashboardWeekLabel">Semana —</strong><small id="dashboardWeekDates">Selector semanal</small></span>
-              <button onclick="cambiarSemanaDashboard(1)" aria-label="Semana siguiente">›</button>
+        <section class="dashboard-panel weekly-dashboard-panel">
+          <div class="dashboard-panel-header balance-panel-header">
+            <span class="dashboard-panel-icon">▦</span><h3>Balance por semana</h3>
+            <div class="balance-selection-summary" id="balanceSelectionSummary" aria-live="polite" hidden><span id="balanceSelectionCount">☑ 0</span><strong id="balanceSelectionTotal">$0</strong></div>
+            <div class="balance-week-picker" id="balanceWeekPicker" hidden>
+              <button type="button" id="balanceWeekPrev" onclick="cambiarSemanaBalance(-1)" aria-label="Semana anterior">‹</button>
+              <span class="balance-week-copy"><strong id="balanceWeekLabel">Semana —</strong><small id="balanceWeekDates">—</small></span>
+              <button type="button" id="balanceWeekNext" onclick="cambiarSemanaBalance(1)" aria-label="Semana siguiente">›</button>
+              <strong class="balance-week-saldo" id="balanceWeekSaldo">$0</strong>
+            </div>
+            <div class="balance-view-toggle" role="group" aria-label="Vista del balance">
+              <button type="button" class="balance-view-btn" data-balance-view="mensual" aria-pressed="false" onclick="setBalanceViewMode('mensual')">Mensual</button>
+              <button type="button" class="balance-view-btn active" data-balance-view="semanal" aria-pressed="true" onclick="setBalanceViewMode('semanal')">Semanal</button>
             </div>
           </div>
-          <div id="recentMovements"></div>
-        </section>
-        <section class="dashboard-panel weekly-dashboard-panel">
-          <div class="dashboard-panel-header"><span class="dashboard-panel-icon">▦</span><h3>Balance por semana</h3></div>
           <div id="movPorSemana"></div>
         </section>
       </div>
@@ -2267,7 +2400,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, setDoc, getDoc, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, setDoc, getDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -2315,6 +2448,22 @@ const now = new Date();
 let mesVista = now.getMonth(), anioVista = now.getFullYear();
 let semanaDashboardVista = null;
 let semanaDashboardPeriodoVista = '';
+let balanceViewMode = 'semanal';
+let balanceSemanaVista = null;
+let balanceSemanaPeriodoVista = '';
+const balanceSelectionState = {
+  active:false,
+  selected:new Set(),
+  longPressTimer:null,
+  pressRow:null,
+  pressId:null,
+  startX:0,
+  startY:0,
+  suppressClickId:null,
+  suppressClickUntil:0,
+  suppressContextUntil:0,
+  historyArmed:false
+};
 
 const usdRateEl = document.getElementById('usdRate');
 let usdTipoActivo = 'oficial'; // 'oficial' | 'tarjeta' | 'manual'
@@ -4363,9 +4512,49 @@ function suscribirMovimientos(){
 // ── PANEL ING/GAS ──────────────────────────────────
 let panelIngOpen=false, panelGasOpen=false;
 
+function syncSummaryFullscreenState(){
+  const panelAbierto=[...document.querySelectorAll('.summary-fullscreen-panel')].find(panel=>panel.style.display!=='none');
+  document.body.classList.toggle('summary-fullscreen-open',!!panelAbierto);
+  let backdrop=document.getElementById('summaryPanelBackdrop');
+  if(panelAbierto){
+    if(!backdrop){
+      backdrop=document.createElement('div');
+      backdrop.id='summaryPanelBackdrop';
+      backdrop.className='summary-panel-backdrop';
+      backdrop.setAttribute('aria-hidden','true');
+      backdrop.onclick=closeSummaryFullscreen;
+      document.body.appendChild(backdrop);
+    }
+  }else{
+    backdrop?.remove();
+  }
+  if(panelAbierto){
+    panelAbierto.scrollTop=0;
+    requestAnimationFrame(()=>panelAbierto.querySelector('.detail-panel-close')?.focus());
+  }
+}
+
+window.closeSummaryFullscreen=()=>{
+  panelIngOpen=false;
+  panelGasOpen=false;
+  panelFijoOpen=false;
+  document.querySelectorAll('.summary-fullscreen-panel').forEach(panel=>panel.style.display='none');
+  document.getElementById('summaryPanelBackdrop')?.remove();
+  document.body.classList.remove('summary-fullscreen-open');
+};
+
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&document.body.classList.contains('summary-fullscreen-open')) closeSummaryFullscreen();
+});
+
 window.toggleMovPanel = tipo => {
-  if(tipo==='ing'){ panelIngOpen=!panelIngOpen; renderMovPanel('ing'); }
-  else            { panelGasOpen=!panelGasOpen; renderMovPanel('gas'); }
+  const abrir=tipo==='ing'?!panelIngOpen:!panelGasOpen;
+  closeSummaryFullscreen();
+  if(!abrir) return;
+  if(tipo==='ing') panelIngOpen=true;
+  else panelGasOpen=true;
+  renderMovPanel(tipo);
+  syncSummaryFullscreenState();
 };
 
 function renderMovPanel(tipo){
@@ -4388,19 +4577,22 @@ function renderMovPanel(tipo){
     const cuota=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const tipoLabel = isIng ? '💚 Ingreso' : (d.tipo==='credito' ? '🟠 Crédito personal' : '🔴 Gasto');
     const semLabel = d._semana || d.semana;
-    return `<div class="mov-panel-item">
+    return `<div class="mov-panel-item" ${movContextMenuAttrs(d.id)}>
       <div>
         <div style="font-size:14px">${d.desc}${usd}${cuota}</div>
         <div style="font-size:11px;color:var(--muted)">${tipoLabel} · Sem. ${semLabel}</div>
       </div>
-      <div class="mov-panel-monto" style="color:${color}">${isIng?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</div>
+      <div class="mov-actions-trigger">
+        <div class="mov-panel-monto" style="color:${color}">${isIng?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</div>
+        ${movMoreButtonHTML(d.id)}
+      </div>
     </div>`;
   }).join('');
 
   panelEl.innerHTML = `
     <div class="mov-panel-header">
       <span class="mov-panel-title" style="color:${color}">${titulo}</span>
-      <span style="color:var(--muted);font-size:12px;cursor:pointer" onclick="toggleMovPanel('${tipo}')">✕</span>
+      <button type="button" class="detail-panel-close" onclick="closeSummaryFullscreen()" aria-label="Cerrar detalle">✕</button>
     </div>
     ${rows}
     <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:space-between;font-family:Arial Black,sans-serif;font-size:13px;font-weight:700;color:${color}">
@@ -4488,7 +4680,7 @@ window.editarMov = id => {
         <label>Monto</label>
         <input id="editMonto" type="text" inputmode="text" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
       </div>
-      ${mov.tipo!=='ingreso' ? `<div class="modal-group"><label>Rubro</label><select id="editRubro">${rubroOptionsHTML(mov.rubro||'sin_rubro')}</select></div>` : ''}
+      ${mov.tipo!=='ingreso' ? `<div class="modal-group"><label>Rubro</label><select id="editRubro">${rubroOptionsHTML(mov.rubro||'sin_rubro')}</select>${mov.grupoId&&['tarjeta','credito'].includes(mov.tipo)?`<small style="display:block;margin-top:6px;color:var(--muted);line-height:1.35">El rubro se aplicará a todas las cuotas de ${mov.tipo==='tarjeta'?'esta compra con tarjeta':'este crédito personal'}.</small>`:''}</div>` : ''}
       <div class="modal-group">
         <label>Fecha</label>
         <div class="date-picker-wrap" id="editDpWrap">
@@ -4525,9 +4717,33 @@ window.editarMov = id => {
   dpModInit('edit', fechaVal);
 };
 window.cerrarModal = () => {
-  const o = document.querySelector('.modal-overlay');
-  if(o) o.remove();
+  const overlays = document.querySelectorAll('.modal-overlay');
+  overlays[overlays.length-1]?.remove();
 };
+function debePropagarRubroACuotas(mov,rubro){
+  return !!(rubro&&mov?.grupoId&&['tarjeta','credito'].includes(mov.tipo));
+}
+async function actualizarMovimientoYRubrosDeCuotas(id,mov,actualizacion,rubro){
+  if(!debePropagarRubroACuotas(mov,rubro)){
+    await updateDoc(userDoc('movimientos',id),actualizacion);
+    return 1;
+  }
+
+  const cuotasSnap=await getDocs(query(userCol('movimientos'),where('grupoId','==',mov.grupoId)));
+  const batch=writeBatch(db);
+  let incluyoMovimientoActual=false;
+  cuotasSnap.docs.forEach(cuotaDoc=>{
+    if(cuotaDoc.id===id){
+      batch.update(cuotaDoc.ref,actualizacion);
+      incluyoMovimientoActual=true;
+    }else{
+      batch.update(cuotaDoc.ref,{rubro});
+    }
+  });
+  if(!incluyoMovimientoActual) batch.update(userDoc('movimientos',id),actualizacion);
+  await batch.commit();
+  return Math.max(cuotasSnap.size,1);
+}
 window.guardarEdicion = async id => {
   const desc  = document.getElementById('editDesc').value.trim();
   const monto = parseMontoInput(document.getElementById('editMonto'));
@@ -4546,8 +4762,9 @@ window.guardarEdicion = async id => {
       const p = getPeriodo(f, movActual?.tipo||'gasto', movActual?.tarjetaId||null);
       extra = { mes: p.mes, anio: p.anio, semana: p.semana };
     }
-    await updateDoc(userDoc('movimientos',id),{ desc, monto, fecha, recordatorio, ...(rubro?{rubro}:{}), ...extra });
-    showToast('✅ Editado!');
+    const actualizacion={ desc, monto, fecha, recordatorio, ...(rubro?{rubro}:{}), ...extra };
+    const cuotasActualizadas=await actualizarMovimientoYRubrosDeCuotas(id,movActual,actualizacion,rubro);
+    showToast(cuotasActualizadas>1?`✅ Editado y rubro aplicado a ${cuotasActualizadas} cuotas!`:'✅ Editado!');
   }catch(e){ showToast('❌ Error al editar',true); }
 };
 
@@ -5477,7 +5694,7 @@ window.copiarMovConfirmar = async id => {
     showToast('⚠️ Ingresá un monto válido', true);
     return;
   }
-  document.querySelector('.modal-overlay')?.remove();
+  cerrarModal();
   const fechasDuplicado = [];
   if(selectedDays.length){
     if(!mov.fecha){
@@ -5515,8 +5732,11 @@ window.copiarMovConfirmar = async id => {
 window.toggleTarjetasPanel=()=>{
   const panel=document.getElementById('tarjetasPanel');
   const showing=panel.style.display!=='none';
-  panel.style.display=showing?'none':'block';
-  if(!showing){ suscribirPagosMesActual(); renderTarjetaTabs(); const _tid = tarjetaPanelActiva || (tarjetas.length ? tarjetas[0].id : '__huerfanos__'); renderTarjetaDetail(_tid); }
+  closeSummaryFullscreen();
+  if(showing) return;
+  panel.style.display='block';
+  suscribirPagosMesActual(); renderTarjetaTabs(); const _tid = tarjetaPanelActiva || (tarjetas.length ? tarjetas[0].id : '__huerfanos__'); renderTarjetaDetail(_tid);
+  syncSummaryFullscreenState();
 };
 function renderTarjetaTabs(){
   const el=document.getElementById('tarjetaTabs');
@@ -5545,7 +5765,9 @@ function renderTarjetaDetail(tid){
         const usdTag=(g.moneda==='USD'||g.moneda==='USD_TAR')?`<span class="usd-tag">${g.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
         const _MC=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
         let _meta; if(g.fecha){const[_y,_m,_d]=g.fecha.split('-').map(Number);_meta=`📅 ${_d} ${_MC[_m-1]}`;}else{_meta=`📅 ${_MC[g.mes]}`;}
-        html+=`<div class="tar-gasto-item"><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div style="display:flex;align-items:center;gap:4px"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div><button class="action-btn edit" onclick="editarMov('${g.id}')" title="Editar">✏️</button><button class="action-btn del2" onclick="borrar('${g.id}')" title="Eliminar">✕</button></div></div>`;
+        const _rubro=getRubro(g.rubro||'sin_rubro');
+        _meta+=` · ${_rubro.icon} ${_rubro.label}`;
+        html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id,'basic')}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${movMoreButtonHTML(g.id,'basic')}</div></div>`;
       }
       html+=`</div>`;
     } else { html+=`<div style="color:var(--muted);font-size:13px;padding:8px 0">Sin gastos este mes</div>`; }
@@ -5567,8 +5789,9 @@ function renderTarjetaDetail(tid){
       if(g.fecha){ const [_y,_m,_d]=g.fecha.split('-').map(Number); _meta=`📅 ${_d} ${_MC[_m-1]}`; }
       else if(g.timestamp){ const _f=new Date(g.timestamp); _meta=`📅 ${_f.getDate()} ${_MC[_f.getMonth()]}`; }
       else { _meta=`📅 ${_MC[g.mes]} ${g.anio}`; }
-      const _eid = g.id.replace(/'/g,"\\'");
-      html+=`<div class="tar-gasto-item"><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div style="display:flex;align-items:center;gap:4px"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div><button class="action-btn edit" onclick="editarMov('${_eid}')" title="Editar">✏️</button><button class="action-btn share" onclick="compartirGasto('${_eid}')" title="Compartir">🤝</button><button class="action-btn copy" onclick="copiarMov('${_eid}')" title="Duplicar">📋</button><button class="action-btn del2" onclick="borrar('${_eid}')" title="Eliminar">✕</button></div></div>`;
+      const _rubro=getRubro(g.rubro||'sin_rubro');
+      _meta+=` · ${_rubro.icon} ${_rubro.label}`;
+      html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id)}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${movMoreButtonHTML(g.id)}</div></div>`;
     }
     html+=`</div>`;
   } else { html+=`<div style="color:var(--muted);font-size:13px;padding:8px 0;margin-bottom:8px">Sin gastos este mes</div>`; }
@@ -5585,6 +5808,7 @@ function renderTarjetaDetail(tid){
 }
 
 window.goTab=t=>{
+  if(t!=='resumen'&&balanceSelectionState.active) salirSeleccionBalance();
   document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
   document.querySelectorAll('.desktop-nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
@@ -5652,6 +5876,7 @@ window.setPeriodo=p=>{
   renderInforme();
 };
 window.cambiarMes=d=>{
+  if(balanceSelectionState.active) salirSeleccionBalance();
   mesVista+=d;
   if(mesVista>11){mesVista=0;anioVista++;} if(mesVista<0){mesVista=11;anioVista--;}
   semanaDashboardVista=null;
@@ -5853,6 +6078,87 @@ window.toggleConfirmar= id => {
   updateDoc(userDoc('movimientos',id),{confirmado: btn?.classList.contains('checked')??true})
     .catch(()=>showToast('❌ Error al sincronizar',true));
 };
+function movMoreButtonHTML(id,modo='full'){
+  const safeId=String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return `<button type="button" class="mov-more-btn" onclick="toggleMovActions(event,'${safeId}',this,'${modo}')" aria-label="Opciones del movimiento" aria-haspopup="menu" aria-expanded="false">…</button>`;
+}
+function movContextMenuAttrs(id,modo='full'){
+  const safeId=String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  return `oncontextmenu="abrirMovActionsDesdeFila(event,'${safeId}',this,'${modo}')"`;
+}
+
+window.cerrarMovActions = () => {
+  document.querySelector('.mov-actions-popover')?.remove();
+  document.querySelectorAll('.mov-more-btn[aria-expanded="true"]').forEach(btn=>btn.setAttribute('aria-expanded','false'));
+  window._movActionsTrigger=null;
+};
+window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => {
+  event?.stopPropagation();
+  const abierto=document.querySelector('.mov-actions-popover');
+  if(abierto&&window._movActionsTrigger===trigger){ cerrarMovActions(); return; }
+  cerrarMovActions();
+  window._movActionsTrigger=trigger;
+  const popover=document.createElement('div');
+  popover.className='mov-actions-popover';
+  popover.dataset.movId=String(id);
+  popover.setAttribute('role','menu');
+  popover.setAttribute('aria-label','Opciones del movimiento');
+  let acciones=[
+    {clase:'edit',icono:'✏️',label:'Editar',accion:()=>editarMov(id)},
+    {clase:'share',icono:'🤝',label:'Compartir',accion:()=>compartirGasto(id)},
+    {clase:'copy',icono:'📋',label:'Duplicar',accion:()=>copiarMov(id)},
+    {clase:'del2',icono:'✕',label:'Eliminar',accion:()=>borrar(id)}
+  ];
+  if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
+  acciones.forEach(({clase,icono,label,accion})=>{
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className=`action-btn ${clase}`;
+    btn.title=label;
+    btn.setAttribute('aria-label',label);
+    btn.setAttribute('role','menuitem');
+    const iconSpan=document.createElement('span');
+    iconSpan.className='mov-action-icon';
+    iconSpan.textContent=icono;
+    const labelSpan=document.createElement('span');
+    labelSpan.className='mov-action-label';
+    labelSpan.textContent=label;
+    btn.append(iconSpan,labelSpan);
+    btn.onclick=e=>{ e.stopPropagation(); cerrarMovActions(); accion(); };
+    popover.appendChild(btn);
+  });
+  document.body.appendChild(popover);
+  if(trigger.matches?.('.mov-more-btn')) trigger.setAttribute('aria-expanded','true');
+  let left,top;
+  if(posicionCursor){
+    left=Math.max(10,Math.min(window.innerWidth-popover.offsetWidth-10,posicionCursor.x));
+    top=Math.max(10,Math.min(window.innerHeight-popover.offsetHeight-10,posicionCursor.y));
+  }else{
+    const rect=trigger.getBoundingClientRect();
+    const leftPreferido=rect.left-popover.offsetWidth-8;
+    left=leftPreferido>=10
+      ? leftPreferido
+      : Math.min(window.innerWidth-popover.offsetWidth-10,rect.right+8);
+    top=Math.max(10,Math.min(window.innerHeight-popover.offsetHeight-10,rect.top+(rect.height-popover.offsetHeight)/2));
+  }
+  popover.style.left=`${left}px`;
+  popover.style.top=`${top}px`;
+};
+window.abrirMovActionsDesdeFila = (event,id,fila,modo='full') => {
+  event.preventDefault();
+  event.stopPropagation();
+  if(balanceSelectionState.active&&Date.now()<balanceSelectionState.suppressContextUntil) return;
+  const trigger=fila.querySelector('.mov-more-btn')||fila;
+  const posicionCursor={x:event.clientX,y:event.clientY};
+  cerrarMovActions();
+  toggleMovActions(event,id,trigger,modo,posicionCursor);
+};
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.mov-actions-popover,.mov-more-btn')) cerrarMovActions();
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') cerrarMovActions(); });
+window.addEventListener('resize',cerrarMovActions);
+window.addEventListener('scroll',cerrarMovActions,true);
 window.borrar = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
@@ -5888,7 +6194,7 @@ window.borrar = id => {
 };
 
 window.borrarConfirmar = async (id, modo) => {
-  document.querySelector('.modal-overlay')?.remove();
+  cerrarModal();
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
   try{
@@ -5915,20 +6221,56 @@ window.borrarConfirmar = async (id, modo) => {
 window.toggleMes=key=>document.getElementById('mescard-'+key).classList.toggle('open');
 window.toggleSemana=id=>{ const el=document.getElementById('semgroup-'+id); if(el) el.classList.toggle('open'); };
 
+function abrirDetalleDistribucionRubro(item){
+  const movimientos=[...(item.movs||[])].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||'')||(b.timestamp||0)-(a.timestamp||0));
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay rubro-detail-overlay';
+  const rows=movimientos.map(d=>{
+    const tarjeta=d.tipo==='tarjeta'?tarjetas.find(t=>t.id===d.tarjetaId):null;
+    const origen=d.tipo==='tarjeta'?`💳 ${tarjeta?.nombre||'Tarjeta de crédito'}`:d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto';
+    let fecha='Sin fecha';
+    if(d.fecha) fecha=fmtFechaISOcorta(d.fecha);
+    else if(d.timestamp) fecha=new Date(d.timestamp).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
+    return `<div class="rubro-detail-row" ${movContextMenuAttrs(d.id)}>
+      <div class="rubro-detail-row-copy"><strong>${d.desc}</strong><small>${fecha} · ${origen}</small></div>
+      <span class="rubro-detail-amount">−${fmtARS(toARS(d.monto,d.moneda))}</span>
+    </div>`;
+  }).join('');
+  overlay.innerHTML=`<div class="modal-box rubro-detail-modal" role="dialog" aria-modal="true" aria-labelledby="rubroDetailTitle">
+    <div class="rubro-detail-head">
+      <span class="rubro-detail-icon">${item.rubro.icon}</span>
+      <span class="rubro-detail-copy"><strong id="rubroDetailTitle">${item.rubro.label}</strong><small>${movimientos.length} ${movimientos.length===1?'movimiento':'movimientos'}</small></span>
+      <button type="button" class="detail-panel-close" aria-label="Cerrar detalle">✕</button>
+    </div>
+    <div class="rubro-detail-list">${rows||'<div class="empty">Sin gastos en este rubro</div>'}</div>
+    <div class="rubro-detail-total"><span>Total</span><span>${fmtARS(item.monto)}</span></div>
+  </div>`;
+  const cerrar=()=>overlay.remove();
+  overlay.querySelector('.detail-panel-close').onclick=cerrar;
+  overlay.onclick=e=>{ if(e.target===overlay) cerrar(); };
+  overlay.addEventListener('keydown',e=>{ if(e.key==='Escape') cerrar(); });
+  document.body.appendChild(overlay);
+  requestAnimationFrame(()=>overlay.querySelector('.detail-panel-close')?.focus());
+}
+
 function renderDistribucionRubros(mesMov){
   const el=document.getElementById('rubroChart'); if(!el) return;
-  const gastos=mesMov.filter(d=>['gasto','credito'].includes(d.tipo)&&!d.esPagoTarjeta);
+  const gastos=mesMov.filter(d=>['gasto','credito','tarjeta'].includes(d.tipo)&&!d.esPagoTarjeta);
   const grupos=new Map();
-  gastos.forEach(d=>{ const id=d.rubro||'sin_rubro'; grupos.set(id,(grupos.get(id)||0)+toARS(d.monto,d.moneda)); });
-  const total=[...grupos.values()].reduce((a,b)=>a+b,0);
+  gastos.forEach(d=>{ const id=d.rubro||'sin_rubro'; if(!grupos.has(id)) grupos.set(id,[]); grupos.get(id).push(d); });
+  const items=[...grupos.entries()].map(([id,movs])=>({id,rubro:getRubro(id),movs,monto:movs.reduce((s,d)=>s+toARS(d.monto,d.moneda),0)})).sort((a,b)=>b.monto-a.monto);
+  const total=items.reduce((a,item)=>a+item.monto,0);
   if(!total){ el.innerHTML='<div class="dashboard-empty"><span>◔</span>Asigná rubros a tus gastos para ver la distribución.</div>'; return; }
-  const items=[...grupos.entries()].map(([id,monto])=>({rubro:getRubro(id),monto})).sort((a,b)=>b.monto-a.monto);
   let cursor=0;
   const segmentos=items.map((item,i)=>{ const ini=cursor; cursor+=item.monto/total*100; return `var(--rubro-${(i%10)+1}) ${ini.toFixed(2)}% ${cursor.toFixed(2)}%`; }).join(',');
   el.innerHTML=`<div class="rubro-chart-layout">
     <div class="rubro-donut" style="background:conic-gradient(${segmentos})"><div><small>Total</small><strong>${fmtARS(total)}</strong></div></div>
-    <div class="rubro-legend">${items.slice(0,7).map((item,i)=>`<div class="rubro-legend-row"><span class="rubro-dot" style="background:var(--rubro-${(i%10)+1})"></span><span class="rubro-legend-name">${item.rubro.label}</span><strong>${fmtARS(item.monto)}</strong><small>${Math.round(item.monto/total*100)}%</small></div>`).join('')}</div>
+    <div class="rubro-legend">${items.map((item,i)=>`<button type="button" class="rubro-legend-row rubro-legend-btn" data-rubro-index="${i}"><span class="rubro-dot" style="background:var(--rubro-${(i%10)+1})"></span><span class="rubro-legend-name">${item.rubro.label}</span><strong>${fmtARS(item.monto)}</strong><small>${Math.round(item.monto/total*100)}%</small></button>`).join('')}</div>
   </div>`;
+  el.querySelectorAll('.rubro-legend-btn').forEach(btn=>{
+    const item=items[Number(btn.dataset.rubroIndex)];
+    btn.onclick=()=>abrirDetalleDistribucionRubro(item);
+  });
 }
 
 function getSemanaActualDashboard(semanas){
@@ -5985,6 +6327,174 @@ window.cambiarSemanaDashboard=dir=>{
   indice=Math.max(0,Math.min(semanas.length-1,indice+dir));
   semanaDashboardVista=Number(semanas[indice].num);
   renderMovimientosSemana(window._mesMov||[]);
+};
+
+function cancelarPulsacionBalance(){
+  if(balanceSelectionState.longPressTimer) clearTimeout(balanceSelectionState.longPressTimer);
+  balanceSelectionState.longPressTimer=null;
+  balanceSelectionState.pressRow?.classList.remove('balance-long-pressing');
+  balanceSelectionState.pressRow=null;
+  balanceSelectionState.pressId=null;
+}
+
+function movimientosSeleccionablesBalance(){
+  const porId=new Map();
+  (window._balanceGrupos||[]).forEach(grupo=>{
+    [...(grupo.tarjetas||[]),...(grupo.movs||[])].forEach(mov=>porId.set(String(mov.id),mov));
+  });
+  return porId;
+}
+
+function actualizarSeleccionBalance(){
+  const panel=document.querySelector('.weekly-dashboard-panel');
+  const summary=document.getElementById('balanceSelectionSummary');
+  const count=document.getElementById('balanceSelectionCount');
+  const totalEl=document.getElementById('balanceSelectionTotal');
+  panel?.classList.toggle('balance-selection-mode',balanceSelectionState.active);
+  if(summary) summary.hidden=!balanceSelectionState.active;
+
+  const movimientos=movimientosSeleccionablesBalance();
+  balanceSelectionState.selected.forEach(id=>{ if(!movimientos.has(id)) balanceSelectionState.selected.delete(id); });
+  const seleccionados=[...balanceSelectionState.selected].map(id=>movimientos.get(id)).filter(Boolean);
+  const total=seleccionados.reduce((s,mov)=>s+movSelectorSignedAmount(mov),0);
+  if(count) count.textContent=`☑ ${seleccionados.length}`;
+  if(totalEl) totalEl.textContent=`${total>0?'+':total<0?'−':''}${fmtARS(Math.abs(total))}`;
+  summary?.classList.toggle('positive',total>0);
+  summary?.classList.toggle('negative',total<0);
+
+  document.querySelectorAll('#movPorSemana .balance-selectable').forEach(row=>{
+    const selected=balanceSelectionState.selected.has(String(row.dataset.balanceSelectId));
+    row.classList.toggle('balance-selected',selected);
+    row.setAttribute('aria-selected',String(selected));
+    const check=row.querySelector('.balance-select-check');
+    if(check) check.textContent=selected?'✓':'';
+  });
+}
+
+function alternarMovimientoBalance(id,row,forzarSeleccion=null){
+  const key=String(id);
+  const selected=forzarSeleccion===null?!balanceSelectionState.selected.has(key):!!forzarSeleccion;
+  if(selected) balanceSelectionState.selected.add(key);
+  else balanceSelectionState.selected.delete(key);
+  if(row){
+    row.classList.toggle('balance-selected',selected);
+    row.setAttribute('aria-selected',String(selected));
+    const check=row.querySelector('.balance-select-check');
+    if(check) check.textContent=selected?'✓':'';
+  }
+  actualizarSeleccionBalance();
+}
+
+function activarSeleccionBalance(id,row){
+  if(balanceSelectionState.active||balanceViewMode!=='semanal') return;
+  cerrarMovActions();
+  balanceSelectionState.active=true;
+  if(!balanceSelectionState.historyArmed){
+    try{
+      history.pushState({...history.state,__balanceSelection:true},'',location.href);
+      balanceSelectionState.historyArmed=true;
+    }catch(e){ console.warn('No se pudo registrar navegación de selección:',e); }
+  }
+  alternarMovimientoBalance(id,row,true);
+}
+
+function salirSeleccionBalance({desdeHistorial=false}={}){
+  cancelarPulsacionBalance();
+  const volverHistorial=balanceSelectionState.historyArmed&&!desdeHistorial;
+  balanceSelectionState.active=false;
+  balanceSelectionState.selected.clear();
+  balanceSelectionState.suppressClickId=null;
+  balanceSelectionState.suppressClickUntil=0;
+  balanceSelectionState.suppressContextUntil=0;
+  balanceSelectionState.historyArmed=false;
+  actualizarSeleccionBalance();
+  if(volverHistorial) setTimeout(()=>history.back(),0);
+}
+window.activarSeleccionBalance=activarSeleccionBalance;
+window.salirSeleccionBalance=salirSeleccionBalance;
+
+const balanceMovContainer=document.getElementById('movPorSemana');
+balanceMovContainer?.addEventListener('pointerdown',event=>{
+  if(balanceSelectionState.active||balanceViewMode!=='semanal'||event.button!==0) return;
+  const row=event.target.closest('.balance-selectable');
+  if(!row||!balanceMovContainer.contains(row)) return;
+  cancelarPulsacionBalance();
+  balanceSelectionState.pressRow=row;
+  balanceSelectionState.pressId=String(row.dataset.balanceSelectId);
+  balanceSelectionState.startX=event.clientX;
+  balanceSelectionState.startY=event.clientY;
+  row.classList.add('balance-long-pressing');
+  balanceSelectionState.longPressTimer=setTimeout(()=>{
+    const pressRow=balanceSelectionState.pressRow;
+    const pressId=balanceSelectionState.pressId;
+    balanceSelectionState.longPressTimer=null;
+    pressRow?.classList.remove('balance-long-pressing');
+    balanceSelectionState.pressRow=null;
+    balanceSelectionState.pressId=null;
+    if(!pressRow||!pressId) return;
+    balanceSelectionState.suppressClickId=pressId;
+    balanceSelectionState.suppressClickUntil=Date.now()+900;
+    balanceSelectionState.suppressContextUntil=Date.now()+900;
+    activarSeleccionBalance(pressId,pressRow);
+    navigator.vibrate?.(25);
+  },650);
+});
+balanceMovContainer?.addEventListener('pointermove',event=>{
+  if(!balanceSelectionState.longPressTimer) return;
+  if(Math.hypot(event.clientX-balanceSelectionState.startX,event.clientY-balanceSelectionState.startY)>12) cancelarPulsacionBalance();
+});
+['pointerup','pointercancel','pointerleave'].forEach(tipo=>balanceMovContainer?.addEventListener(tipo,cancelarPulsacionBalance));
+balanceMovContainer?.addEventListener('click',event=>{
+  if(!balanceSelectionState.active) return;
+  const row=event.target.closest('.balance-selectable');
+  if(!row||!balanceMovContainer.contains(row)) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  const id=String(row.dataset.balanceSelectId);
+  if(balanceSelectionState.suppressClickId===id&&Date.now()<balanceSelectionState.suppressClickUntil){
+    balanceSelectionState.suppressClickId=null;
+    balanceSelectionState.suppressClickUntil=0;
+    return;
+  }
+  alternarMovimientoBalance(id,row);
+},true);
+balanceMovContainer?.addEventListener('keydown',event=>{
+  if(!['Enter',' '].includes(event.key)||balanceViewMode!=='semanal') return;
+  const row=event.target.closest('.balance-selectable');
+  if(!row||!balanceMovContainer.contains(row)) return;
+  event.preventDefault();
+  const id=String(row.dataset.balanceSelectId);
+  if(balanceSelectionState.active) alternarMovimientoBalance(id,row);
+  else activarSeleccionBalance(id,row);
+});
+
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&balanceSelectionState.active){
+    event.preventDefault();
+    salirSeleccionBalance();
+  }
+});
+window.addEventListener('popstate',()=>{
+  if(balanceSelectionState.active||balanceSelectionState.historyArmed) salirSeleccionBalance({desdeHistorial:true});
+});
+
+window.setBalanceViewMode=modo=>{
+  if(!['mensual','semanal'].includes(modo)||balanceViewMode===modo) return;
+  if(balanceSelectionState.active) salirSeleccionBalance();
+  balanceViewMode=modo;
+  cerrarMovActions();
+  renderResumen();
+};
+
+window.cambiarSemanaBalance=dir=>{
+  const grupos=window._balanceGrupos||[];
+  if(!grupos.length) return;
+  let indice=grupos.findIndex(g=>String(g.id)===String(balanceSemanaVista));
+  if(indice<0) indice=0;
+  indice=Math.max(0,Math.min(grupos.length-1,indice+dir));
+  balanceSemanaVista=String(grupos[indice].id);
+  cerrarMovActions();
+  renderResumen();
 };
 
 function renderProximosMovimientos(mesMov){
@@ -6140,29 +6650,32 @@ function renderResumen(){
 
   // Renderizar grupos
   function renderMovItem(d){
+    const balanceSelectId=escapeMovSelectorHtml(String(d.id));
+    const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const usdTag=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
     const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')"></button>`:'';
     const cuotaTag=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif;font-weight:700">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const _fmtFecha = f => { if(!f) return ''; const p=f.split('-'); return p[2]+'/'+p[1]; };
     const _fechaLabel = d.fecha ? ' · '+_fmtFecha(d.fecha) : '';
     const _rubroLabel = d.tipo==='ingreso'||d.esPagoTarjeta ? '' : ` · ${getRubro(d.rubro||'sin_rubro').label}`;
-    return `<div class="mov-item">
-      <div><div class="mov-nombre">${d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
-      <div style="display:flex;align-items:center;gap:4px">
+    return `<div class="mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}" ${movContextMenuAttrs(d.id)}>
+      <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
+      <div class="balance-mov-copy"><div class="mov-nombre">${d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
+      <div class="mov-actions-trigger">
         ${confirmBtn}
         <div class="mov-monto ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'-'}${fmtARS(toARS(d.monto,d.moneda))}</div>
-        <button class="action-btn edit" onclick="editarMov('${d.id}')" title="Editar">✏️</button>
-        <button class="action-btn share" onclick="compartirGasto('${d.id}')" title="Compartir">🤝</button>
-        <button class="action-btn copy" onclick="copiarMov('${d.id}')" title="Duplicar">📋</button>
-        <button class="action-btn del2" onclick="borrar('${d.id}')" title="Eliminar">✕</button>
+        ${movMoreButtonHTML(d.id)}
       </div>
     </div>`;
   }
   function renderTarjetaResumenItem(d){
+    const balanceSelectId=escapeMovSelectorHtml(String(d.id));
+    const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const _fechaLabel = d.fecha ? ' · '+fmtFechaISOcorta(d.fecha) : '';
     const pagadoTxt = d.totalP>0 ? ` · Pagado ${fmtARS(d.totalP)}` : '';
-    return `<div class="mov-item">
-      <div>
+    return `<div class="mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}">
+      <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
+      <div class="balance-mov-copy">
         <div class="mov-nombre">${d.desc}</div>
         <div class="mov-meta">🟠 Crédito tarjeta${_fechaLabel} · Pago día ${d.diaPago}${pagadoTxt}</div>
       </div>
@@ -6172,18 +6685,63 @@ function renderResumen(){
     </div>`;
   }
 
-  let html='';
-  const maxSaldo=Math.max(1,...grupos.map(g=>Math.abs(g.sI-g.sG-g.sPag-(g.sTar||0))));
-  for(const g of grupos){
-    const isOpen = openSemanas.has(g.id);
-    const saldoGrupo = g.sI-g.sG-g.sPag-(g.sTar||0);
-    const saldoColor = saldoGrupo>=0 ? 'var(--green)' : 'var(--red)';
-    const hasContent = g.movs.length || (g.tarjetas?.length);
-    const saldoTxt = hasContent ? fmtARS(saldoGrupo) : '';
-    const saldoPct = hasContent ? Math.max(4,Math.round(Math.abs(saldoGrupo)/maxSaldo*100)) : 0;
-    const bodyContent = hasContent
+  window._balanceGrupos=grupos;
+  const panel=container.closest('.weekly-dashboard-panel');
+  const picker=document.getElementById('balanceWeekPicker');
+  document.querySelectorAll('.balance-view-btn').forEach(btn=>{
+    const activo=btn.dataset.balanceView===balanceViewMode;
+    btn.classList.toggle('active',activo);
+    btn.setAttribute('aria-pressed',String(activo));
+  });
+  panel?.classList.toggle('balance-week-mode',balanceViewMode==='semanal');
+  const periodoBalanceKey=`${anioVista}-${mesVista}-${userConfig.frecuencia||'semanal'}`;
+  if(balanceSemanaPeriodoVista!==periodoBalanceKey){
+    balanceSemanaPeriodoVista=periodoBalanceKey;
+    balanceSemanaVista=null;
+  }
+  const getSaldoGrupo=g=>g.sI-g.sG-g.sPag-(g.sTar||0);
+  const getBodyGrupo=g=>{
+    const hasContent=g.movs.length||(g.tarjetas?.length);
+    return hasContent
       ? `${(g.tarjetas||[]).map(renderTarjetaResumenItem).join('')}${g.movs.map(renderMovItem).join('')}`
       : '<div style="padding:14px 16px;color:var(--muted);font-size:13px">Sin movimientos</div>';
+  };
+
+  if(balanceViewMode==='semanal'){
+    if(picker) picker.hidden=false;
+    const semanaActual=getSemanaActualDashboard(getSemanas(mesVista,anioVista));
+    if(balanceSemanaVista===null||!grupos.some(g=>String(g.id)===String(balanceSemanaVista))){
+      const inicial=grupos.find(g=>String(g.id)===String(semanaActual?.num))||grupos[0]||null;
+      balanceSemanaVista=inicial?String(inicial.id):null;
+    }
+    const indice=Math.max(0,grupos.findIndex(g=>String(g.id)===String(balanceSemanaVista)));
+    const grupo=grupos[indice]||null;
+    const prev=document.getElementById('balanceWeekPrev');
+    const next=document.getElementById('balanceWeekNext');
+    if(prev) prev.disabled=!grupo||indice===0;
+    if(next) next.disabled=!grupo||indice===grupos.length-1;
+    const label=document.getElementById('balanceWeekLabel');
+    const dates=document.getElementById('balanceWeekDates');
+    const saldo=document.getElementById('balanceWeekSaldo');
+    if(label) label.textContent=grupo?.label||'Semana —';
+    if(dates) dates.textContent=grupo?.fechas||'—';
+    const saldoGrupo=grupo?getSaldoGrupo(grupo):0;
+    if(saldo){ saldo.textContent=fmtARS(saldoGrupo); saldo.style.color=saldoGrupo>=0?'var(--green)':'var(--red)'; }
+    container.innerHTML=grupo?`<div class="balance-week-detail mov-list">${getBodyGrupo(grupo)}</div>`:'<div class="empty">Sin movimientos</div>';
+    actualizarSeleccionBalance();
+    return;
+  }
+
+  if(picker) picker.hidden=true;
+  let html='';
+  const maxSaldo=Math.max(1,...grupos.map(g=>Math.abs(getSaldoGrupo(g))));
+  for(const g of grupos){
+    const isOpen=openSemanas.has(g.id);
+    const saldoGrupo=getSaldoGrupo(g);
+    const saldoColor=saldoGrupo>=0?'var(--green)':'var(--red)';
+    const hasContent=g.movs.length||(g.tarjetas?.length);
+    const saldoTxt=hasContent?fmtARS(saldoGrupo):'';
+    const saldoPct=hasContent?Math.max(4,Math.round(Math.abs(saldoGrupo)/maxSaldo*100)):0;
     html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}">
       <div class="sem-header" onclick="toggleSemana('${g.id}')">
         <div class="sem-header-left"><span class="sem-calendar">▦</span><span class="sem-chevron">▾</span>
@@ -6192,27 +6750,25 @@ function renderResumen(){
         <div class="sem-balance-track"><span style="width:${saldoPct}%;background:${saldoColor}"></span></div>
         <div class="sem-saldo" style="color:${saldoColor}">${saldoTxt}</div>
       </div>
-      <div class="sem-body mov-list">${bodyContent}</div>
+      <div class="sem-body mov-list">${getBodyGrupo(g)}</div>
     </div>`;
   }
   container.innerHTML=html||'<div class="empty">Sin movimientos</div>';
-  container.querySelectorAll('.sem-group').forEach(groupEl => {
+  container.querySelectorAll('.sem-group').forEach(groupEl=>{
     if(groupEl.parentElement?.classList.contains('sem-group-row')) return;
-    const row = document.createElement('div');
-    row.className = 'sem-group-row';
-    groupEl.parentNode.insertBefore(row, groupEl);
+    const row=document.createElement('div');
+    row.className='sem-group-row';
+    groupEl.parentNode.insertBefore(row,groupEl);
     row.appendChild(groupEl);
-    const infoBtn = document.createElement('button');
-    infoBtn.type = 'button';
-    infoBtn.className = 'sem-info-side-btn';
-    infoBtn.setAttribute('aria-label', 'Ver detalle del tab semanal');
-    infoBtn.textContent = '💡';
-    infoBtn.onclick = e => {
-      e.stopPropagation();
-      mostrarInfoSemanal();
-    };
+    const infoBtn=document.createElement('button');
+    infoBtn.type='button';
+    infoBtn.className='sem-info-side-btn';
+    infoBtn.setAttribute('aria-label','Ver detalle del tab semanal');
+    infoBtn.textContent='💡';
+    infoBtn.onclick=e=>{ e.stopPropagation(); mostrarInfoSemanal(); };
     row.appendChild(infoBtn);
   });
+  actualizarSeleccionBalance();
 }
 
 function renderInforme(){
@@ -6368,10 +6924,14 @@ function suscribirPagosFijo(fijoId){
 
 let panelFijoOpen=false;
 window.toggleFijoPanel=()=>{
-  panelFijoOpen=!panelFijoOpen;
+  const abrir=!panelFijoOpen;
+  closeSummaryFullscreen();
+  if(!abrir) return;
+  panelFijoOpen=true;
   const panel=document.getElementById('fijoPanel');
-  panel.style.display=panelFijoOpen?'block':'none';
-  if(panelFijoOpen) renderFijoDetail();
+  panel.style.display='block';
+  renderFijoDetail();
+  syncSummaryFullscreenState();
 };
 
 function renderFijoDetail(){
@@ -6667,7 +7227,7 @@ window.superAgregarAGastos = () => {
 window.superConfirmarGasto = async (total, nombre) => {
   const fecha = document.getElementById('superFecha')?.value || null;
   const rubro = document.getElementById('superRubro')?.value || 'compras';
-  document.querySelector('.modal-overlay')?.remove();
+  cerrarModal();
   try{
     const f = fecha ? new Date(fecha+'T12:00:00') : new Date();
     const p = getPeriodo(f, 'gasto', null);
