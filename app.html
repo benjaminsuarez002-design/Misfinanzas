@@ -1983,7 +1983,8 @@
     .desktop-calc-row.desktop-nav-item { height:auto; min-height:60px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:normal; line-height:1.15; }
     .desktop-calc-row.desktop-nav-item span { width:16px; }
     .desktop-calc-row.desktop-nav-item:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,transparent); }
-    .desktop-bottom-actions { position:fixed; z-index:190; right:16px; bottom:64px; width:auto; display:flex; justify-content:flex-end; gap:10px; }
+    .desktop-bottom-actions { position:fixed; z-index:190; left:18px; bottom:92px; width:178px; display:flex; justify-content:flex-end; gap:10px; }
+    .desktop-bottom-actions button:last-child { flex:1; }
     .desktop-bottom-actions button { height:32px; padding:0 14px; border:1px solid var(--border); border-radius:9px; background:var(--card); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:11px; font-weight:800; cursor:pointer; }
     .desktop-bottom-actions button:first-child { width:46px; padding:0; font-size:15px; }
     .desktop-help { position:fixed; z-index:190; left:14px; bottom:14px; width:178px; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:12px; padding:11px; background:var(--card2); color:var(--blue); text-align:left; cursor:pointer; }
@@ -2123,6 +2124,7 @@
   <div class="spinner"></div>
   <p>Cargando datos...</p>
 </div>
+<script>if(new URLSearchParams(location.search).get('widget')==='1')document.getElementById('loadingOverlay').classList.add('hidden');</script>
 
 <!-- LOGIN -->
 <div id="loginScreen" style="display:none;">
@@ -2571,6 +2573,7 @@ const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includ
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 const visualTestMode = location.hostname === '127.0.0.1' && new URLSearchParams(location.search).has('visualTest');
+const widgetEntryMode = new URLSearchParams(location.search).get('widget') === '1';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DEFAULT_RUBROS = [
@@ -2672,6 +2675,10 @@ onAuthStateChanged(auth, user => {
   if(user) {
     currentUser = user;
     document.getElementById('loginScreen').style.display = 'none';
+    if(widgetEntryMode){
+      document.getElementById('loadingOverlay').classList.add('hidden');
+      aplicarEntradaWidget();
+    }
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = (user.email||'').split('@')[0];
     cargarConfig().then(() => iniciarApp());
@@ -2758,7 +2765,14 @@ function limpiarApp() {
     personalizacion: window.MisFinanzasTheme?.getCurrent?.() || null
   };
 }
-function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); }
+function aplicarEntradaWidget(){
+  const params=new URLSearchParams(location.search);
+  if(params.get('widget')!=='1') return;
+  const tipo=params.get('tipo');
+  goTab('cargar');
+  if(['ingreso','gasto','credito','fijo'].includes(tipo)) setTipo(tipo);
+}
+function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); setTimeout(aplicarEntradaWidget,0); }
 
 
 // ── CONFIG ──────────────────────────────────────────
@@ -4655,7 +4669,7 @@ window.borrarPago=async(tid,mes,anio,pid)=>{
 
 function suscribirMovimientos(){
   // Tapar la pantalla hasta que lleguen los datos reales del usuario
-  document.getElementById('loadingOverlay').classList.remove('hidden');
+  if(!widgetEntryMode) document.getElementById('loadingOverlay').classList.remove('hidden');
   const q=query(userCol('movimientos'),orderBy('timestamp','desc'));
   movListener=onSnapshot(q,snap=>{
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
