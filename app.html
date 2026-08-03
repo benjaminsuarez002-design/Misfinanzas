@@ -432,6 +432,85 @@
   .btn-submit:active { transform: scale(.98); }
   .btn-submit:disabled { opacity: .5; cursor: not-allowed; }
 
+  /* ── CARGAR: FLUJO COMPACTO ── */
+  #tab-cargar .form-card { max-width:720px; margin:0 auto; }
+  .amount-currency-shell { display:flex; align-items:stretch; min-width:0; overflow:visible; border:1.5px solid var(--border); border-radius:12px; background:rgba(243,236,255,.5); transition:border-color .2s,box-shadow .2s; }
+  .amount-currency-shell:focus-within { border-color:var(--blue); box-shadow:0 0 0 3px rgba(108,140,255,.15); }
+  .amount-field-host { min-width:0; flex:1; display:flex; align-items:center; }
+  .amount-field-host .amount-copy-wrap { width:100%; }
+  .amount-field-host input,.amount-field-host .amount-copy-wrap>input { border:0 !important; border-radius:11px 0 0 11px; background:transparent; box-shadow:none !important; }
+  .form-currency-picker { position:relative; flex:0 0 auto; display:flex; align-items:stretch; }
+  .form-currency-trigger { min-width:88px; padding:0 13px; border:0; border-left:1px solid var(--border); border-radius:0 11px 11px 0; background:color-mix(in srgb,var(--blue) 8%,var(--card)); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:12px; font-weight:800; cursor:pointer; }
+  .form-currency-menu { position:absolute; z-index:7300; right:0; top:calc(100% + 7px); width:176px; display:none; gap:5px; padding:7px; border:1px solid var(--border); border-radius:12px; background:var(--card); box-shadow:0 14px 34px var(--surface-shadow); }
+  .form-currency-menu.open { display:grid; }
+  .form-currency-menu .moneda-btn { width:100%; padding:10px; text-align:left; }
+  .credit-config-summary { display:none; align-items:center; gap:11px; margin-bottom:18px; padding:12px; border:1.5px solid color-mix(in srgb,#ff8c00 64%,var(--border)); border-radius:13px; background:color-mix(in srgb,#ff8c00 8%,var(--card)); }
+  .credit-config-summary.visible { display:flex; }
+  .credit-config-summary-icon { width:34px; height:34px; flex:0 0 34px; display:grid; place-items:center; border-radius:10px; background:color-mix(in srgb,#ff8c00 13%,var(--card)); }
+  .credit-config-summary-copy { min-width:0; flex:1; }
+  .credit-config-summary-copy strong { display:block; color:#ff8c00; font-family:'Arial Black',sans-serif; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .credit-config-summary-copy small { display:block; margin-top:3px; color:var(--muted); font-size:11px; }
+  .credit-config-summary-actions { display:flex; align-items:center; gap:5px; }
+  .credit-config-open,.cards-manager-open { height:34px; border:1px solid color-mix(in srgb,#ff8c00 55%,var(--border)); border-radius:9px; background:var(--card); color:#ff8c00; font-family:'Arial Black',sans-serif; font-size:11px; font-weight:800; cursor:pointer; }
+  .credit-config-open { padding:0 11px; }
+  .cards-manager-open { width:34px; padding:0; color:var(--blue); border-color:var(--border); font-size:15px; }
+  .form-detail-row { display:grid; grid-template-columns:1fr; gap:10px; }
+  .form-detail-row.has-rubro { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .form-detail-row>.form-group { min-width:0; }
+  .form-status-row { display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:18px; }
+  .form-status-row.has-recordatorio { grid-template-columns:1fr 1fr; }
+  .status-chip { min-width:0; min-height:48px; display:flex; align-items:center; justify-content:center; gap:8px; margin:0; padding:9px 11px; border:1.5px solid var(--border); border-radius:12px; background:var(--card2); color:var(--muted); text-transform:none; letter-spacing:0; cursor:pointer; transition:background .15s,border-color .15s,color .15s,box-shadow .15s; }
+  .status-chip[hidden] { display:none !important; }
+  .status-chip input { position:absolute; opacity:0; pointer-events:none; width:0; height:0; }
+  .status-chip-icon { width:19px; height:19px; display:grid; place-items:center; border:1.5px solid currentColor; border-radius:5px; font-size:11px; }
+  .status-chip-text { min-width:0; font-family:'Arial Black',sans-serif; font-size:12px; font-weight:800; white-space:nowrap; }
+  .status-chip:has(input:checked) { border-color:color-mix(in srgb,var(--green) 70%,var(--border)); background:color-mix(in srgb,var(--green) 9%,var(--card)); color:var(--green); box-shadow:0 5px 14px color-mix(in srgb,var(--green) 14%,transparent); }
+  .status-chip.reminder:has(input:checked) { border-color:color-mix(in srgb,var(--green) 70%,var(--border)); background:color-mix(in srgb,var(--green) 9%,var(--card)); color:var(--green); box-shadow:0 5px 14px color-mix(in srgb,var(--green) 14%,transparent); }
+  .form-sheet-overlay { position:fixed; inset:0; z-index:7100; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(35,27,65,.42); backdrop-filter:blur(7px); }
+  body.form-sheet-open { overflow:hidden; }
+  .form-sheet-overlay.open { display:flex; }
+  .form-sheet { width:min(520px,100%); max-height:min(88vh,720px); overflow:auto; padding:18px; border:1.5px solid var(--border); border-radius:20px; background:var(--card); box-shadow:0 24px 70px rgba(48,36,92,.3); }
+  .form-sheet-handle { display:none; width:52px; height:5px; margin:0 auto 10px; border-radius:999px; background:var(--border); }
+  .form-sheet-head { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+  .form-sheet-head h3 { flex:1; color:var(--text); font-family:'Arial Black',sans-serif; font-size:17px; }
+  .form-sheet-close { width:34px; height:34px; border:1px solid var(--border); border-radius:10px; background:var(--card2); color:var(--muted); font-size:17px; cursor:pointer; }
+  .credit-sheet .subtipo-wrap,.credit-sheet .tarjeta-sel-wrap,.credit-sheet .monto-modo-toggle,.credit-sheet .cuotas-input-wrap { margin-bottom:14px; }
+  .credit-sheet .subtipo-wrap.visible,.credit-sheet .tarjeta-sel-wrap.visible { display:block; }
+  .credit-sheet .monto-modo-toggle.visible { display:flex; }
+  .credit-sheet .cuotas-input-wrap.visible { display:flex; }
+  .credit-sheet .cuotas-input-wrap input { width:100%; }
+  .credit-sheet .cuota-preview { display:block; margin:0 0 14px; padding:11px 14px; text-align:center; border-color:color-mix(in srgb,var(--blue) 35%,var(--border)); background:color-mix(in srgb,var(--blue) 7%,var(--card)); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:12px; }
+  .credit-sheet .monto-modo-toggle { width:100%; }
+  .credit-sheet .monto-modo-btn { flex:1; text-align:center; padding:9px 14px; }
+  .credit-sheet-card-row { display:none; align-items:flex-end; gap:8px; }
+  .credit-sheet-card-row.visible { display:flex; }
+  .credit-sheet-card-row .tarjeta-sel-wrap { min-width:0; flex:1; }
+  .credit-sheet-card-row .cards-manager-open { margin-bottom:14px; }
+  .credit-sheet .tarjeta-select { width:100%; height:46px; padding:0 13px; background:var(--card2); color:var(--text); font-size:14px; }
+  .credit-sheet-apply { width:100%; height:44px; border:0; border-radius:12px; background:var(--button-gradient); color:#fff; font-family:'Arial Black',sans-serif; font-size:13px; font-weight:800; cursor:pointer; }
+  .credit-stepper { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; }
+  .credit-stepper button { border:1.5px solid var(--border); background:var(--card2); color:var(--blue); font-size:20px; cursor:pointer; }
+  .credit-stepper button:first-child { border-radius:11px 0 0 11px; }
+  .credit-stepper button:last-child { border-radius:0 11px 11px 0; }
+  .credit-stepper input { width:100% !important; border-left:0; border-right:0; border-radius:0; }
+  .cards-manager-sheet .tarjetas-manager { margin:0; animation:none !important; }
+
+  @media (max-width:600px) {
+    #tab-cargar .form-card { padding:15px 12px 28px; border-radius:16px; }
+    #tab-cargar .form-group { margin-bottom:14px; }
+    .form-currency-trigger { min-width:78px; padding:0 10px; }
+    .credit-config-summary { margin-bottom:14px; padding:10px; }
+    .credit-config-open { padding:0 8px; font-size:10px; }
+    .form-detail-row.has-rubro { gap:8px; }
+    .form-detail-row input,.form-detail-row select { padding-left:10px; padding-right:10px; font-size:14px; }
+    .status-chip { min-height:44px; padding:8px 7px; gap:6px; }
+    .status-chip-text { font-size:11px; }
+    #tab-cargar .btn-submit { position:sticky; z-index:30; bottom:10px; margin-top:2px; }
+    .form-sheet-overlay { align-items:flex-end; padding:0; }
+    .form-sheet { width:100%; max-height:92dvh; padding:12px 14px calc(16px + env(safe-area-inset-bottom)); border-width:1.5px 0 0; border-radius:22px 22px 0 0; }
+    .form-sheet-handle { display:block; }
+  }
+
   /* ── TARJETAS MANAGER ── */
   .tarjetas-manager { background: rgba(246,242,255,.7); border-radius: 14px; padding: 16px; margin-bottom: 18px; border: 1px solid var(--border); }
   .tarjetas-manager-title { font-family: 'Arial Black', sans-serif; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
@@ -1900,7 +1979,7 @@
     .desktop-nav-item { width:100%; display:flex; align-items:center; gap:13px; border:0; border-left:4px solid transparent; border-radius:0 12px 12px 0; padding:13px 14px; background:transparent; color:var(--muted); font-family:'Arial Black',sans-serif; font-size:12px; text-align:left; cursor:pointer; }
     .desktop-nav-item span { width:22px; color:var(--blue); font-size:18px; }
     .desktop-nav-item.active { color:var(--blue); border-left-color:var(--blue); background:color-mix(in srgb,var(--blue) 10%,transparent); }
-    .desktop-new-mov { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:32px; padding:13px 10px; border:0; border-radius:10px; background:var(--button-gradient); box-shadow:0 8px 18px var(--button-shadow); color:#fff; font-family:'Arial Black',sans-serif; font-size:11px; cursor:pointer; }
+    .desktop-new-mov { width:100%; display:flex; align-items:center; justify-content:center; gap:6px; margin-top:32px; padding:13px 8px; border:0; border-radius:10px; background:var(--button-gradient); box-shadow:0 8px 18px var(--button-shadow); color:#fff; font-family:'Arial Black',sans-serif; font-size:11px; white-space:nowrap; cursor:pointer; }
     .desktop-calc-row.desktop-nav-item { height:auto; min-height:60px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:normal; line-height:1.15; }
     .desktop-calc-row.desktop-nav-item span { width:16px; }
     .desktop-calc-row.desktop-nav-item:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,transparent); }
@@ -2291,95 +2370,116 @@
           <div class="tipo-btn" id="btn-fijo" onclick="setTipo('fijo')">📌 Mov. Fijo</div>
         </div>
       </div>
-      <div class="subtipo-wrap" id="subtipoWrap">
-        <div class="subtipo-btns">
-          <div class="subtipo-btn active" id="btn-sub-personal" onclick="setSubtipo('personal')">👤 Crédito personal</div>
-          <div class="subtipo-btn" id="btn-sub-tarjeta" onclick="setSubtipo('tarjeta')">💳 Tarjeta de crédito</div>
+      <div class="form-group"><label>Descripción</label><input type="text" id="fDesc" placeholder="Ej: Sueldo, Comida, Luz..."></div>
+      <div class="form-group">
+        <label id="labelMonto">Monto</label>
+        <div class="amount-currency-shell">
+          <div class="amount-field-host">
+            <input type="text" id="fMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this);abrirConfigCreditoDesdeMonto(this)" onkeydown="handleMontoExpressionEnter(event,this);if(event.key==='Enter')abrirConfigCreditoDesdeMonto(this)" style="text-align:left">
+          </div>
+          <div class="form-currency-picker">
+            <button type="button" class="form-currency-trigger" id="formCurrencyTrigger" onclick="toggleFormCurrencyMenu(event)">$ ARS ▾</button>
+            <div class="form-currency-menu" id="formCurrencyMenu">
+              <div class="moneda-btn active" id="mBtn-ars" onclick="setMoneda('ARS')">$ ARS</div>
+              <div class="moneda-btn" id="mBtn-usd" onclick="setMoneda('USD')">💵 USD Of.</div>
+              <div class="moneda-btn" id="mBtn-usd-tar" onclick="setMoneda('USD_TAR')">💳 USD Tarj.</div>
+            </div>
+          </div>
         </div>
       </div>
+
+      <div class="credit-config-summary" id="creditConfigSummary">
+        <span class="credit-config-summary-icon">💳</span>
+        <span class="credit-config-summary-copy"><strong id="creditConfigTitle">Crédito personal</strong><small id="creditConfigMeta">1 cuota · Total</small></span>
+        <span class="credit-config-summary-actions">
+          <button type="button" class="credit-config-open" onclick="abrirConfigCredito()">Configurar ›</button>
+          <button type="button" class="cards-manager-open" id="creditSummaryCardsBtn" onclick="abrirTarjetasManager(event)" aria-label="Administrar tarjetas" hidden>⚙️</button>
+        </span>
+      </div>
+
       <div class="subtipo-fijo-wrap" id="subtipoFijoWrap">
         <div class="subtipo-btns">
           <div class="subtipo-fijo-btn active" id="btn-fijo-medeben" onclick="setSubtipoFijo('me_deben')">💰 Me deben</div>
           <div class="subtipo-fijo-btn" id="btn-fijo-debo" onclick="setSubtipoFijo('debo')">💸 Debo</div>
         </div>
       </div>
-      <div class="form-group tarjeta-sel-wrap" id="tarjetaSelWrap">
-        <label>Tarjeta</label>
-        <div class="tarjeta-chips" id="tarjetaChips"></div>
-      </div>
-      <div class="form-group"><label>Descripción</label><input type="text" id="fDesc" placeholder="Ej: Sueldo, Comida, Luz..."></div>
-      <div class="form-group rubro-field" id="rubroWrap">
-        <label>Rubro</label>
-        <select id="fRubro"></select>
-      </div>
-      <div class="form-group">
-        <label id="labelMonto">Monto Total</label>
-        <div class="monto-modo-toggle" id="montoModoToggle">
-          <div class="monto-modo-btn active" id="modoTotal" onclick="setMontoCuotasModo('total')">Total</div>
-          <div class="monto-modo-btn" id="modoCuota" onclick="setMontoCuotasModo('cuota')">Por cuota</div>
+
+      <div class="form-detail-row" id="formDetailRow">
+        <div class="form-group rubro-field" id="rubroWrap">
+          <label>Rubro</label>
+          <select id="fRubro"></select>
         </div>
-        <div class="monto-cuotas-row">
-          <input type="text" id="fMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
-          <div class="cuotas-input-wrap" id="cuotasWrap">
-            <label>Cuotas</label>
-            <input type="number" id="fCuotas" placeholder="" min="1" max="60" oninput="actualizarPreviewCuotas()">
+        <div class="form-group form-date-group" id="fechaWrap">
+          <label>Fecha</label>
+          <div class="date-picker-wrap" id="dpWrap">
+            <div class="date-picker-display" id="dpDisplay" style="padding:0;overflow:hidden;">
+              <input id="dpTextInput" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
+                style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
+                oninput="dpParseText(this.value)"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();dpParseText(this.value,true);}"
+              >
+              <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpToggle()">📅</span>
+            </div>
+            <div class="dp-popup" id="dpPopup" style="display:none"></div>
           </div>
-        </div>
-        <div class="cuota-preview" id="cuotaPreview"></div>
-      </div>
-      <div class="form-group">
-        <label>Moneda</label>
-        <div class="moneda-toggle">
-          <div class="moneda-btn active" id="mBtn-ars" onclick="setMoneda('ARS')">$ ARS</div>
-          <div class="moneda-btn" id="mBtn-usd" onclick="setMoneda('USD')">💵 USD Of.</div>
-          <div class="moneda-btn" id="mBtn-usd-tar" onclick="setMoneda('USD_TAR')">💳 USD Tarj.</div>
+          <input type="hidden" id="fFecha">
         </div>
       </div>
-      <div class="form-group">
-        <label>Fecha</label>
-        <div class="date-picker-wrap" id="dpWrap">
-          <div class="date-picker-display" id="dpDisplay" style="padding:0;overflow:hidden;">
-            <input id="dpTextInput" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
-              style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
-              oninput="dpParseText(this.value)"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();dpParseText(this.value,true);}"
-            >
-            <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpToggle()">📅</span>
-          </div>
-          <div class="dp-popup" id="dpPopup" style="display:none"></div>
-        </div>
-        <input type="hidden" id="fFecha">
-      </div>
-      <input type="hidden" id="fMes">
-      <select id="fSemana" style="display:none"></select>
-      <div class="form-group" id="activoWrap">
-        <label onclick="document.getElementById('fConfirmado').click()" style="cursor:pointer" class="recordatorio-row">
-          <div>
-            <div class="recordatorio-label">Activo en saldo</div>
-            <div class="recordatorio-sub">Si está apagado, queda cargado pero no descuenta ni suma todavía</div>
-          </div>
-          <label class="toggle-switch" onclick="event.stopPropagation()">
-            <input type="checkbox" id="fConfirmado" checked>
-            <span class="toggle-slider"></span>
-          </label>
+      <select id="fMes" style="display:none" onchange="actualizarSemanasForm()"></select>
+      <div id="semanaWrap" style="display:none"><select id="fSemana"></select></div>
+
+      <div class="form-status-row" id="formStatusRow">
+        <label class="status-chip" id="activoWrap">
+          <input type="checkbox" id="fConfirmado" checked onchange="if(this.checked)document.getElementById('fRecordatorio').checked=false">
+          <span class="status-chip-icon">✓</span><span class="status-chip-text">Activo en saldo</span>
+        </label>
+        <label class="status-chip reminder" id="recordatorioWrap" hidden>
+          <input type="checkbox" id="fRecordatorio" onchange="if(this.checked)document.getElementById('fConfirmado').checked=false">
+          <span class="status-chip-icon">⏰</span><span class="status-chip-text recordatorio-label">Recordatorio</span>
         </label>
       </div>
-      <div class="form-group" id="recordatorioWrap" style="display:none">
-        <label onclick="document.getElementById('fRecordatorio').click()" style="cursor:pointer" class="recordatorio-row">
-          <div>
-            <div class="recordatorio-label">⏰ Avisarme 3 días antes</div>
-            <div class="recordatorio-sub">Te mandamos un email de recordatorio</div>
+      <button class="btn-submit" id="btnGuardar" onclick="guardar()">Guardar movimiento</button>
+    </div>
+
+    <div class="form-sheet-overlay" id="creditConfigOverlay" onclick="if(event.target===this)cerrarConfigCredito()">
+      <div class="form-sheet credit-sheet" role="dialog" aria-modal="true" aria-labelledby="creditConfigSheetTitle">
+        <div class="form-sheet-handle"></div>
+        <div class="form-sheet-head"><h3 id="creditConfigSheetTitle">Configurar crédito</h3><button type="button" class="form-sheet-close" onclick="cerrarConfigCredito()" aria-label="Cerrar">✕</button></div>
+        <div class="subtipo-wrap" id="subtipoWrap">
+          <div class="subtipo-btns">
+            <div class="subtipo-btn active" id="btn-sub-personal" onclick="setSubtipo('personal')">👤 Crédito personal</div>
+            <div class="subtipo-btn" id="btn-sub-tarjeta" onclick="setSubtipo('tarjeta')">💳 Tarjeta de crédito</div>
           </div>
-          <label class="toggle-switch" onclick="event.stopPropagation()">
-            <input type="checkbox" id="fRecordatorio" checked>
-            <span class="toggle-slider"></span>
-          </label>
-        </label>
+        </div>
+        <div class="credit-sheet-card-row" id="creditCardRow">
+          <div class="form-group tarjeta-sel-wrap" id="tarjetaSelWrap">
+            <label>Tarjeta</label>
+            <select class="tarjeta-select" id="tarjetaChips" onchange="selTarjeta(this.value)"></select>
+          </div>
+          <button type="button" class="cards-manager-open" onclick="abrirTarjetasManager(event)" aria-label="Administrar tarjetas">⚙️</button>
+        </div>
+        <div class="form-group">
+          <label>Cálculo</label>
+          <div class="monto-modo-toggle" id="montoModoToggle">
+            <div class="monto-modo-btn active" id="modoTotal" onclick="setMontoCuotasModo('total')">Total</div>
+            <div class="monto-modo-btn" id="modoCuota" onclick="setMontoCuotasModo('cuota')">Por cuota</div>
+          </div>
+        </div>
+        <div class="cuotas-input-wrap" id="cuotasWrap">
+          <label>Cuotas</label>
+          <div class="credit-stepper"><button type="button" onclick="ajustarCuotas(-1)">−</button><input type="number" id="fCuotas" value="1" min="1" max="60" onfocus="this.select()" onclick="this.select()" oninput="actualizarPreviewCuotas();actualizarResumenCredito()"><button type="button" onclick="ajustarCuotas(1)">＋</button></div>
+        </div>
+        <div class="cuota-preview visible" id="cuotaPreview">1 cuota de $0</div>
+        <button type="button" class="credit-sheet-apply" onclick="cerrarConfigCredito()">Aplicar configuración</button>
       </div>
-      <button class="btn-submit" id="btnGuardar" onclick="guardar()">Guardar</button>
-      <div style="margin-top:24px">
+    </div>
+
+    <div class="form-sheet-overlay" id="cardsManagerOverlay" onclick="if(event.target===this)cerrarTarjetasManager()">
+      <div class="form-sheet cards-manager-sheet" role="dialog" aria-modal="true" aria-labelledby="cardsManagerSheetTitle">
+        <div class="form-sheet-handle"></div>
+        <div class="form-sheet-head"><h3 id="cardsManagerSheetTitle">Mis Tarjetas</h3><button type="button" class="form-sheet-close" onclick="cerrarTarjetasManager()" aria-label="Cerrar">✕</button></div>
         <div class="tarjetas-manager">
-          <div class="tarjetas-manager-title">⚙️ Mis Tarjetas</div>
+          <div class="tarjetas-manager-title">⚙️ Administrar tarjetas</div>
           <div id="tarjetasManagerList"></div>
           <div class="add-tarjeta-form">
             <input type="text" id="nuevaTarjetaNombre" placeholder="Ej: Naranja, San Francisco...">
@@ -2609,7 +2709,7 @@ function iniciarVisualTest(){
     mov('v8','gasto','Otros gastos',69801,'2026-07-31','otros'),
     mov('v9','tarjeta','Consumos Tarjeta Visa',751072,'2026-07-22','compras',{tarjetaId:'visa'})
   ];
-  refrescarSelectoresRubros(); renderResumen();
+  initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); renderResumen();
 }
 
 window.doLogin = async () => {
@@ -4106,7 +4206,7 @@ function decorateStaticHelp(root = document){
   attachFieldHelp('cfMonto', 'compartido_monto', root);
   attachFieldHelp('cfFecha', 'compartido_fecha', root);
   appendInlineHelp(root.querySelector('#tarjetaSelWrap label'), 'form_tarjeta');
-  appendInlineHelp(root.querySelector('#mBtn-ars')?.closest('.form-group')?.querySelector('label'), 'form_moneda');
+  appendInlineHelp(root.querySelector('#mBtn-ars')?.closest('.form-group')?.querySelector('label:not(#labelMonto)'), 'form_moneda');
   appendInlineHelp(root.querySelector('#recordatorioWrap .recordatorio-label'), 'form_recordatorio');
   appendInlineHelp(root.querySelector('#modalCompartidoForm .form-group label'), 'compartido_tipo');
   appendInlineHelp(root.querySelector('#modalCompartidoForm #cf-mBtn-ars')?.closest('.form-group')?.querySelector('label'), 'form_moneda');
@@ -4222,6 +4322,9 @@ function pagoDoc(key,id){return doc(db,`usuarios/${currentUser.uid}/pagos_tarjet
 async function cargarTarjetas(){
   const snap=await getDocs(userCol('tarjetas'));
   tarjetas=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const ultima=userConfig.ultimaTarjetaId;
+  if(ultima&&tarjetas.some(t=>t.id===ultima)) tarjetaSeleccionada=ultima;
+  else if(!tarjetaSeleccionada&&tarjetas.length) tarjetaSeleccionada=tarjetas[0].id;
   renderTarjetasManager(); renderTarjetaChips(); suscribirPagosMesActual();
 }
 window.agregarTarjeta=async()=>{
@@ -4232,7 +4335,8 @@ window.agregarTarjeta=async()=>{
   try{
     const ref=await addDoc(userCol('tarjetas'),{nombre,timestamp:Date.now()});
     tarjetas.push({id:ref.id,nombre}); input.value='';
-    renderTarjetasManager(); renderTarjetaChips(); showToast('💳 Tarjeta agregada');
+    if(!tarjetaSeleccionada){tarjetaSeleccionada=ref.id;guardarUltimaTarjeta(ref.id);}
+    renderTarjetasManager(); renderTarjetaChips(); actualizarResumenCredito(); showToast('💳 Tarjeta agregada');
   }catch(e){showToast('❌ Error',true);}
 };
 window.eliminarTarjeta=async id=>{
@@ -4240,12 +4344,13 @@ window.eliminarTarjeta=async id=>{
   try{
     await deleteDoc(userDoc('tarjetas',id));
     tarjetas=tarjetas.filter(t=>t.id!==id);
-    if(tarjetaSeleccionada===id) tarjetaSeleccionada=null;
-    renderTarjetasManager(); renderTarjetaChips();
+    if(tarjetaSeleccionada===id){tarjetaSeleccionada=tarjetas[0]?.id||null;guardarUltimaTarjeta(tarjetaSeleccionada);}
+    renderTarjetasManager(); renderTarjetaChips(); actualizarResumenCredito();
   }catch(e){showToast('❌ Error',true);}
 };
 function renderTarjetasManager(){
   const el=document.getElementById('tarjetasManagerList');
+  if(!el) return;
   if(!tarjetas.length){el.innerHTML='<div style="color:var(--muted);font-size:13px;padding:4px 0">No hay tarjetas.</div>';return;}
   el.innerHTML=tarjetas.map(t=>`<div class="tarjeta-list-item">
     <span class="tarjeta-list-name">💳 ${t.nombre}</span>
@@ -4258,10 +4363,17 @@ function renderTarjetasManager(){
 }
 function renderTarjetaChips(){
   const el=document.getElementById('tarjetaChips');
-  if(!tarjetas.length){el.innerHTML='<span style="color:var(--muted);font-size:13px">No hay tarjetas.</span>';return;}
-  el.innerHTML=tarjetas.map(t=>`<div class="tarjeta-chip ${tarjetaSeleccionada===t.id?'active':''}" onclick="selTarjeta('${t.id}')">${t.nombre}</div>`).join('');
+  if(!el) return;
+  if(!tarjetas.length){el.innerHTML='<option value="">No hay tarjetas</option>';el.disabled=true;return;}
+  el.disabled=false;
+  el.innerHTML=`<option value="" ${tarjetaSeleccionada?'':'selected'} disabled>Seleccioná una tarjeta</option>`+tarjetas.map(t=>`<option value="${t.id}" ${tarjetaSeleccionada===t.id?'selected':''}>${t.nombre}</option>`).join('');
 }
-window.selTarjeta=id=>{tarjetaSeleccionada=id;renderTarjetaChips();};
+async function guardarUltimaTarjeta(id){
+  userConfig.ultimaTarjetaId=id||null;
+  if(!currentUser) return;
+  try{await setDoc(userDoc('config','preferencias'),{ultimaTarjetaId:id||null},{merge:true});}catch(e){console.warn('guardarUltimaTarjeta error:',e);}
+}
+window.selTarjeta=id=>{tarjetaSeleccionada=id;guardarUltimaTarjeta(id);renderTarjetaChips();actualizarResumenCredito();};
 
 window.editarConfigTarjeta = id => {
   const t = tarjetas.find(t=>t.id===id);
@@ -4270,7 +4382,7 @@ window.editarConfigTarjeta = id => {
   if(existing) existing.remove();
   const ov = document.createElement('div');
   ov.id = 'cfgTarjetaOverlay';
-  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;display:flex;align-items:center;justify-content:center;';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:7400;display:flex;align-items:center;justify-content:center;';
   ov.innerHTML = `
     <div style="background:var(--card);border-radius:18px;padding:24px;width:88%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,.18)">
       <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px">⚙️ ${t.nombre}</div>
@@ -5867,10 +5979,13 @@ window.goTab=t=>{
   if(t==='informe'){ superLoad(); }
 };
 window.setTipo=t=>{
+  const tipoBaseAnterior = (tipoActual==='credito'||tipoActual==='tarjeta') ? 'credito' : (String(tipoActual).startsWith('fijo_') ? 'fijo' : tipoActual);
   tipoActual = t === 'credito' ? (subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito') : (t === 'fijo' ? (subtipoFijoActual === 'me_deben' ? 'fijo_medeben' : 'fijo_debo') : t);
   const esCredito = t === 'credito';
   const esTarjeta = esCredito && subtipoActual === 'tarjeta';
   const esFijo = t === 'fijo';
+  const llevaRubro = t==='gasto'||esCredito;
+  const llevaRecordatorio = t==='gasto'||esCredito;
   document.querySelectorAll('.tipo-btn').forEach(b=>b.classList.remove('active','act-gas','act-tar','act-cred','act-fijo'));
   if(t==='ingreso') document.getElementById('btn-ing').classList.add('active');
   if(t==='gasto')   document.getElementById('btn-gas').classList.add('act-gas');
@@ -5882,19 +5997,32 @@ window.setTipo=t=>{
   document.getElementById('subtipoFijoWrap').classList.toggle('visible', esFijo);
   // selector de tarjeta solo si es crédito con tarjeta
   document.getElementById('tarjetaSelWrap').classList.toggle('visible', esTarjeta);
+  document.getElementById('creditCardRow')?.classList.toggle('visible', esTarjeta);
   // cuotas y modo monto en crédito
   document.getElementById('cuotasWrap').classList.toggle('visible', esCredito);
   document.getElementById('montoModoToggle').classList.toggle('visible', esCredito);
-  document.getElementById('recordatorioWrap').style.display = (t==='gasto'||esCredito) ? 'block' : 'none';
-  document.getElementById('rubroWrap')?.classList.toggle('visible', t==='gasto'||esCredito);
+  document.getElementById('creditConfigSummary')?.classList.toggle('visible', esCredito);
+  const recordatorioWrap=document.getElementById('recordatorioWrap');
+  if(recordatorioWrap) recordatorioWrap.hidden=!llevaRecordatorio;
+  document.getElementById('formStatusRow')?.classList.toggle('has-recordatorio', llevaRecordatorio);
+  document.getElementById('rubroWrap')?.classList.toggle('visible', llevaRubro);
+  document.getElementById('formDetailRow')?.classList.toggle('has-rubro', llevaRubro);
+  if(tipoBaseAnterior!==t){
+    const activo=document.getElementById('fConfirmado');
+    if(activo) activo.checked=!esCredito;
+    const recordatorio=document.getElementById('fRecordatorio');
+    if(recordatorio) recordatorio.checked=llevaRecordatorio&&esCredito;
+  }
   if(!esCredito){
-    const fc=document.getElementById('fCuotas');if(fc)fc.value='';
+    const fc=document.getElementById('fCuotas');if(fc)fc.value='1';
     document.getElementById('cuotaPreview').classList.remove('visible');
     window._montoCuotasModo='total';
-    const label=document.getElementById('labelMonto'); if(label) label.textContent='Monto Total';
+    const label=document.getElementById('labelMonto'); if(label) label.textContent='Monto';
     document.getElementById('modoTotal').classList.add('active');
     document.getElementById('modoCuota').classList.remove('active');
+    cerrarConfigCredito();
   }
+  actualizarResumenCredito();
 };
 
 window.setSubtipo = s => {
@@ -5904,6 +6032,8 @@ window.setSubtipo = s => {
   // actualizar selector de tarjeta y tipoActual
   tipoActual = s === 'tarjeta' ? 'tarjeta' : 'credito';
   document.getElementById('tarjetaSelWrap').classList.toggle('visible', s==='tarjeta');
+  document.getElementById('creditCardRow')?.classList.toggle('visible', s==='tarjeta');
+  actualizarResumenCredito();
 };
 window.setSubtipoFijo = s => {
   subtipoFijoActual = s;
@@ -5917,7 +6047,76 @@ window.setMoneda=m=>{
   document.getElementById('mBtn-usd').classList.toggle('active',m==='USD');
   const btnTar = document.getElementById('mBtn-usd-tar');
   if(btnTar) btnTar.classList.toggle('active',m==='USD_TAR');
+  const trigger=document.getElementById('formCurrencyTrigger');
+  if(trigger) trigger.textContent=({ARS:'$ ARS ▾',USD:'💵 USD Of. ▾',USD_TAR:'💳 USD Tarj. ▾'})[m]||'$ ARS ▾';
+  closeFormCurrencyMenu();
 };
+
+window.toggleFormCurrencyMenu=event=>{
+  event?.stopPropagation();
+  document.getElementById('formCurrencyMenu')?.classList.toggle('open');
+};
+window.closeFormCurrencyMenu=()=>document.getElementById('formCurrencyMenu')?.classList.remove('open');
+
+window.abrirConfigCredito=()=>{
+  if(!(tipoActual==='credito'||tipoActual==='tarjeta')) return;
+  renderTarjetaChips();
+  actualizarPreviewCuotas();
+  actualizarResumenCredito();
+  document.getElementById('creditConfigOverlay')?.classList.add('open');
+  document.body.classList.add('form-sheet-open');
+};
+window.cerrarConfigCredito=()=>{
+  document.getElementById('creditConfigOverlay')?.classList.remove('open');
+  if(!document.getElementById('cardsManagerOverlay')?.classList.contains('open')) document.body.classList.remove('form-sheet-open');
+};
+window.abrirTarjetasManager=event=>{
+  event?.stopPropagation();
+  renderTarjetasManager();
+  document.getElementById('cardsManagerOverlay')?.classList.add('open');
+  document.body.classList.add('form-sheet-open');
+};
+window.cerrarTarjetasManager=()=>{
+  document.getElementById('cardsManagerOverlay')?.classList.remove('open');
+  if(!document.getElementById('creditConfigOverlay')?.classList.contains('open')) document.body.classList.remove('form-sheet-open');
+};
+window.ajustarCuotas=delta=>{
+  const input=document.getElementById('fCuotas');
+  if(!input) return;
+  input.value=Math.min(60,Math.max(1,(parseInt(input.value)||1)+delta));
+  actualizarPreviewCuotas();
+};
+window.actualizarResumenCredito=()=>{
+  const title=document.getElementById('creditConfigTitle');
+  const meta=document.getElementById('creditConfigMeta');
+  const gear=document.getElementById('creditSummaryCardsBtn');
+  if(!title||!meta) return;
+  const esTarjeta=subtipoActual==='tarjeta';
+  const tarjeta=tarjetas.find(t=>t.id===tarjetaSeleccionada);
+  title.textContent=esTarjeta ? (tarjeta ? `Tarjeta ${tarjeta.nombre}` : 'Elegí una tarjeta') : 'Crédito personal';
+  const cuotas=Math.max(1,parseInt(document.getElementById('fCuotas')?.value)||1);
+  const monto=window.fMontoGetValue?.()||0;
+  const total=window._montoCuotasModo==='cuota'?monto*cuotas:monto;
+  meta.textContent=`${cuotas} ${cuotas===1?'cuota':'cuotas'} · ${window._montoCuotasModo==='cuota'?'Por cuota':'Total'} · Total ${fmtARS(total)}`;
+  if(gear) gear.hidden=!esTarjeta;
+};
+
+window.abrirConfigCreditoDesdeMonto=el=>{
+  if(!(tipoActual==='credito'||tipoActual==='tarjeta')) return;
+  const monto=window.fMontoGetValue?.()||0;
+  if(monto<=0||document.getElementById('creditConfigOverlay')?.classList.contains('open')) return;
+  abrirConfigCredito();
+};
+
+document.addEventListener('click',event=>{
+  if(!event.target.closest('.form-currency-picker')) closeFormCurrencyMenu();
+});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape') return;
+  if(document.getElementById('cfgTarjetaOverlay')) document.getElementById('cfgTarjetaOverlay').remove();
+  else if(document.getElementById('cardsManagerOverlay')?.classList.contains('open')) cerrarTarjetasManager();
+  else if(document.getElementById('creditConfigOverlay')?.classList.contains('open')) cerrarConfigCredito();
+});
 window.setPeriodo=p=>{
   periodoActual=p;
   document.getElementById('pBtn-sem').classList.toggle('active',p==='semanal');
@@ -5934,19 +6133,13 @@ window.cambiarMes=d=>{
 };
 window.actualizarSemanasForm=()=>{
   const [mes,anio]=document.getElementById('fMes').value.split('-').map(Number);
-  const esMensual = userConfig.frecuencia === 'mensual';
-  document.getElementById('semanaWrap').style.display = esMensual ? 'none' : '';
-  document.getElementById('fechaWrap').style.display  = esMensual ? '' : 'none';
-  if(!esMensual){
-    document.getElementById('fSemana').innerHTML=getSemanas(mes,anio).map(s=>`<option value="${s.num}">Semana ${s.num} (${fmtF(s.desde)} → ${fmtF(s.hasta)})</option>`).join('');
-  } else {
-    const h=new Date();
-    const fd = document.getElementById('fFecha');
-    if(!fd.value){ fd.value=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0'); }
-    dpInit(fd.value);
-    const MESES_DP=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-    document.getElementById('dpLabel').textContent = h.getDate()+' de '+MESES_DP[h.getMonth()]+' '+h.getFullYear();
-  }
+  document.getElementById('semanaWrap').style.display='none';
+  document.getElementById('fechaWrap').style.display='';
+  document.getElementById('fSemana').innerHTML=getSemanas(mes,anio).map(s=>`<option value="${s.num}">Semana ${s.num} (${fmtF(s.desde)} → ${fmtF(s.hasta)})</option>`).join('');
+  const h=new Date();
+  const fd=document.getElementById('fFecha');
+  if(!fd.value) fd.value=h.getFullYear()+'-'+String(h.getMonth()+1).padStart(2,'0')+'-'+String(h.getDate()).padStart(2,'0');
+  dpInit(fd.value);
 };
 
 window._montoCuotasModo = 'total';
@@ -5955,8 +6148,9 @@ window.setMontoCuotasModo = modo => {
   document.getElementById('modoTotal').classList.toggle('active', modo === 'total');
   document.getElementById('modoCuota').classList.toggle('active', modo === 'cuota');
   const label = document.getElementById('labelMonto');
-  if(label) label.textContent = modo === 'cuota' ? 'Monto por cuota' : 'Monto Total';
+  if(label) label.textContent = 'Monto';
   actualizarPreviewCuotas();
+  actualizarResumenCredito();
 };
 // editMontoInput → usa el módulo general
 window.editMontoInput = el => formatMontoInput(el);
@@ -5998,12 +6192,12 @@ window.actualizarPreviewCuotas = () => {
   const cuotas = cuotasEl ? (parseInt(cuotasEl.value) || 1) : 1;
   const prev = document.getElementById('cuotaPreview');
   if(!prev) return;
-  if(cuotas <= 1 || monto === 0){ prev.classList.remove('visible'); return; }
   const esModoTotal = window._montoCuotasModo !== 'cuota';
-  const cuota = esModoTotal ? Math.round(monto / cuotas) : monto;
+  const cuota = esModoTotal ? Math.round(monto / Math.max(cuotas,1)) : monto;
   const total = esModoTotal ? monto : monto * cuotas;
   prev.classList.add('visible');
-  prev.innerHTML = `💳 <strong>${fmtARS(cuota)}/mes</strong> × ${cuotas} cuotas = <strong>${fmtARS(total)}</strong> total`;
+  prev.innerHTML = `<strong>${cuotas} ${cuotas===1?'cuota':'cuotas'} de ${fmtARS(cuota)}</strong>`;
+  actualizarResumenCredito();
 };
 
 window.guardar=async()=>{
@@ -6011,6 +6205,8 @@ window.guardar=async()=>{
   const montoRaw = fMontoGetValue();
   const rubro = document.getElementById('fRubro')?.value || 'otros';
   const confirmadoInicial = document.getElementById('fConfirmado')?.checked !== false;
+  const usaRecordatorio = tipoActual==='gasto'||tipoActual==='credito'||tipoActual==='tarjeta';
+  const recordatorioActivo = usaRecordatorio && document.getElementById('fRecordatorio')?.checked === true;
   let semana, mes, anio;
   {
     const fd = document.getElementById('fFecha').value;
@@ -6032,13 +6228,14 @@ window.guardar=async()=>{
         monto,
         subtipo: tipoActual==='fijo_medeben' ? 'me_deben' : 'debo',
         moneda: monedaActual,
+        confirmado: confirmadoInicial,
         timestamp: Date.now()
       });
       showToast('✅ Mov. fijo guardado!');
       document.getElementById('fDesc').value=''; document.getElementById('fMonto').value='';
       const fConfirmado=document.getElementById('fConfirmado'); if(fConfirmado) fConfirmado.checked=true;
     }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
-    btn.disabled=false;btn.textContent='Guardar';
+    btn.disabled=false;btn.textContent='Guardar movimiento';
     return;
   }
 
@@ -6078,7 +6275,7 @@ window.guardar=async()=>{
           montoTotal: montoTotal, grupoId,
           confirmado: confirmadoInicial, fecha: fechaCuota,
           rubro,
-          recordatorio: document.getElementById('fRecordatorio').checked,
+          recordatorio: recordatorioActivo,
           ...(window._compartidoPendiente ? {compartidoPor: window._compartidoPendiente.compartidoPor} : {})
         };
         promesas.push(addDoc(userCol('movimientos'), docData));
@@ -6087,15 +6284,15 @@ window.guardar=async()=>{
       showToast(`✅ ${cuotasActual} cuotas guardadas!`);
     } else {
       const _fdVal=document.getElementById('fFecha').value;
-      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:confirmadoInicial,fecha:_fdVal||null,rubro,recordatorio:document.getElementById('fRecordatorio').checked,...(window._compartidoPendiente?{compartidoPor:window._compartidoPendiente.compartidoPor}:{})};
+      const docData={tipo:tipoGuardado,desc,monto,semana,mes,anio,moneda:monedaActual,timestamp:Date.now(),confirmado:confirmadoInicial,fecha:_fdVal||null,rubro,recordatorio:recordatorioActivo,...(window._compartidoPendiente?{compartidoPor:window._compartidoPendiente.compartidoPor}:{})};
       if(tipoGuardado==='tarjeta') docData.tarjetaId=tarjetaSeleccionada;
       await addDoc(userCol('movimientos'),docData);
       showToast('✅ Guardado!');
     }
     document.getElementById('fDesc').value=''; document.getElementById('fMonto').value='';
-    const fConfirmado=document.getElementById('fConfirmado'); if(fConfirmado) fConfirmado.checked=true;
+    const fConfirmado=document.getElementById('fConfirmado'); if(fConfirmado) fConfirmado.checked=!(tipoActual==='credito'||tipoActual==='tarjeta');
     // Mantener la fecha para el próximo movimiento — solo limpiar desc y monto
-    const fc=document.getElementById('fCuotas'); if(fc) fc.value='';
+    const fc=document.getElementById('fCuotas'); if(fc) fc.value='1';
     document.getElementById('cuotaPreview').classList.remove('visible');
 
     // Si viene de un gasto compartido, marcar como aceptado y limpiar UI
@@ -6106,7 +6303,7 @@ window.guardar=async()=>{
       });
     }
   }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
-  btn.disabled=false;btn.textContent='Guardar';
+  btn.disabled=false;btn.textContent='Guardar movimiento';
 };
 window.toggleConfirmar= id => {
   // 1. Actualizar UI al instante
