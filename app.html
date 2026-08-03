@@ -767,6 +767,9 @@
   }
   .mov-actions-popover .action-btn { width:100%; height:38px; padding:0 11px; display:flex; align-items:center; justify-content:flex-start; gap:9px; font-size:14px; text-align:left; }
   .mov-actions-popover .mov-action-icon { width:20px; display:inline-flex; justify-content:center; flex-shrink:0; }
+  .mov-actions-popover .selection-check-icon,
+  .desktop-calc-row.desktop-nav-item .selection-check-icon,
+  .mov-selector-btn .selection-check-icon { width:20px; height:20px; display:inline-grid; place-items:center; flex:0 0 20px; border:1.5px solid var(--blue); border-radius:5px; background:linear-gradient(135deg,var(--blue),var(--accent)); color:#fff; box-shadow:0 3px 9px color-mix(in srgb,var(--blue) 25%,transparent); font-family:'Arial Black',sans-serif; font-size:11px; }
   .mov-actions-popover .mov-action-label { color:var(--text); font-size:13px; font-weight:700; }
   .mov-actions-popover .action-btn.del2 { margin-top:2px; border-top:1px solid var(--border); border-radius:0 0 8px 8px; }
   .mov-actions-popover .action-btn.del2 .mov-action-label { color:var(--red); }
@@ -1812,7 +1815,7 @@
   .rubro-donut small { color:var(--muted); font-size:10px; }
   .rubro-donut strong { font-family:'Arial Black',sans-serif; color:var(--text); font-size:12px; margin-top:3px; }
   .rubro-legend { min-width:0; }
-  .rubro-legend-row { display:grid; grid-template-columns:8px minmax(70px,1fr) auto 28px; gap:7px; align-items:center; min-height:25px; font-size:10px; }
+  .rubro-legend-row { display:grid; grid-template-columns:8px minmax(70px,1fr) auto 40px; gap:7px; align-items:center; min-height:25px; font-size:10px; }
   .rubro-legend-btn { width:100%; padding:3px 5px; border:0; border-radius:8px; background:transparent; color:inherit; font-family:inherit; text-align:left; cursor:pointer; transition:background .15s,transform .15s; }
   .rubro-legend-btn:hover,.rubro-legend-btn:focus-visible { background:color-mix(in srgb,var(--blue) 9%,transparent); outline:none; transform:translateX(2px); }
   .rubro-dot { width:8px; height:8px; border-radius:50%; }
@@ -1898,7 +1901,7 @@
     .desktop-nav-item span { width:22px; color:var(--blue); font-size:18px; }
     .desktop-nav-item.active { color:var(--blue); border-left-color:var(--blue); background:color-mix(in srgb,var(--blue) 10%,transparent); }
     .desktop-new-mov { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:32px; padding:13px 10px; border:0; border-radius:10px; background:var(--button-gradient); box-shadow:0 8px 18px var(--button-shadow); color:#fff; font-family:'Arial Black',sans-serif; font-size:11px; cursor:pointer; }
-    .desktop-calc-row.desktop-nav-item { height:52px; min-height:52px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:nowrap; }
+    .desktop-calc-row.desktop-nav-item { height:auto; min-height:60px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:normal; line-height:1.15; }
     .desktop-calc-row.desktop-nav-item span { width:16px; }
     .desktop-calc-row.desktop-nav-item:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,transparent); }
     .desktop-bottom-actions { position:fixed; z-index:190; right:16px; bottom:64px; width:auto; display:flex; justify-content:flex-end; gap:10px; }
@@ -1985,6 +1988,51 @@
     .dashboard-heading .mes-nav span { min-width:70px; }
     .balance-week-picker { width:100%; }
     .balance-view-toggle { margin-left:0; }
+  }
+
+  /* Los textos principales nunca deben verse más chicos que el nombre de un movimiento. */
+  :root { --primary-title-size:15px; }
+  .mov-nombre,
+  .mov-panel-title,
+  .mov-week-title,
+  .mov-select-desc,
+  .sum-card .label,
+  .dashboard-panel-header h3,
+  .weekly-dashboard-panel .sem-title,
+  .week-selector strong,
+  .week-selector small,
+  .balance-week-copy strong,
+  .balance-week-copy small,
+  .balance-week-saldo,
+  .balance-view-btn,
+  .rubro-legend-row,
+  .rubro-legend-row strong,
+  .rubro-legend-row small,
+  .upcoming-copy strong,
+  .upcoming-date,
+  .upcoming-amount,
+  .recent-desc,
+  .rubro-detail-row-copy strong,
+  .fijo-panel-title,
+  .fijo-section-title,
+  .tarjetas-panel-title,
+  .tarjetas-manager-title,
+  .tarjeta-tab,
+  .tar-gasto-desc,
+  .det-tarjetas-title,
+  .det-tar-name,
+  .desktop-nav-item,
+  .desktop-new-mov,
+  .desktop-help strong,
+  .tab,
+  .cfg-section-title,
+  .cfg-theme-block-title,
+  .cfg-theme-custom-title,
+  .cfg-theme-live-title { font-size:var(--primary-title-size); }
+
+  @media (max-width:600px) {
+    :root { --primary-title-size:13px; }
+    .rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 34px; }
   }
 
 </style>
@@ -2128,7 +2176,7 @@
     </div>
     <input type="number" id="usdRate" value="1000" style="display:none">
     <div class="usd-bar-right">
-      <button class="mov-selector-btn" id="movSelectorBtn" onclick="toggleMovSelector()" title="Sumar movimientos del mes" aria-label="Sumar movimientos del mes">☑️</button>
+      <button class="mov-selector-btn" id="movSelectorBtn" onclick="toggleMovSelector()" title="Sumar movimientos del mes" aria-label="Sumar movimientos del mes"><span class="selection-check-icon" aria-hidden="true">✓</span></button>
       <button class="config-btn" onclick="abrirConfig()" title="Configuración">⚙️</button>
       <span class="usd-fetch-status" id="usdStatus">⏳</span>
     </div>
@@ -2142,7 +2190,7 @@
       <button class="desktop-nav-item" data-tab="informe" onclick="goTab('informe')"><span>🛒</span> Compras</button>
     </nav>
     <button class="desktop-new-mov" onclick="goTab('cargar')"><span>＋</span> Nuevo movimiento</button>
-    <button class="desktop-calc-row desktop-nav-item" onclick="toggleMovSelector()"><span>☑</span> Calcular movimientos</button>
+    <button class="desktop-calc-row desktop-nav-item" onclick="toggleMovSelector()"><span class="selection-check-icon" aria-hidden="true">✓</span> Calcular movimientos</button>
     <div class="desktop-bottom-actions">
       <button onclick="abrirConfig()" title="Configuración">⚙️</button>
       <button onclick="doLogout()">Salir</button>
@@ -2462,6 +2510,7 @@ const balanceSelectionState = {
   suppressClickId:null,
   suppressClickUntil:0,
   suppressContextUntil:0,
+  lastTouchPressAt:0,
   historyArmed:false
 };
 
@@ -6073,6 +6122,7 @@ window.toggleConfirmar= id => {
     let totalPag=0;
     tarjetas.forEach(t=>{totalPag+=(pagosData[getPagosKey(t.id,mesVista,anioVista)]||[]).reduce((s,p)=>s+p.monto,0);});
     document.getElementById('sumSal').textContent = fmtARS(ingC - gasC);
+    renderProximosMovimientos(window._mesMov||[]);
   }
   // 3. Sincronizar Firebase en segundo plano
   updateDoc(userDoc('movimientos',id),{confirmado: btn?.classList.contains('checked')??true})
@@ -6109,6 +6159,10 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
     {clase:'copy',icono:'📋',label:'Duplicar',accion:()=>copiarMov(id)},
     {clase:'del2',icono:'✕',label:'Eliminar',accion:()=>borrar(id)}
   ];
+  const balanceRow=trigger.closest?.('#movPorSemana .balance-selectable');
+  if(balanceRow&&balanceViewMode==='semanal'){
+    acciones.unshift({clase:'select',icono:'✓',label:'Seleccionar',accion:()=>activarSeleccionBalance(id,balanceRow)});
+  }
   if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
   acciones.forEach(({clase,icono,label,accion})=>{
     const btn=document.createElement('button');
@@ -6118,7 +6172,7 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
     btn.setAttribute('aria-label',label);
     btn.setAttribute('role','menuitem');
     const iconSpan=document.createElement('span');
-    iconSpan.className='mov-action-icon';
+    iconSpan.className=`mov-action-icon${clase==='select'?' selection-check-icon':''}`;
     iconSpan.textContent=icono;
     const labelSpan=document.createElement('span');
     labelSpan.className='mov-action-label';
@@ -6147,6 +6201,8 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
 window.abrirMovActionsDesdeFila = (event,id,fila,modo='full') => {
   event.preventDefault();
   event.stopPropagation();
+  const esContextoTactil=event.pointerType==='touch'||event.sourceCapabilities?.firesTouchEvents||Date.now()-balanceSelectionState.lastTouchPressAt<1000;
+  if(esContextoTactil&&fila.closest?.('#movPorSemana')) return;
   if(balanceSelectionState.active&&Date.now()<balanceSelectionState.suppressContextUntil) return;
   const trigger=fila.querySelector('.mov-more-btn')||fila;
   const posicionCursor={x:event.clientX,y:event.clientY};
@@ -6418,6 +6474,7 @@ balanceMovContainer?.addEventListener('pointerdown',event=>{
   if(balanceSelectionState.active||balanceViewMode!=='semanal'||event.button!==0) return;
   const row=event.target.closest('.balance-selectable');
   if(!row||!balanceMovContainer.contains(row)) return;
+  if(event.pointerType==='touch') balanceSelectionState.lastTouchPressAt=Date.now();
   cancelarPulsacionBalance();
   balanceSelectionState.pressRow=row;
   balanceSelectionState.pressId=String(row.dataset.balanceSelectId);
@@ -6500,8 +6557,9 @@ window.cambiarSemanaBalance=dir=>{
 function renderProximosMovimientos(mesMov){
   const el=document.getElementById('upcomingMovements'); if(!el) return;
   const hoy=new Date(); hoy.setHours(0,0,0,0);
-  let items=mesMov.filter(d=>d.fecha&&!d.esPagoTarjeta&&new Date(d.fecha+'T12:00:00')>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
-  if(!items.length) items=mesMov.filter(d=>d.fecha&&!d.esPagoTarjeta).sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
+  const pendientes=mesMov.filter(d=>d.confirmado===false&&d.fecha&&!d.esPagoTarjeta);
+  let items=pendientes.filter(d=>new Date(d.fecha+'T12:00:00')>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
+  if(!items.length) items=pendientes.sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
   if(!items.length){ el.innerHTML='<div class="dashboard-empty">Sin próximos movimientos.</div>'; return; }
   el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${d.desc}</strong><small>${d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
 }
