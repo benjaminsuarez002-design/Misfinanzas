@@ -568,8 +568,8 @@
   .bar-fill { height: 100%; border-radius: 4px; animation: barGrow .8s cubic-bezier(.34,1.56,.64,1) both; }
 
   /* ── TOAST ── */
-  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--button-gradient, linear-gradient(135deg,#00ffd5,#8f6bff)); color: #fff; padding: 12px 24px; border-radius: 14px; font-family: 'Arial Black', sans-serif; font-weight: 700; font-size: 14px; transition: transform .35s cubic-bezier(.34,1.56,.64,1); z-index: 999; pointer-events: none; box-shadow: 0 4px 20px var(--button-shadow, rgba(120,90,255,.4)); }
-  .toast.show  { transform: translateX(-50%) translateY(0); }
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); opacity:0; visibility:hidden; background: var(--button-gradient, linear-gradient(135deg,#00ffd5,#8f6bff)); color: #fff; padding: 12px 24px; border-radius: 14px; font-family: 'Arial Black', sans-serif; font-weight: 700; font-size: 14px; transition: transform .35s cubic-bezier(.34,1.56,.64,1),opacity .12s ease,visibility 0s linear .12s; z-index: 999; pointer-events: none; box-shadow: 0 4px 20px var(--button-shadow, rgba(120,90,255,.4)); }
+  .toast.show  { transform: translateX(-50%) translateY(0); opacity:1; visibility:visible; transition-delay:0s; }
   .toast.error { background: linear-gradient(135deg,#ff4d6d,#ff3bd4); }
 
   /* ── MES NAV ── */
@@ -581,6 +581,7 @@
   /* ── LOADING ── */
   .loading-overlay { position: fixed; inset: 0; background: rgba(239,230,255,.92); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 2000; flex-direction: column; gap: 16px; }
   .loading-overlay.hidden { display: none; }
+  .widget-entry .app-help-inline-btn,.widget-entry .sem-info-side-btn { display:none !important; }
   .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; }
   .loading-overlay p { font-family: 'Arial Black', sans-serif; color: var(--muted); font-size: 14px; }
 
@@ -618,7 +619,9 @@
   .super-inp { border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 14px; color: var(--text); background: rgba(243,236,255,.4); outline: none; transition: border-color .2s, box-shadow .2s; font-family: Arial,sans-serif; width: 100%; }
   .super-inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(108,140,255,.12); background: #fff; }
   .super-inp-precio { width: 80px; text-align: right; }
-  .super-inp-cant   { width: 50px; text-align: center; }
+  .super-inp-cant   { width: 68px; min-width: 68px; padding-left: 6px; padding-right: 6px; text-align: center; -moz-appearance: textfield; }
+  .super-inp-cant::-webkit-outer-spin-button,
+  .super-inp-cant::-webkit-inner-spin-button { margin: 0; -webkit-appearance: none; }
   .super-inp-desc   { width: 100%; min-width: 90px; }
   .super-subtotal {
     font-family: Arial Black,sans-serif; font-weight: 800; font-size: 13px; white-space: nowrap;
@@ -1257,6 +1260,13 @@
     display: flex;
     flex-direction: column;
   }
+  .cfg-box.cfg-box-rubros {
+    height: min(88vh, 760px);
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
   .cfg-title { font-family: Arial Black,sans-serif; font-size: 17px; font-weight: 800; color: var(--text); margin-bottom: 22px; display:flex; align-items:center; gap:8px; }
   .cfg-section-title { font-size: 11px; color: var(--blue); font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display:flex; align-items:center; gap:6px; }
   .cfg-option {
@@ -1353,6 +1363,12 @@
   }
   .cfg-panel { display:none; }
   .cfg-panel.active { display:block; }
+  .cfg-panel-rubros.active {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
   .cfg-panel-personal.active {
     flex: 1 1 auto;
     min-height: 0;
@@ -1934,8 +1950,12 @@
   .recent-type { display:inline-block; border:1px solid currentColor; border-radius:999px; padding:2px 7px; font-style:normal; font-size:8px; }
   .dashboard-empty { min-height:140px; display:flex; align-items:center; justify-content:center; gap:8px; padding:20px; text-align:center; color:var(--muted); font-size:12px; }
   .rubro-field { display:none; } .rubro-field.visible { display:block; }
-  .cfg-rubros-list { display:grid; gap:8px; margin:14px 0; }
-  .cfg-rubro-row { display:grid; grid-template-columns:12px 34px minmax(0,1fr) auto auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--card2); }
+  .cfg-rubros-list { display:grid; flex:1 1 auto; gap:8px; margin:14px 0; min-height:0; overflow-y:auto; padding-right:4px; overscroll-behavior:contain; scrollbar-gutter:stable; }
+  .cfg-rubros-list::-webkit-scrollbar { width:8px; }
+  .cfg-rubros-list::-webkit-scrollbar-thumb { background:color-mix(in srgb,var(--blue) 28%,transparent); border-radius:999px; }
+  .cfg-rubro-row { display:grid; grid-template-columns:12px 34px minmax(0,1fr) auto auto; gap:8px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--card2); touch-action:pan-y; user-select:none; transition:transform .15s,box-shadow .15s,border-color .15s,opacity .15s; }
+  .cfg-rubro-row.is-dragging { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 13%,var(--card)); box-shadow:0 12px 28px color-mix(in srgb,var(--blue) 24%,transparent); transform:scale(.985); opacity:.94; z-index:2; }
+  .cfg-rubro-row.is-dragging .cfg-rubro-name::after { content:' · Moviendo'; color:var(--blue); font-size:10px; }
   .cfg-rubro-row.is-hidden { opacity:.5; }
   .cfg-rubro-color { width:10px; height:30px; border-radius:999px; background:var(--blue); }
   .cfg-rubro-row:nth-child(2n) .cfg-rubro-color { background:var(--accent); }
@@ -1961,20 +1981,20 @@
 
   @media (min-width: 1000px) {
     .top-collapsible { height:0; }
-    header { position:fixed; z-index:180; left:0; top:0; width:208px; height:46px; padding:0 16px; background:color-mix(in srgb,var(--card) 94%,transparent); border-right:1px solid var(--border); border-bottom:0; backdrop-filter:none; -webkit-backdrop-filter:none; }
+    header { position:fixed; z-index:180; left:0; top:0; width:240px; height:46px; padding:0 16px; background:color-mix(in srgb,var(--card) 94%,transparent); border-right:1px solid var(--border); border-bottom:0; backdrop-filter:none; -webkit-backdrop-filter:none; }
     header h1 { font-size:20px; white-space:nowrap; }
     header .header-right { display:block; }
-    header .sync-label { position:fixed; z-index:190; left:14px; bottom:143px; font-size:10px; }
-    header .user-badge { position:fixed; z-index:190; left:14px; bottom:113px; width:178px; max-width:178px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
+    header .sync-label { position:fixed; z-index:190; left:14px; bottom:150px; font-size:10px; }
+    header .user-badge { position:fixed; z-index:190; left:14px; bottom:120px; width:212px; max-width:212px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
     header .logout-btn { display:none; }
-    .usd-bar { position:fixed; z-index:170; left:0; top:46px; width:208px; height:69px; min-height:0; margin:0; padding:0 10px 9px; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:0; overflow:visible; background:color-mix(in srgb,var(--card) 86%,transparent); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
+    .usd-bar { position:fixed; z-index:170; left:0; top:46px; width:240px; height:69px; min-height:0; margin:0; padding:0 10px 9px; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:0; overflow:visible; background:color-mix(in srgb,var(--card) 86%,transparent); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
     .usd-pills { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
     .usd-pill { min-width:0; width:100%; padding:6px 4px; }
     .usd-pill-label { font-size:8px; letter-spacing:.6px; }
     .usd-pill-val { font-size:12px; }
     .usd-pill-sub { font-size:8px; }
     .usd-bar-right { display:none; }
-    .desktop-sidebar { display:flex; position:fixed; z-index:150; left:0; top:0; bottom:0; width:208px; height:100vh; flex-direction:column; padding:133px 14px 20px; background:color-mix(in srgb,var(--card) 82%,transparent); border-right:1px solid var(--border); backdrop-filter:blur(18px); }
+    .desktop-sidebar { display:flex; position:fixed; z-index:150; left:0; top:0; bottom:0; width:240px; height:100vh; flex-direction:column; padding:133px 14px 20px; background:color-mix(in srgb,var(--card) 82%,transparent); border-right:1px solid var(--border); backdrop-filter:blur(18px); }
     .desktop-nav { display:grid; gap:8px; }
     .desktop-nav-item { width:100%; display:flex; align-items:center; gap:13px; border:0; border-left:4px solid transparent; border-radius:0 12px 12px 0; padding:13px 14px; background:transparent; color:var(--muted); font-family:'Arial Black',sans-serif; font-size:12px; text-align:left; cursor:pointer; }
     .desktop-nav-item span { width:22px; color:var(--blue); font-size:18px; }
@@ -1983,16 +2003,16 @@
     .desktop-calc-row.desktop-nav-item { height:auto; min-height:60px; margin-top:8px; padding-left:8px; padding-right:8px; gap:8px; color:var(--muted); white-space:normal; line-height:1.15; }
     .desktop-calc-row.desktop-nav-item span { width:16px; }
     .desktop-calc-row.desktop-nav-item:hover { color:var(--blue); background:color-mix(in srgb,var(--blue) 7%,transparent); }
-    .desktop-bottom-actions { position:fixed; z-index:190; left:18px; bottom:92px; width:178px; display:flex; justify-content:flex-end; gap:10px; }
+    .desktop-bottom-actions { position:fixed; z-index:190; left:18px; bottom:76px; width:204px; display:flex; justify-content:flex-end; gap:10px; }
     .desktop-bottom-actions button:last-child { flex:1; }
     .desktop-bottom-actions button { height:32px; padding:0 14px; border:1px solid var(--border); border-radius:9px; background:var(--card); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:11px; font-weight:800; cursor:pointer; }
     .desktop-bottom-actions button:first-child { width:46px; padding:0; font-size:15px; }
-    .desktop-help { position:fixed; z-index:190; left:14px; bottom:14px; width:178px; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:12px; padding:11px; background:var(--card2); color:var(--blue); text-align:left; cursor:pointer; }
+    .desktop-help { position:fixed; z-index:190; left:14px; bottom:14px; width:212px; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:12px; padding:11px; background:var(--card2); color:var(--blue); text-align:left; cursor:pointer; }
     .desktop-help>span:first-child { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 15%,transparent); font-weight:900; }
     .desktop-help strong,.desktop-help small { display:block; font-size:9px; }
     .desktop-help small { margin-top:3px; color:var(--muted); }
     .tabs { display:none; }
-    .page { width:calc(100% - 208px); max-width:none; margin-left:208px; padding:18px 18px 40px; }
+    .page { width:calc(100% - 240px); max-width:none; margin-left:240px; padding:18px 18px 40px; }
     #tab-resumen.page.active { display:block; }
     #tab-resumen .dashboard-heading { position:relative; min-height:48px; margin-bottom:0; }
     #tab-resumen .dashboard-heading .mes-nav { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); }
@@ -2008,7 +2028,10 @@
     .weekly-dashboard-panel .sem-group { margin-top:6px; }
     .dashboard-left-column { gap:10px; }
     #ingPanel,#gasPanel,#tarjetasPanel,#fijoPanel { max-width:none; }
-    #tab-cargar { max-width:900px; margin-right:auto; }
+    #tab-cargar { width:min(900px,calc(100% - 240px)); max-width:900px; margin-left:calc(240px + max(0px,(100vw - 1140px)/2)); margin-right:0; }
+    #tab-menu { width:min(760px,calc(100% - 240px)); max-width:760px; margin-left:calc(240px + max(0px,(100vw - 1000px)/2)); margin-right:0; }
+    #tab-compartir { width:min(980px,calc(100% - 240px)); max-width:980px; margin-left:calc(240px + max(0px,(100vw - 1220px)/2)); margin-right:0; }
+    #tab-compartir .split-participants { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
     #tab-informe { max-width:none; }
     .btn-duplicar-mes { max-width:460px; margin-left:auto; margin-right:auto; }
   }
@@ -2026,7 +2049,7 @@
     .usd-bar { padding:8px 10px; }.usd-pill { min-width:74px; padding:6px 8px; }.usd-pill-val { font-size:13px; }.usd-bar-right { gap:6px; }
     .tab { padding:12px 6px; font-size:12px; }.page { padding:14px 12px 32px; }
     .dashboard-heading { align-items:flex-end; gap:8px; margin-bottom:14px; }.dashboard-heading h2 { font-size:18px; white-space:nowrap; }.dashboard-eyebrow { display:none; }
-    .dashboard-heading .mes-nav { min-width:0; gap:6px; }.dashboard-heading .mes-nav span { min-width:74px; font-size:12px; }
+    .dashboard-heading .mes-nav { width:50%; flex:0 0 50%; min-width:0; gap:6px; justify-content:space-between; }.dashboard-heading .mes-nav span { min-width:74px; font-size:12px; }
     .dashboard-heading .mes-nav>button,.balance-week-picker>button { width:28px; height:28px; }
     .dashboard-heading .mes-nav>button { flex-basis:28px; }
     .summary-grid { gap:7px; margin-bottom:12px; }.sum-card { min-width:0; min-height:68px; border-radius:13px; padding:10px 11px; }
@@ -2055,7 +2078,7 @@
     .weekly-dashboard-panel .sem-header { grid-template-columns:minmax(128px,1fr) auto; gap:8px; padding:9px; }.sem-balance-track { display:none; }
     .sem-group-row { margin-right:4px; }.sem-header-left { gap:7px; min-width:0; }.weekly-dashboard-panel .sem-title { font-size:12px; }.weekly-dashboard-panel .sem-fechas { font-size:8px; }.weekly-dashboard-panel .sem-saldo { font-size:11px; white-space:nowrap; }
     .rubro-chart-layout { grid-template-columns:120px 1fr; padding:16px 12px; }.rubro-donut { width:116px; }.rubro-donut>div { width:62px; }.rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 25px; font-size:9px; }
-    .upcoming-row { grid-template-columns:36px minmax(0,1fr) 38px auto; padding:9px; }.upcoming-amount { font-size:9px; }
+    .upcoming-row { grid-template-columns:36px minmax(0,1fr) minmax(48px,max-content) max-content; padding:9px; }.upcoming-date { white-space:nowrap; }.upcoming-amount { font-size:9px; }
     .mov-item { align-items:flex-start; gap:10px; padding:13px 12px; }.mov-item>.balance-mov-copy { min-width:0; }.mov-item>div:last-child { flex-wrap:wrap; justify-content:flex-end; }.mov-nombre { font-size:13px; overflow-wrap:anywhere; }.mov-monto { font-size:13px; white-space:nowrap; }.action-btn { padding:4px; }
     .cfg-rubro-row { grid-template-columns:10px 34px minmax(0,1fr) auto; }.cfg-rubro-row .cfg-rubro-icon { grid-column:2; grid-row:1; }.cfg-rubro-row .cfg-rubro-action-rename { grid-column:2/4; grid-row:2; }.cfg-rubro-row .cfg-rubro-action-toggle { grid-column:4; grid-row:2; }
     .cfg-icon-editor { padding:17px; }.cfg-icon-grid { grid-template-columns:repeat(6,1fr); gap:6px; }
@@ -2068,6 +2091,118 @@
     .dashboard-heading .mes-nav span { min-width:70px; }
     .balance-week-picker { width:100%; }
     .balance-view-toggle { margin-left:0; }
+  }
+
+  /* ── MENÚ Y REPARTO DE GASTOS ── */
+  #tab-menu { max-width:760px; }
+  #tab-compartir { max-width:980px; }
+  .menu-hub { padding:14px 8px 30px; }
+  .menu-hub-title { margin:0 0 34px; font-family:'Arial Black',sans-serif; font-size:28px; color:var(--text); }
+  .menu-option-list { display:grid; gap:18px; }
+  .menu-option-card { width:100%; min-height:126px; display:grid; grid-template-columns:82px minmax(0,1fr) 30px; align-items:center; gap:18px; padding:22px 24px; border:1.5px solid var(--border); border-radius:22px; background:color-mix(in srgb,var(--card) 94%,transparent); color:var(--text); text-align:left; cursor:pointer; box-shadow:0 8px 24px var(--surface-shadow); transition:transform .18s,border-color .18s,box-shadow .18s; }
+  .menu-option-card:hover { transform:translateY(-2px); border-color:var(--blue); box-shadow:0 14px 30px var(--surface-shadow); }
+  .menu-option-card.split { border-color:color-mix(in srgb,var(--green) 45%,var(--border)); }
+  .menu-option-icon { width:76px; height:76px; display:grid; place-items:center; border-radius:50%; background:color-mix(in srgb,var(--blue) 12%,var(--card)); color:var(--blue); font-size:35px; }
+  .menu-option-icon svg { width:39px; height:39px; stroke:currentColor; }
+  .menu-option-card.split .menu-option-icon { background:color-mix(in srgb,var(--green) 11%,var(--card)); color:var(--green); }
+  .menu-option-copy { min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .menu-option-copy strong { font-family:'Arial Black',sans-serif; font-size:20px; color:var(--text); }
+  .menu-option-copy small { color:var(--muted); font-size:15px; line-height:1.35; }
+  .menu-option-chevron { color:var(--blue); font-size:34px; line-height:1; text-align:center; }
+  .menu-option-card.split .menu-option-chevron { color:var(--green); }
+
+  .split-screen { padding:4px 6px 28px; color:var(--text); }
+  .split-page-head { min-height:58px; display:grid; grid-template-columns:42px minmax(0,1fr) 42px; align-items:center; gap:10px; margin-bottom:8px; }
+  .split-back { width:42px; height:42px; display:grid; place-items:center; border:1.5px solid var(--border); border-radius:12px; background:var(--card); color:var(--text); font-size:23px; cursor:pointer; }
+  .split-head-copy { min-width:0; text-align:center; }
+  .split-head-copy h2 { margin:0; font-family:'Arial Black',sans-serif; font-size:21px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .split-head-copy p { margin:3px 0 0; color:var(--text); font-size:13px; }
+  .split-head-spacer { width:46px; }
+  .split-add-expense { width:100%; min-height:50px; margin-bottom:16px; border:1.5px solid var(--blue); border-radius:14px; background:color-mix(in srgb,var(--blue) 4%,var(--card)); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:15px; cursor:pointer; }
+  .split-participants { display:grid; gap:10px; }
+  .split-person-card { overflow:hidden; border:1.5px solid var(--border); border-radius:14px; background:color-mix(in srgb,var(--card) 94%,transparent); box-shadow:0 4px 12px var(--surface-shadow); }
+  .split-person-head { width:100%; min-height:60px; display:grid; grid-template-columns:42px minmax(0,1fr) 22px; align-items:center; gap:10px; padding:8px 12px; border:0; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+  .split-avatar { width:40px; height:40px; display:grid; place-items:center; border-radius:50%; background:linear-gradient(135deg,var(--blue),var(--accent2)); color:#fff; font-family:'Arial Black',sans-serif; font-size:18px; box-shadow:0 5px 13px color-mix(in srgb,var(--blue) 25%,transparent); }
+  .split-avatar.tone-1 { background:linear-gradient(135deg,var(--blue),#4d9cff); }
+  .split-avatar.tone-2 { background:linear-gradient(135deg,var(--green),#00a981); }
+  .split-person-copy { min-width:0; }
+  .split-person-copy strong { display:block; font-family:'Arial Black',sans-serif; font-size:15px; color:var(--text); }
+  .split-person-copy small { display:block; margin-top:3px; color:var(--muted); font-size:12px; }
+  .split-person-copy small b { color:var(--blue); font-family:'Arial Black',sans-serif; }
+  .split-chevron { width:24px; height:24px; display:grid; place-items:center; color:var(--muted); transition:transform .2s,color .2s; }
+  .split-chevron svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; }
+  .split-person-head:hover .split-chevron { color:var(--blue); }
+  .split-person-card.collapsed .split-chevron { transform:rotate(-90deg); }
+  .split-items { border-top:1px solid color-mix(in srgb,var(--border) 75%,transparent); }
+  .split-person-card.collapsed .split-items { display:none; }
+  .split-item-row { min-height:38px; display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:10px; padding:7px 12px; border-bottom:1px solid color-mix(in srgb,var(--border) 55%,transparent); color:var(--text); cursor:pointer; }
+  .split-item-row:last-child { border-bottom:0; }
+  .split-item-row:hover { background:color-mix(in srgb,var(--blue) 5%,transparent); }
+  .split-item-row span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+  .split-item-row strong { font-size:13px; white-space:nowrap; }
+  .split-empty-person { padding:13px 15px; color:var(--muted); font-size:12px; }
+  .split-quick-row { display:grid; grid-template-columns:minmax(0,1fr) 104px; gap:7px; padding:7px 10px; background:color-mix(in srgb,var(--blue) 3%,var(--card)); }
+  .split-quick-row input { width:100%; min-width:0; height:36px; padding:0 10px; border:1.5px dashed var(--border); border-radius:9px; outline:none; background:color-mix(in srgb,var(--card2) 75%,transparent); color:var(--text); font-size:12px; }
+  .split-quick-row input:focus { border-style:solid; border-color:var(--blue); box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 10%,transparent); }
+  .split-quick-amount { text-align:right; }
+  .split-event-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .split-event-actions button { width:100%; min-height:56px; border-radius:15px; font-family:'Arial Black',sans-serif; font-size:14px; cursor:pointer; }
+  .split-add-person { border:1.5px solid var(--blue); background:color-mix(in srgb,var(--blue) 4%,var(--card)); color:var(--blue); }
+  .split-settle-btn { border:0; background:var(--button-gradient,linear-gradient(135deg,var(--accent),var(--blue))); color:#fff; box-shadow:0 10px 25px var(--button-shadow); }
+
+  .split-summary-card { min-height:142px; display:grid; grid-template-columns:82px minmax(0,1fr); align-items:center; gap:20px; padding:22px 25px; border:1.5px solid var(--border); border-radius:20px; background:color-mix(in srgb,var(--card) 95%,transparent); box-shadow:0 8px 22px var(--surface-shadow); }
+  .split-summary-icon { width:78px; height:78px; display:grid; place-items:center; border-radius:50%; background:color-mix(in srgb,var(--blue) 12%,var(--card)); color:var(--blue); font-size:37px; }
+  .split-summary-icon svg { width:45px; height:45px; stroke:currentColor; }
+  .split-summary-lines { display:grid; gap:9px; }
+  .split-summary-line { display:flex; align-items:center; justify-content:space-between; gap:12px; font-size:16px; }
+  .split-summary-line strong { color:var(--text); font-family:'Arial Black',sans-serif; white-space:nowrap; }
+  .split-summary-line:first-child strong { color:var(--green); }
+  .split-summary-line:last-child strong { color:var(--blue); }
+  .split-settlement-title { margin:28px 0 15px; font-family:'Arial Black',sans-serif; font-size:22px; color:var(--text); }
+  .split-transfers { display:grid; gap:13px; }
+  .split-transfer-card { min-height:84px; display:grid; grid-template-columns:minmax(0,1fr) 28px minmax(90px,.8fr); align-items:center; gap:12px; padding:14px 17px; border:1.5px solid var(--border); border-radius:17px; background:color-mix(in srgb,var(--card) 95%,transparent); box-shadow:0 5px 16px var(--surface-shadow); }
+  .split-transfer-person { min-width:0; display:flex; align-items:center; gap:12px; }
+  .split-transfer-person .split-avatar { width:43px; height:43px; flex:0 0 43px; font-size:17px; }
+  .split-transfer-copy { min-width:0; }
+  .split-transfer-copy strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:'Arial Black',sans-serif; font-size:13px; }
+  .split-transfer-copy small { display:block; margin-top:4px; color:var(--text); font-size:12px; white-space:nowrap; }
+  .split-transfer-copy small b { color:var(--green); font-family:'Arial Black',sans-serif; }
+  .split-transfer-arrow { text-align:center; color:var(--text); font-size:25px; }
+  .split-transfer-to { min-width:0; display:flex; align-items:center; gap:9px; }
+  .split-transfer-to .split-avatar { width:39px; height:39px; flex:0 0 39px; font-size:16px; }
+  .split-transfer-to span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; }
+  .split-all-even { width:max-content; max-width:100%; margin:22px auto; padding:10px 18px; border-radius:999px; background:color-mix(in srgb,var(--green) 10%,var(--card)); color:var(--green); font-family:'Arial Black',sans-serif; font-size:13px; }
+  .split-result-actions { display:grid; gap:12px; }
+  .split-result-actions button { width:100%; min-height:57px; border-radius:15px; font-family:'Arial Black',sans-serif; font-size:14px; cursor:pointer; }
+  .split-edit-btn { border:1.5px solid var(--blue); background:color-mix(in srgb,var(--blue) 4%,var(--card)); color:var(--blue); }
+  .split-done-btn { border:0; background:var(--button-gradient,linear-gradient(135deg,var(--accent),var(--blue))); color:#fff; box-shadow:0 10px 25px var(--button-shadow); }
+  .split-no-data { padding:44px 20px; text-align:center; border:1.5px dashed var(--border); border-radius:20px; color:var(--muted); }
+  .split-no-data strong { display:block; margin-bottom:8px; color:var(--text); font-family:'Arial Black',sans-serif; font-size:18px; }
+  .split-no-data button { margin-top:18px; padding:13px 20px; border:0; border-radius:13px; background:var(--button-gradient); color:#fff; font-family:'Arial Black',sans-serif; cursor:pointer; }
+
+  @media (max-width:600px) {
+    #tab-menu,#tab-compartir { padding:20px 16px 34px; }
+    .menu-hub { padding:7px 2px 24px; }
+    .menu-hub-title { margin-bottom:34px; font-size:27px; }
+    .menu-option-card { min-height:126px; grid-template-columns:76px minmax(0,1fr) 24px; gap:15px; padding:20px 18px; border-radius:20px; }
+    .menu-option-icon { width:70px; height:70px; font-size:32px; }
+    .menu-option-copy strong { font-size:18px; }
+    .menu-option-copy small { font-size:14px; }
+    .menu-option-chevron { font-size:29px; }
+    .split-screen { padding:0 0 24px; }
+    .split-page-head { min-height:56px; grid-template-columns:40px minmax(0,1fr) 40px; gap:8px; }
+    .split-back { width:42px; height:42px; border-radius:12px; font-size:23px; }
+    .split-head-copy h2 { font-size:21px; }
+    .split-head-copy p { font-size:13px; }
+    .split-add-expense { min-height:48px; }
+    .split-person-head { min-height:58px; grid-template-columns:40px minmax(0,1fr) 22px; padding:8px 11px; }
+    .split-avatar { width:38px; height:38px; font-size:17px; }
+    .split-summary-card { min-height:132px; grid-template-columns:70px minmax(0,1fr); gap:16px; padding:20px 18px; }
+    .split-summary-icon { width:68px; height:68px; font-size:32px; }
+    .split-summary-line { font-size:14px; }
+    .split-transfer-card { grid-template-columns:minmax(0,1fr) 24px minmax(83px,.72fr); gap:8px; padding:13px 12px; }
+    .split-quick-row { grid-template-columns:minmax(0,1fr) 102px; gap:6px; padding:8px 10px; }
+    .split-event-actions button { min-height:52px; font-size:12px; }
   }
 
   /* Los textos principales nunca deben verse más chicos que el nombre de un movimiento. */
@@ -2124,7 +2259,7 @@
   <div class="spinner"></div>
   <p>Cargando datos...</p>
 </div>
-<script>if(new URLSearchParams(location.search).get('widget')==='1')document.getElementById('loadingOverlay').classList.add('hidden');</script>
+<script>if(new URLSearchParams(location.search).get('widget')==='1'){document.documentElement.classList.add('widget-entry');document.getElementById('loadingOverlay').classList.add('hidden');}</script>
 
 <!-- LOGIN -->
 <div id="loginScreen" style="display:none;">
@@ -2268,7 +2403,7 @@
     <nav class="desktop-nav">
       <button class="desktop-nav-item active" data-tab="resumen" onclick="goTab('resumen')"><span>▥</span> Resumen</button>
       <button class="desktop-nav-item" data-tab="cargar" onclick="goTab('cargar')"><span>＋</span> Cargar</button>
-      <button class="desktop-nav-item" data-tab="informe" onclick="goTab('informe')"><span>🛒</span> Compras</button>
+      <button class="desktop-nav-item" data-tab="menu" onclick="goTab('menu')"><span>☰</span> Menú</button>
     </nav>
     <button class="desktop-new-mov" onclick="goTab('cargar')"><span>＋</span> Nuevo movimiento</button>
     <button class="desktop-calc-row desktop-nav-item" onclick="toggleMovSelector()"><span class="selection-check-icon" aria-hidden="true">✓</span> Calcular movimientos</button>
@@ -2280,9 +2415,9 @@
   </aside>
 
   <div class="tabs sticky-bar">
-    <div class="tab active" onclick="goTab('resumen')">Resumen</div>
-    <div class="tab" onclick="goTab('cargar')">+ Cargar</div>
-    <div class="tab" onclick="goTab('informe')">Compras</div>
+    <div class="tab active" data-tab="resumen" onclick="goTab('resumen')">Resumen</div>
+    <div class="tab" data-tab="cargar" onclick="goTab('cargar')">+ Cargar</div>
+    <div class="tab" data-tab="menu" onclick="goTab('menu')">Menú</div>
   </div>
 
   <!-- RESUMEN -->
@@ -2377,7 +2512,7 @@
         <label id="labelMonto">Monto</label>
         <div class="amount-currency-shell">
           <div class="amount-field-host">
-            <input type="text" id="fMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this);abrirConfigCreditoDesdeMonto(this)" onkeydown="handleMontoExpressionEnter(event,this);if(event.key==='Enter')abrirConfigCreditoDesdeMonto(this)" style="text-align:left">
+            <input type="text" id="fMonto" inputmode="numeric" enterkeyhint="done" placeholder="0" oninput="fMontoInput(this)" onblur="resolveMontoExpressionInput(this);abrirConfigCreditoDesdeMonto(this)" onkeydown="handleMontoExpressionEnter(event,this);if(event.key==='Enter')abrirConfigCreditoDesdeMonto(this)" style="text-align:left">
           </div>
           <div class="form-currency-picker">
             <button type="button" class="form-currency-trigger" id="formCurrencyTrigger" onclick="toggleFormCurrencyMenu(event)">$ ARS ▾</button>
@@ -2492,6 +2627,30 @@
     </div>
   </div>
 
+  <!-- MENÚ -->
+  <div class="page" id="tab-menu">
+    <div class="menu-hub">
+      <h2 class="menu-hub-title">Menú</h2>
+      <div class="menu-option-list">
+        <button type="button" class="menu-option-card" onclick="goTab('informe')">
+          <span class="menu-option-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M7 10h5l4 21h21l4-14H14"/><circle cx="20" cy="38" r="2.5"/><circle cx="35" cy="38" r="2.5"/><path d="M20 15v13M28 15v13M36 16l-2 12"/></svg></span>
+          <span class="menu-option-copy"><strong>Compras</strong><small>Listas y compras del mes</small></span>
+          <span class="menu-option-chevron">›</span>
+        </button>
+        <button type="button" class="menu-option-card split" onclick="abrirGastosRepartidos()">
+          <span class="menu-option-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="14" r="6"/><circle cx="10" cy="20" r="4.5"/><circle cx="38" cy="20" r="4.5"/><path d="M13 40v-4c0-6 5-10 11-10s11 4 11 10v4M3 37v-3c0-4 3-7 7-7M45 37v-3c0-4-3-7-7-7"/></svg></span>
+          <span class="menu-option-copy"><strong>Compartir gastos</strong><small>Dividí gastos con amigos o familia</small></span>
+          <span class="menu-option-chevron">›</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPARTIR GASTOS -->
+  <div class="page" id="tab-compartir">
+    <div id="splitRoot"></div>
+  </div>
+
   <!-- COMPRAS -->
   <div class="page" id="tab-informe" style="padding:16px 12px 40px;">
 
@@ -2550,7 +2709,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, updateDoc, setDoc, getDoc, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, getDocsFromServer, updateDoc, setDoc, getDoc, getDocFromServer, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -2563,8 +2722,9 @@ const firebaseConfig = {
   appId: "1:933125362701:web:d7976685e9a803753ef144"
 };
 
+const widgetEntryMode = new URLSearchParams(location.search).get('widget') === '1';
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = widgetEntryMode ? initializeFirestore(app,{localCache:persistentLocalCache({})}) : getFirestore(app);
 const auth = getAuth(app);
 const SUPABASE_URL = 'https://tizyjenayrcdkcodsjnc.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRpenlqZW5heXJjZGtjb2Rzam5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyMzE4MDYsImV4cCI6MjA4NzgwNzgwNn0.Xue8zgo8QJiKTErtzfUOgpczMngsAaePJZqLvA8Z7oI';
@@ -2573,7 +2733,6 @@ const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includ
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 const visualTestMode = location.hostname === '127.0.0.1' && new URLSearchParams(location.search).has('visualTest');
-const widgetEntryMode = new URLSearchParams(location.search).get('widget') === '1';
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DEFAULT_RUBROS = [
@@ -2593,6 +2752,7 @@ const RUBRO_ICON_OPTIONS = ['🛒','🏠','🚗','🚌','🍽️','🍎','💡',
 let currentUser = null;
 let data = [], pagosData = {}, pagosListeners = {}, movListener = null, tarjetas = [];
 let fijoData = [], fijoListener = null, fijoPagosData = {}, fijoPagosListeners = {};
+let appCacheHydrated = false;
 let tipoActual = 'ingreso', subtipoActual = 'personal', subtipoFijoActual = 'me_deben', monedaActual = 'ARS', periodoActual = 'semanal';
 let tarjetaSeleccionada = null, tarjetaPanelActiva = null;
 const now = new Date();
@@ -2674,14 +2834,19 @@ onAuthStateChanged(auth, user => {
   if(visualTestMode){ iniciarVisualTest(); return; }
   if(user) {
     currentUser = user;
+    appCacheHydrated = cargarAppCacheLocal(user.uid);
     document.getElementById('loginScreen').style.display = 'none';
-    if(widgetEntryMode){
+    if(appCacheHydrated || widgetEntryMode){
       document.getElementById('loadingOverlay').classList.add('hidden');
-      aplicarEntradaWidget();
     }
     document.getElementById('appScreen').style.display = 'block';
     document.getElementById('userBadge').textContent = (user.email||'').split('@')[0];
-    cargarConfig().then(() => iniciarApp());
+    aplicarConfigActual();
+    iniciarApp();
+    if(appCacheHydrated){ setSyncStatus('syncing'); renderResumen(); }
+    cargarConfig().then(()=>{
+      initMesSelect(); refrescarSelectoresRubros(); renderTarjetaChips(); renderResumen();
+    });
   } else {
     // Sin sesión → redirigir al login
     window.location.href = 'index.html';  // ← el nombre de tu archivo de login
@@ -2698,7 +2863,7 @@ function iniciarVisualTest(){
   document.getElementById('userBadge').textContent='benjaminsuarez002';
   document.getElementById('syncLabel').textContent='Sincronizado';
   document.getElementById('syncDot').classList.add('ok');
-  userConfig={...userConfig,frecuencia:'semanal',diaCorte:11,diaCobro:5,rubrosCustom:[],rubrosHidden:[],rubroAliases:{},rubroIcons:{}};
+  userConfig={...userConfig,frecuencia:'semanal',diaCorte:11,diaCobro:5,rubrosCustom:[],rubrosHidden:[],rubroAliases:{},rubroIcons:{},rubrosOrder:[]};
   mesVista=6; anioVista=2026; usdValOficial=1510; usdValTarjeta=1963;
   document.getElementById('valOficial').textContent='$1.510'; document.getElementById('valTarjeta').textContent='$1.963';
   tarjetas=[{id:'visa',nombre:'Tarjeta Visa',diaCierre:28,diaPago:7}];
@@ -2762,6 +2927,7 @@ function limpiarApp() {
     rubrosHidden: [],
     rubroAliases: {},
     rubroIcons: {},
+    rubrosOrder: [],
     personalizacion: window.MisFinanzasTheme?.getCurrent?.() || null
   };
 }
@@ -2771,8 +2937,9 @@ function aplicarEntradaWidget(){
   const tipo=params.get('tipo');
   goTab('cargar');
   if(['ingreso','gasto','credito','fijo'].includes(tipo)) setTipo(tipo);
+  history.replaceState(null,'',location.pathname);
 }
-function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); setTimeout(aplicarEntradaWidget,0); }
+function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); setTimeout(aplicarEntradaWidget,0); }
 
 
 // ── CONFIG ──────────────────────────────────────────
@@ -2786,14 +2953,59 @@ let userConfig = {
   rubrosHidden: [],
   rubroAliases: {},
   rubroIcons: {},
+  rubrosOrder: [],
   personalizacion: window.MisFinanzasTheme?.getCurrent?.() || null
 }; // diaCobro: 0=Lu..6=Do
 
+function configCacheKey(uid=currentUser?.uid){return uid?`misfinanzas-config-${uid}`:null;}
+function appDataCacheKey(uid=currentUser?.uid){return uid?`misfinanzas-app-cache-v1-${uid}`:null;}
+function cargarAppCacheLocal(uid){
+  try{
+    const raw=localStorage.getItem(appDataCacheKey(uid));
+    if(!raw) return false;
+    const cache=JSON.parse(raw);
+    if(!cache||cache.version!==1) return false;
+    if(cache.config) userConfig={...userConfig,...cache.config};
+    data=Array.isArray(cache.movimientos)?cache.movimientos:[];
+    tarjetas=Array.isArray(cache.tarjetas)?cache.tarjetas:[];
+    fijoData=Array.isArray(cache.fijos)?cache.fijos:[];
+    pagosData=cache.pagosTarjeta&&typeof cache.pagosTarjeta==='object'?cache.pagosTarjeta:{};
+    fijoPagosData=cache.pagosFijos&&typeof cache.pagosFijos==='object'?cache.pagosFijos:{};
+    return true;
+  }catch(e){ return false; }
+}
+function guardarAppCacheLocal(){
+  if(!currentUser||visualTestMode) return;
+  const key=appDataCacheKey(); if(!key) return;
+  try{
+    localStorage.setItem(key,JSON.stringify({
+      version:1,updatedAt:Date.now(),config:userConfig,
+      movimientos:data,tarjetas,fijos:fijoData,
+      pagosTarjeta:pagosData,pagosFijos:fijoPagosData
+    }));
+  }catch(e){ console.warn('guardarAppCacheLocal error:',e); }
+}
+function cargarConfigLocalWidget(uid){
+  try{
+    const raw=localStorage.getItem(configCacheKey(uid));
+    if(raw) userConfig={...userConfig,...JSON.parse(raw)};
+    if(window.MisFinanzasTheme&&userConfig.personalizacion) window.MisFinanzasTheme.setTheme(userConfig.personalizacion,{persist:true});
+    syncHelpVisibility(document);
+  }catch(e){}
+}
+
 async function cargarConfig() {
   try {
-    const snap = await getDoc(userDoc('config','preferencias'));
-    if(snap.exists()) userConfig = { ...userConfig, ...snap.data() };
+    const snap = await getDocFromServer(userDoc('config','preferencias'));
+    if(snap.exists()){
+      userConfig = { ...userConfig, ...snap.data() };
+      const key=configCacheKey(); if(key) localStorage.setItem(key,JSON.stringify(userConfig));
+      guardarAppCacheLocal();
+    }
   } catch(e) { console.warn('cargarConfig error:', e); }
+  aplicarConfigActual();
+}
+function aplicarConfigActual(){
   if(window.MisFinanzasTheme){
     const tema = userConfig.personalizacion || window.MisFinanzasTheme.getCurrent();
     userConfig.personalizacion = tema;
@@ -2823,13 +3035,17 @@ async function cargarConfig() {
   }
   mesVista = periodoMes;
   anioVista = periodoAnio;
+  syncHelpVisibility(document);
 }
 async function guardarConfig() {
   if(window.MisFinanzasTheme){
     userConfig.personalizacion = window.MisFinanzasTheme.getCurrent();
     window.MisFinanzasTheme.setTheme(userConfig.personalizacion, { persist: true });
   }
-  try { await setDoc(userDoc('config','preferencias'), userConfig); } catch(e) { console.warn('guardarConfig error:', e); }
+  try {
+    await setDoc(userDoc('config','preferencias'), userConfig);
+    const key=configCacheKey(); if(key) localStorage.setItem(key,JSON.stringify(userConfig));
+  } catch(e) { console.warn('guardarConfig error:', e); }
 }
 
 
@@ -3034,8 +3250,11 @@ function getRubros({ incluirOcultos = false } = {}) {
   const hidden = new Set(Array.isArray(userConfig.rubrosHidden) ? userConfig.rubrosHidden : []);
   const aliases = userConfig.rubroAliases || {};
   const icons = userConfig.rubroIcons || {};
+  const order = Array.isArray(userConfig.rubrosOrder) ? userConfig.rubrosOrder : [];
+  const orderIndex = new Map(order.map((id, index) => [id, index]));
   return [...DEFAULT_RUBROS, ...custom]
     .filter((r, idx, all) => all.findIndex(x => x.id === r.id) === idx)
+    .sort((a,b) => (orderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (orderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER))
     .map(r => ({ ...r, label: aliases[r.id] || r.label, icon: icons[r.id] || r.icon, hidden: hidden.has(r.id) }))
     .filter(r => incluirOcultos || !r.hidden);
 }
@@ -3051,8 +3270,11 @@ function rubroOptionsHTML(selected = 'otros', incluirVacio = false) {
 }
 
 function refrescarSelectoresRubros() {
-  const principal = document.getElementById('fRubro');
-  if(principal){ const actual=principal.value||'otros'; principal.innerHTML=rubroOptionsHTML(actual); if([...principal.options].some(o=>o.value===actual)) principal.value=actual; }
+  document.querySelectorAll('#fRubro,#cfRubro,#editRubro,#superRubro').forEach(select => {
+    const actual=select.value||'otros';
+    select.innerHTML=rubroOptionsHTML(actual);
+    if([...select.options].some(o=>o.value===actual)) select.value=actual;
+  });
 }
 
 function escapeRubroConfigHtml(value){
@@ -3063,13 +3285,102 @@ function renderCfgRubros() {
   const list = document.getElementById('cfgRubrosList');
   if(!list) return;
   list.innerHTML = getRubros({ incluirOcultos:true }).map((r, i) => `
-    <div class="cfg-rubro-row ${r.hidden?'is-hidden':''}">
+    <div class="cfg-rubro-row ${r.hidden?'is-hidden':''}" data-rubro-id="${r.id}" title="Mantené presionado un segundo para mover">
       <span class="cfg-rubro-color" style="--rubro-index:${i}"></span>
       <button type="button" class="cfg-rubro-icon" onclick="cambiarIconoRubroConfig('${r.id}')" title="Cambiar icono de ${escapeRubroConfigHtml(r.label)}" aria-label="Cambiar icono de ${escapeRubroConfigHtml(r.label)}">${escapeRubroConfigHtml(r.icon)}</button>
       <span class="cfg-rubro-name">${escapeRubroConfigHtml(r.label)}</span>
       <button type="button" class="cfg-rubro-action-rename" onclick="renombrarRubroConfig('${r.id}')">Renombrar</button>
       <button type="button" class="cfg-rubro-action-toggle" onclick="toggleRubroConfig('${r.id}')">${r.hidden?'Mostrar':'Ocultar'}</button>
     </div>`).join('');
+  activarOrdenCfgRubros(list);
+}
+
+function activarOrdenCfgRubros(list) {
+  let dragState=null;
+  const terminar=(commit=false)=>{
+    if(!dragState) return;
+    clearTimeout(dragState.timer);
+    const estabaActivo=dragState.active;
+    dragState.row.classList.remove('is-dragging');
+    if(commit&&estabaActivo){
+      userConfig.rubrosOrder=[...list.querySelectorAll('.cfg-rubro-row')].map(row=>row.dataset.rubroId);
+      refrescarSelectoresRubros();
+      showToast('↕️ Orden actualizado. Tocá Guardar para conservarlo.');
+    }
+    dragState=null;
+  };
+  const moverFila=(clientX,clientY)=>{
+    const target=document.elementFromPoint(clientX,clientY)?.closest('.cfg-rubro-row');
+    if(target&&target!==dragState.row&&target.parentElement===list){
+      const rect=target.getBoundingClientRect();
+      list.insertBefore(dragState.row,clientY>rect.top+rect.height/2?target.nextSibling:target);
+    }
+    const listRect=list.getBoundingClientRect();
+    if(clientY<listRect.top+42) list.scrollBy({top:-18,behavior:'auto'});
+    else if(clientY>listRect.bottom-42) list.scrollBy({top:18,behavior:'auto'});
+  };
+
+  list.querySelectorAll('.cfg-rubro-row').forEach(row=>{
+    row.addEventListener('contextmenu',e=>e.preventDefault());
+    row.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='touch'||e.button!==0||e.target.closest('button')) return;
+      terminar(false);
+      const next={row,pointerId:e.pointerId,startX:e.clientX,startY:e.clientY,active:false,timer:null};
+      next.timer=setTimeout(()=>{
+        if(dragState!==next) return;
+        next.active=true;
+        row.classList.add('is-dragging');
+        try{row.setPointerCapture(next.pointerId);}catch(_){}
+        try{navigator.vibrate?.(25);}catch(_){}
+      },1000);
+      dragState=next;
+    });
+    row.addEventListener('pointermove',e=>{
+      if(e.pointerType==='touch'||!dragState||dragState.pointerId!==e.pointerId) return;
+      if(!dragState.active){
+        if(Math.hypot(e.clientX-dragState.startX,e.clientY-dragState.startY)>8) terminar(false);
+        return;
+      }
+      e.preventDefault();
+      moverFila(e.clientX,e.clientY);
+    });
+    row.addEventListener('pointerup',e=>{
+      if(dragState?.pointerId===e.pointerId) terminar(true);
+    });
+    row.addEventListener('pointercancel',e=>{
+      if(dragState?.pointerId===e.pointerId) terminar(dragState.active);
+    });
+    row.addEventListener('touchstart',e=>{
+      if(e.touches.length!==1||e.target.closest('button')) return;
+      terminar(false);
+      const touch=e.touches[0];
+      const next={row,touchId:touch.identifier,startX:touch.clientX,startY:touch.clientY,active:false,timer:null};
+      next.timer=setTimeout(()=>{
+        if(dragState!==next) return;
+        next.active=true;
+        row.classList.add('is-dragging');
+        try{navigator.vibrate?.(25);}catch(_){}
+      },1000);
+      dragState=next;
+    },{passive:true});
+    row.addEventListener('touchmove',e=>{
+      if(!dragState||dragState.touchId==null) return;
+      const touch=Array.from(e.touches).find(t=>t.identifier===dragState.touchId);
+      if(!touch) return;
+      if(!dragState.active){
+        if(Math.hypot(touch.clientX-dragState.startX,touch.clientY-dragState.startY)>8) terminar(false);
+        return;
+      }
+      e.preventDefault();
+      moverFila(touch.clientX,touch.clientY);
+    },{passive:false});
+    row.addEventListener('touchend',e=>{
+      if(dragState?.touchId!=null&&Array.from(e.changedTouches).some(t=>t.identifier===dragState.touchId)) terminar(true);
+    });
+    row.addEventListener('touchcancel',e=>{
+      if(dragState?.touchId!=null&&Array.from(e.changedTouches).some(t=>t.identifier===dragState.touchId)) terminar(dragState.active);
+    });
+  });
 }
 
 window.cambiarIconoRubroConfig = id => {
@@ -3164,7 +3475,7 @@ window.abrirConfig = () => {
         <button type="button" id="cfgTabPersonal" class="cfg-tab-chip ${userConfig.configTab==='personalizacion'?'active':''}" onclick="setCfgConfigTab('personalizacion')">Personalización</button>
       </div>
 
-      <div id="cfgPanelRubros" class="cfg-panel ${userConfig.configTab==='rubros'?'active':''}">
+      <div id="cfgPanelRubros" class="cfg-panel cfg-panel-rubros ${userConfig.configTab==='rubros'?'active':''}">
         <div class="cfg-section-title">◔ Rubros de movimientos</div>
         <div class="cfg-section-note">Se usan para clasificar gastos y construir el gráfico de distribución. Tocá el emoji para cambiarlo; también podés renombrar, ocultar o sumar rubros.</div>
         <div id="cfgRubrosList" class="cfg-rubros-list"></div>
@@ -3257,7 +3568,7 @@ window.fitConfigBoxToViewport = () => {
   const box = overlay?.querySelector('.cfg-box');
   if(!box) return;
   box.style.transform = 'scale(1)';
-  if(userConfig.configTab === 'personalizacion'){
+  if(userConfig.configTab === 'personalizacion' || userConfig.configTab === 'rubros'){
     syncCfgConfigLayoutMode();
     return;
   }
@@ -3703,6 +4014,7 @@ window.syncCfgConfigLayoutMode = () => {
   const box = document.querySelector('#cfgOverlay .cfg-box');
   if(!box) return;
   box.classList.toggle('cfg-box-personal', userConfig.configTab === 'personalizacion');
+  box.classList.toggle('cfg-box-rubros', userConfig.configTab === 'rubros');
 };
 
 window.setCfgConfigTab = tab => {
@@ -4078,6 +4390,7 @@ const HELP_CONTENT = {
   tab_resumen: { title: 'Resumen', subtitle: 'Te muestra una vista rápida de cómo viene tu período actual.', items: [ { title: 'Qué reúne', text: 'Acá ves ingresos, gastos, tarjetas, saldo, presupuesto estimado y movimientos fijos en un solo pantallazo.' }, { title: 'Para qué sirve', text: 'Te deja entender rápido cómo venís antes de entrar a cada detalle.' } ] },
   tab_cargar: { title: '+ Cargar', subtitle: 'Es el formulario principal para registrar movimientos.', items: [ { title: 'Qué podés guardar', text: 'Ingresos, gastos, créditos, deudas fijas y consumos con tarjeta con sus datos completos.' }, { title: 'Cuándo usarlo', text: 'Cada vez que querés dejar asentado un movimiento nuevo en la app.' } ] },
   tab_compras: { title: 'Compras', subtitle: 'Sirve para armar una compra tipo carrito antes de pasarla a gastos.', items: [ { title: 'Cómo trabaja', text: 'Cargás artículos, cantidades y subtotales para formar un total general.' }, { title: 'Resultado', text: 'Después podés convertir esa compra en movimientos reales dentro de la app.' } ] },
+  tab_menu: { title: 'Menú', subtitle: 'Reúne las herramientas adicionales de la app.', items: [ { title: 'Compras', text: 'Armá listas con cantidades, subtotales y un total general.' }, { title: 'Compartir gastos', text: 'Anotá lo que pagó cada persona y calculá cómo saldar el encuentro.' } ] },
   usd_oficial: { title: 'USD Oficial', subtitle: 'Usa el valor oficial del dólar para cálculos y referencias.', items: [ { title: 'Impacto', text: 'Sirve cuando cargás o analizás movimientos en dólares oficiales.' } ] },
   usd_tarjeta: { title: 'USD Tarjeta', subtitle: 'Usa una referencia del dólar tarjeta para consumos con recargos.', items: [ { title: 'Impacto', text: 'Te ayuda a estimar mejor cuánto termina costando un gasto en tarjeta cobrado en dólares.' } ] },
   sum_ingresos: { title: 'Ingresos', subtitle: 'Resume todo lo que entró en el período activo.', items: [ { title: 'Toque rápido', text: 'Si lo tocás, se abre el detalle de ingresos cargados en ese período.' } ] },
@@ -4193,7 +4506,7 @@ function attachFieldHelp(inputId, key, root = document){
 function decorateStaticHelp(root = document){
   appendInlineHelp(root.querySelector('.tabs .tab:nth-child(1)'), 'tab_resumen');
   appendInlineHelp(root.querySelector('.tabs .tab:nth-child(2)'), 'tab_cargar');
-  appendInlineHelp(root.querySelector('.tabs .tab:nth-child(3)'), 'tab_compras');
+  appendInlineHelp(root.querySelector('.tabs .tab:nth-child(3)'), 'tab_menu');
   appendInlineHelp(root.querySelector('#pillOficial .usd-pill-label'), 'usd_oficial');
   appendInlineHelp(root.querySelector('#pillTarjeta .usd-pill-label'), 'usd_tarjeta');
   appendInlineHelp(root.querySelector('.sum-card.ing .label'), 'sum_ingresos');
@@ -4319,6 +4632,7 @@ function fmtARS(n){return '$'+Math.round(n).toLocaleString('es-AR');}
 function setSyncStatus(s){
   const dot=document.getElementById('syncDot'),lbl=document.getElementById('syncLabel');
   if(s==='ok'){dot.className='sync-dot ok';lbl.textContent='Sincronizado';}
+  else if(s==='syncing'){dot.className='sync-dot loading';lbl.textContent='Actualizando...';}
   else if(s==='loading'){dot.className='sync-dot loading';lbl.textContent='Guardando...';}
   else{dot.className='sync-dot';lbl.textContent='Sin conexión';}
 }
@@ -4334,8 +4648,11 @@ function pagoCol(key){return collection(db,`usuarios/${currentUser.uid}/pagos_ta
 function pagoDoc(key,id){return doc(db,`usuarios/${currentUser.uid}/pagos_tarjeta/${key}/items`,id);}
 
 async function cargarTarjetas(){
-  const snap=await getDocs(userCol('tarjetas'));
-  tarjetas=snap.docs.map(d=>({id:d.id,...d.data()}));
+  try{
+    const snap=await getDocsFromServer(userCol('tarjetas'));
+    tarjetas=snap.docs.map(d=>({id:d.id,...d.data()}));
+    guardarAppCacheLocal();
+  }catch(e){ console.warn('cargarTarjetas cloud error:',e); }
   const ultima=userConfig.ultimaTarjetaId;
   if(ultima&&tarjetas.some(t=>t.id===ultima)) tarjetaSeleccionada=ultima;
   else if(!tarjetaSeleccionada&&tarjetas.length) tarjetaSeleccionada=tarjetas[0].id;
@@ -4593,7 +4910,9 @@ function suscribirPagos(tid,mes,anio){
   const key=getPagosKey(tid,mes,anio);
   if(pagosListeners[key]) return;
   const unsub=onSnapshot(pagoCol(key),snap=>{
+    if(appCacheHydrated&&snap.metadata.fromCache) return;
     pagosData[key]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!snap.metadata.fromCache) guardarAppCacheLocal();
     const prevVista = getMesAnterior(mesVista, anioVista);
     const nextVista = shiftPeriodoMes(mesVista, anioVista, 1);
     if((mes===mesVista&&anio===anioVista) || (mes===prevVista.mes&&anio===prevVista.anio) || (mes===nextVista.mes&&anio===nextVista.anio)){
@@ -4619,26 +4938,31 @@ window.guardarPago=async(tid,mes,anio)=>{
   if(!monto||monto<=0) return showToast('⚠️ Ingresá un monto válido',true);
   const key=getPagosKey(tid,mes,anio);
   try{
-    const nowTs = Date.now();
-    const pagoSyncId = `pt_${nowTs}_${Math.random().toString(36).slice(2,8)}`;
-    // Guardar en pagos_tarjeta (para descontar del total de la tarjeta)
-    const pagoRef = await addDoc(pagoCol(key),{monto,timestamp:nowTs,desc:'Pago',pagoSyncId});
-    // Crear movimiento de gasto en el tab semanal
+    const intentoTs=Date.now();
+    const pagoHuerfano=(pagosData[key]||[])
+      .filter(p=>!p.movimientoId&&Number(p.monto||0)===monto&&Math.abs(intentoTs-Number(p.timestamp||0))<10*60*1000)
+      .sort((a,b)=>Number(b.timestamp||0)-Number(a.timestamp||0))[0];
+    const nowTs=Number(pagoHuerfano?.timestamp)||intentoTs;
+    const pagoSyncId=pagoHuerfano?.pagoSyncId||`pt_${nowTs}_${Math.random().toString(36).slice(2,8)}`;
+    const pagoRef=pagoHuerfano?pagoDoc(key,pagoHuerfano.id):doc(pagoCol(key));
+    const movRef=doc(userCol('movimientos'));
     const t=tarjetas.find(x=>x.id===tid);
     const nombreTar=t?t.nombre:'Tarjeta';
     const hoy=new Date();
     const p=getPeriodo(hoy,'gasto',null);
     const fecha=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
-    const movRef = await addDoc(userCol('movimientos'),{
+    const batch=writeBatch(db);
+    batch.set(pagoRef,{monto,timestamp:nowTs,desc:'Pago',pagoSyncId,movimientoId:movRef.id},{merge:true});
+    batch.set(movRef,{
       tipo:'gasto',
       desc:'Pago '+nombreTar,
       monto,
       mes:p.mes, anio:p.anio, semana:p.semana,
       moneda:'ARS',
       timestamp:nowTs,
-      confirmado:false,
+      confirmado:true,
       fecha,
-      rubro: esMeDeben ? null : 'otros',
+      rubro:'otros',
       recordatorio:false,
       esPagoTarjeta:true,
       tarjetaId:tid,
@@ -4647,11 +4971,11 @@ window.guardarPago=async(tid,mes,anio)=>{
       pagoPeriodoAnio:anio,
       pagoSyncId
     });
-    await updateDoc(pagoRef,{movimientoId:movRef.id});
+    await batch.commit();
     input.value='';
     showToast('✅ Pago registrado');
   }
-  catch(e){showToast('❌ Error al guardar pago',true);}
+  catch(e){console.error('guardarPago error:',e);showToast('❌ Error al guardar pago',true);}
 };
 window.borrarPago=async(tid,mes,anio,pid)=>{
   if(!confirm('¿Borrar este pago?')) return;
@@ -4669,10 +4993,12 @@ window.borrarPago=async(tid,mes,anio,pid)=>{
 
 function suscribirMovimientos(){
   // Tapar la pantalla hasta que lleguen los datos reales del usuario
-  if(!widgetEntryMode) document.getElementById('loadingOverlay').classList.remove('hidden');
+  if(!widgetEntryMode&&!appCacheHydrated) document.getElementById('loadingOverlay').classList.remove('hidden');
   const q=query(userCol('movimientos'),orderBy('timestamp','desc'));
   movListener=onSnapshot(q,snap=>{
+    if(appCacheHydrated&&snap.metadata.fromCache) return;
     data=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!snap.metadata.fromCache) guardarAppCacheLocal();
     document.getElementById('loadingOverlay').classList.add('hidden');
     setSyncStatus('ok'); renderResumen(); if(notifListener) renderNotifPanel();
     if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
@@ -5286,7 +5612,6 @@ function prepareAmountFieldForCalculator(input){
   input.dataset.amountCalcReady = '1';
   if(input.type !== 'number'){
     input.setAttribute('inputmode', 'numeric');
-    input.setAttribute('pattern', '[0-9.,+*/()-]*');
     input.setAttribute('enterkeyhint', 'done');
   }
   input.setAttribute('autocomplete', 'off');
@@ -5984,13 +6309,14 @@ function renderTarjetaDetail(tid){
 
 window.goTab=t=>{
   if(t!=='resumen'&&balanceSelectionState.active) salirSeleccionBalance();
-  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.desktop-nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===t));
+  const topTab=['menu','informe','compartir'].includes(t)?'menu':t;
+  document.querySelectorAll('.tab').forEach(el=>el.classList.toggle('active',el.dataset.tab===topTab));
+  document.querySelectorAll('.desktop-nav-item').forEach(el=>el.classList.toggle('active',el.dataset.tab===topTab));
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
-  ['resumen','cargar','informe'].forEach((n,i)=>{if(n===t)document.querySelectorAll('.tab')[i].classList.add('active');});
-  document.getElementById('tab-'+t).classList.add('active');
+  document.getElementById('tab-'+t)?.classList.add('active');
   if(t==='resumen') renderResumen();
   if(t==='informe'){ superLoad(); }
+  if(t==='compartir'){ splitLoad(); }
 };
 window.setTipo=t=>{
   const tipoBaseAnterior = (tipoActual==='credito'||tipoActual==='tarjeta') ? 'credito' : (String(tipoActual).startsWith('fijo_') ? 'fijo' : tipoActual);
@@ -7174,7 +7500,9 @@ function fijoPagoDocRef(fijoId,pid){return doc(db,`usuarios/${currentUser.uid}/p
 function suscribirFijos(){
   const q2=query(fijoCol(),orderBy('timestamp','desc'));
   fijoListener=onSnapshot(q2,snap=>{
+    if(appCacheHydrated&&snap.metadata.fromCache) return;
     fijoData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!snap.metadata.fromCache) guardarAppCacheLocal();
     renderResumen();
     fijoData.forEach(f=>suscribirPagosFijo(f.id));
     if(document.getElementById('fijoPanel').style.display!=='none') renderFijoDetail();
@@ -7184,7 +7512,9 @@ function suscribirFijos(){
 function suscribirPagosFijo(fijoId){
   if(fijoPagosListeners[fijoId]) return;
   const unsub=onSnapshot(fijoPagoCol(fijoId),snap=>{
+    if(appCacheHydrated&&snap.metadata.fromCache) return;
     fijoPagosData[fijoId]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(!snap.metadata.fromCache) guardarAppCacheLocal();
     renderResumen();
     if(document.getElementById('fijoPanel').style.display!=='none') renderFijoDetail();
   },err=>console.warn('fijo pagos listener:',fijoId,err));
@@ -7522,6 +7852,305 @@ window.superBorrarCompra = () => {
     superListIdx = Math.min(superListIdx, superLists.length - 1);
   }
   _superSave(); superRender();
+};
+
+
+// ── REPARTO GRUPAL DE GASTOS ───────────────────────────────────────────
+let splitGroups=[];
+let splitCurrentId=null;
+let splitLoaded=false;
+let splitView='evento';
+const splitCollapsed=new Set();
+
+function splitId(prefix='split'){
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+}
+function splitEscape(value){
+  return String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+function splitFmt(value,decimals=false){
+  const amount=Number(value||0);
+  const hasDecimals=Math.abs(amount-Math.round(amount))>.0001;
+  return '$'+amount.toLocaleString('es-AR',{
+    minimumFractionDigits:decimals||hasDecimals?2:0,
+    maximumFractionDigits:decimals||hasDecimals?2:0
+  });
+}
+function splitInitial(name){
+  return (String(name||'?').trim()[0]||'?').toUpperCase();
+}
+function splitTone(group,personId){
+  const index=Math.max(0,(group?.participantes||[]).findIndex(person=>person.id===personId));
+  return `tone-${index%3}`;
+}
+function splitCurrent(){
+  return splitGroups.find(group=>group.id===splitCurrentId)||null;
+}
+function splitPaid(group,personId){
+  return (group?.gastos||[]).filter(g=>g.personaId===personId).reduce((sum,g)=>sum+Number(g.monto||0),0);
+}
+function splitTotal(group){
+  return (group?.gastos||[]).reduce((sum,g)=>sum+Number(g.monto||0),0);
+}
+function splitVisualSeed(){
+  return [{
+    id:'split_visual_asado',nombre:'Asado del sábado',saldado:false,timestamp:Date.now(),
+    participantes:[
+      {id:'split_benjamin',nombre:'Benjamín'},
+      {id:'split_cunado',nombre:'Cuñado'},
+      {id:'split_primo',nombre:'Primo'}
+    ],
+    gastos:[
+      {id:'sg1',personaId:'split_benjamin',desc:'Carne',monto:7000},
+      {id:'sg2',personaId:'split_benjamin',desc:'Pan y carbón',monto:3000},
+      {id:'sg3',personaId:'split_cunado',desc:'Verduras',monto:10000},
+      {id:'sg4',personaId:'split_cunado',desc:'Tapa de asado',monto:10000},
+      {id:'sg5',personaId:'split_primo',desc:'Fernet',monto:2000},
+      {id:'sg6',personaId:'split_primo',desc:'Vodka',monto:3000},
+      {id:'sg7',personaId:'split_primo',desc:'Coca',monto:5000}
+    ]
+  }];
+}
+
+async function splitLoad(){
+  if(!splitLoaded){
+    splitLoaded=true;
+    if(visualTestMode){
+      splitGroups=splitVisualSeed();
+    }else{
+      try{
+        const snap=await getDoc(userDoc('config','repartosGastos'));
+        splitGroups=snap.exists()&&Array.isArray(snap.data().groups)?snap.data().groups:[];
+      }catch(e){ console.warn('splitLoad error',e); splitGroups=[]; }
+    }
+    const abierto=[...splitGroups].reverse().find(group=>!group.saldado);
+    splitCurrentId=(abierto||(visualTestMode?splitGroups[splitGroups.length-1]:null)||{}).id||null;
+  }
+  splitRender();
+  if(!splitCurrent()&&!visualTestMode) setTimeout(splitAbrirNuevoGrupo,80);
+}
+async function splitSave(){
+  if(visualTestMode||!currentUser) return;
+  try{ await setDoc(userDoc('config','repartosGastos'),{groups:splitGroups,updatedAt:Date.now()}); }
+  catch(e){ console.warn('splitSave error',e); showToast('❌ No se pudo guardar el reparto',true); }
+}
+
+window.abrirGastosRepartidos=()=>{
+  splitView='evento';
+  if(splitLoaded){
+    const abierto=[...splitGroups].reverse().find(group=>!group.saldado);
+    splitCurrentId=abierto?.id||null;
+  }
+  goTab('compartir');
+};
+window.splitVolverMenu=()=>goTab('menu');
+window.splitEditarReparto=()=>{ splitView='evento'; splitRender(); };
+window.splitMostrarReparto=()=>{
+  const group=splitCurrent();
+  if(!group||!(group.participantes||[]).length) return;
+  if(splitTotal(group)<=0){ showToast('⚠️ Agregá al menos un gasto',true); return; }
+  splitView='reparto';
+  splitRender();
+  document.getElementById('tab-compartir')?.scrollTo?.({top:0,behavior:'smooth'});
+};
+window.splitTogglePerson=id=>{
+  if(splitCollapsed.has(id)) splitCollapsed.delete(id); else splitCollapsed.add(id);
+  document.querySelector(`.split-person-card[data-person-id="${id}"]`)?.classList.toggle('collapsed',splitCollapsed.has(id));
+};
+
+function splitRender(){
+  const root=document.getElementById('splitRoot');
+  if(!root) return;
+  const group=splitCurrent();
+  if(!group){
+    root.innerHTML=`<div class="split-screen"><div class="split-page-head"><button class="split-back" onclick="splitVolverMenu()">‹</button><div class="split-head-copy"><h2>Compartir gastos</h2></div><span class="split-head-spacer"></span></div><div class="split-no-data"><strong>Armemos un nuevo encuentro</strong><span>Cargá las personas y después anotá qué pagó cada una.</span><button onclick="splitAbrirNuevoGrupo()">＋ Nuevo encuentro</button></div></div>`;
+    return;
+  }
+  if(splitView==='reparto'){ splitRenderResult(root,group); return; }
+  const total=splitTotal(group);
+  const people=group.participantes||[];
+  root.innerHTML=`<div class="split-screen">
+    <div class="split-page-head">
+      <button type="button" class="split-back" onclick="splitVolverMenu()" aria-label="Volver al menú">‹</button>
+      <div class="split-head-copy"><h2>${splitEscape(group.nombre)}</h2><p>${people.length} ${people.length===1?'persona':'personas'} · Total ${splitFmt(total)}</p></div>
+      <span class="split-head-spacer"></span>
+    </div>
+    <div class="split-participants">${people.map((person,index)=>{
+      const items=(group.gastos||[]).filter(g=>g.personaId===person.id);
+      const paid=splitPaid(group,person.id);
+      return `<section class="split-person-card ${splitCollapsed.has(person.id)?'collapsed':''}" data-person-id="${person.id}">
+        <button type="button" class="split-person-head" onclick="splitTogglePerson('${person.id}')">
+          <span class="split-avatar ${splitTone(group,person.id)}">${splitEscape(splitInitial(person.nombre))}</span>
+          <span class="split-person-copy"><strong>${splitEscape(person.nombre)}</strong><small>Pagó <b>${splitFmt(paid)}</b></small></span>
+          <span class="split-chevron" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span>
+        </button>
+        <div class="split-items">
+          ${items.map(item=>`<div class="split-item-row" onclick="splitAbrirGasto('${item.id}')"><span>${splitEscape(item.desc)}</span><strong>${splitFmt(item.monto)}</strong></div>`).join('')}
+          <div class="split-quick-row">
+            <input id="splitQuickDesc_${person.id}" type="text" placeholder="Escribir gasto..." autocomplete="off" onkeydown="splitQuickKey(event,'${person.id}','desc')">
+            <input id="splitQuickAmount_${person.id}" class="split-quick-amount" type="text" inputmode="numeric" placeholder="$0" autocomplete="off" oninput="formatMontoInput(this)" onfocus="this.select()" onkeydown="splitQuickKey(event,'${person.id}','amount')">
+          </div>
+        </div>
+      </section>`;
+    }).join('')}</div>
+    <div class="split-event-actions">
+      <button type="button" class="split-add-person" onclick="splitAgregarPersona()">＋ Añadir integrante</button>
+      <button type="button" class="split-settle-btn" onclick="splitMostrarReparto()">Repartir gastos</button>
+    </div>
+  </div>`;
+}
+
+function splitCalculate(group){
+  const people=group.participantes||[];
+  const totalCents=Math.round(splitTotal(group)*100);
+  if(!people.length) return {totalCents,share:0,transfers:[]};
+  const base=Math.floor(totalCents/people.length);
+  const remainder=totalCents%people.length;
+  const balances=people.map((person,index)=>{
+    const target=base+(index>=people.length-remainder?1:0);
+    return {person,balance:Math.round(splitPaid(group,person.id)*100)-target};
+  });
+  const creditors=balances.filter(x=>x.balance>0).sort((a,b)=>b.balance-a.balance);
+  const debtors=balances.filter(x=>x.balance<0);
+  const transfers=[];
+  let ci=0,di=0;
+  while(ci<creditors.length&&di<debtors.length){
+    const amount=Math.min(creditors[ci].balance,-debtors[di].balance);
+    if(amount>0) transfers.push({from:debtors[di].person,to:creditors[ci].person,amount});
+    creditors[ci].balance-=amount; debtors[di].balance+=amount;
+    if(creditors[ci].balance===0) ci++;
+    if(debtors[di].balance===0) di++;
+  }
+  return {totalCents,share:totalCents/people.length,transfers};
+}
+
+function splitRenderResult(root,group){
+  const result=splitCalculate(group);
+  const people=group.participantes||[];
+  root.innerHTML=`<div class="split-screen split-result-screen">
+    <div class="split-page-head">
+      <button type="button" class="split-back" onclick="splitEditarReparto()" aria-label="Volver al detalle">‹</button>
+      <div class="split-head-copy"><h2>Repartir gastos</h2></div>
+      <span class="split-head-spacer"></span>
+    </div>
+    <section class="split-summary-card">
+      <div class="split-summary-icon" aria-hidden="true"><svg viewBox="0 0 48 48" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><circle cx="24" cy="14" r="6"/><circle cx="10" cy="20" r="4.5"/><circle cx="38" cy="20" r="4.5"/><path d="M13 40v-4c0-6 5-10 11-10s11 4 11 10v4M3 37v-3c0-4 3-7 7-7M45 37v-3c0-4-3-7-7-7"/></svg></div>
+      <div class="split-summary-lines">
+        <div class="split-summary-line"><span>Total</span><strong>${splitFmt(result.totalCents/100)}</strong></div>
+        <div class="split-summary-line"><span>${people.length} ${people.length===1?'persona':'personas'}</span><strong></strong></div>
+        <div class="split-summary-line"><span>Cada uno</span><strong>${splitFmt(result.share/100,true)}</strong></div>
+      </div>
+    </section>
+    <h3 class="split-settlement-title">Cómo saldar</h3>
+    <div class="split-transfers">${result.transfers.length?result.transfers.map((transfer,index)=>`<div class="split-transfer-card">
+      <div class="split-transfer-person"><span class="split-avatar ${splitTone(group,transfer.from.id)}">${splitEscape(splitInitial(transfer.from.nombre))}</span><span class="split-transfer-copy"><strong>${splitEscape(transfer.from.nombre)}</strong><small>paga <b>${splitFmt(transfer.amount/100,true)}</b></small></span></div>
+      <span class="split-transfer-arrow">→</span>
+      <div class="split-transfer-to"><span class="split-avatar ${splitTone(group,transfer.to.id)}">${splitEscape(splitInitial(transfer.to.nombre))}</span><span>${splitEscape(transfer.to.nombre)}</span></div>
+    </div>`).join(''):`<div class="split-no-data"><strong>Ya está equilibrado</strong><span>Nadie tiene que transferir dinero.</span></div>`}</div>
+    <div class="split-all-even">✓ &nbsp;Quedan todos a mano</div>
+    <div class="split-result-actions">
+      <button type="button" class="split-edit-btn" onclick="splitEditarReparto()">✎ &nbsp;Editar reparto</button>
+      <button type="button" class="split-done-btn" onclick="splitMarcarSaldado()">✓ &nbsp;Marcar como saldado</button>
+    </div>
+  </div>`;
+}
+
+window.splitAbrirNuevoGrupo=()=>{
+  document.getElementById('splitEntryModal')?.remove();
+  const ownName=(currentUser?.email||'').split('@')[0]||'Yo';
+  const ov=document.createElement('div');
+  ov.className='modal-overlay'; ov.id='splitEntryModal';
+  ov.innerHTML=`<div class="modal-box">
+    <div class="modal-title">Nuevo encuentro</div>
+    <div class="modal-group"><label>Nombre</label><input id="splitGroupName" type="text" placeholder="Ej: Asado del sábado"></div>
+    <div class="modal-group"><label>Personas</label><input id="splitGroupPeople" type="text" value="${splitEscape(ownName)}" placeholder="Benjamín, Cuñado, Primo"><small style="display:block;margin-top:6px;color:var(--muted)">Separalas con comas.</small></div>
+    <div class="modal-btns"><button class="modal-btn-cancel" onclick="document.getElementById('splitEntryModal').remove();splitVolverMenu()">Cancelar</button><button class="modal-btn-ok" onclick="splitCrearGrupo()">Crear</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('splitGroupName')?.focus(),30);
+};
+window.splitCrearGrupo=async()=>{
+  const nombre=document.getElementById('splitGroupName')?.value.trim();
+  const names=(document.getElementById('splitGroupPeople')?.value||'').split(',').map(x=>x.trim()).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>y.toLowerCase()===x.toLowerCase())===i);
+  if(!nombre) return showToast('⚠️ Escribí un nombre',true);
+  if(names.length<2) return showToast('⚠️ Agregá al menos dos personas',true);
+  const group={id:splitId('grupo'),nombre,saldado:false,timestamp:Date.now(),participantes:names.map(name=>({id:splitId('persona'),nombre:name})),gastos:[]};
+  splitGroups.push(group); splitCurrentId=group.id; splitView='evento';
+  document.getElementById('splitEntryModal')?.remove(); splitRender(); await splitSave();
+};
+
+window.splitAbrirGasto=(expenseId='')=>{
+  const group=splitCurrent(); if(!group) return;
+  const expense=(group.gastos||[]).find(g=>g.id===expenseId)||null;
+  const ov=document.createElement('div');
+  ov.className='modal-overlay'; ov.id='splitExpenseModal';
+  ov.innerHTML=`<div class="modal-box">
+    <div class="modal-title">${expense?'Editar gasto':'Agregar gasto'}</div>
+    <div class="modal-group"><label>Quién pagó</label><select id="splitExpensePerson">${(group.participantes||[]).map(person=>`<option value="${person.id}" ${person.id===expense?.personaId?'selected':''}>${splitEscape(person.nombre)}</option>`).join('')}</select><button type="button" class="cfg-add-rubro" style="margin-top:8px" onclick="splitAgregarPersonaDesdeModal()">＋ Agregar persona</button></div>
+    <div class="modal-group"><label>Descripción</label><input id="splitExpenseDesc" type="text" value="${splitEscape(expense?.desc||'')}" placeholder="Ej: Carne, bebidas..."></div>
+    <div class="modal-group"><label>Monto</label><input id="splitExpenseAmount" type="text" inputmode="numeric" value="${expense?Number(expense.monto).toLocaleString('es-AR'):''}" placeholder="0" oninput="formatMontoInput(this)" onfocus="this.select()"></div>
+    <div class="modal-btns">${expense?`<button class="modal-btn-cancel" style="color:var(--red)" onclick="splitBorrarGasto('${expense.id}')">Eliminar</button>`:`<button class="modal-btn-cancel" onclick="document.getElementById('splitExpenseModal').remove()">Cancelar</button>`}<button class="modal-btn-ok" onclick="splitGuardarGasto('${expense?.id||''}')">Guardar</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  setTimeout(()=>document.getElementById('splitExpenseDesc')?.focus(),30);
+};
+window.splitQuickKey=(event,personId,field)=>{
+  if(event.key!=='Enter') return;
+  event.preventDefault();
+  const descInput=document.getElementById(`splitQuickDesc_${personId}`);
+  const amountInput=document.getElementById(`splitQuickAmount_${personId}`);
+  if(field==='desc'){
+    if(!descInput?.value.trim()) return;
+    amountInput?.focus(); amountInput?.select();
+    return;
+  }
+  const group=splitCurrent();
+  const desc=descInput?.value.trim();
+  const amount=parseMontoInput(amountInput);
+  if(!group||!desc||!amount||amount<=0) return showToast('⚠️ Completá descripción y monto',true);
+  group.gastos.push({id:splitId('gasto'),personaId:personId,desc,monto:amount});
+  splitCollapsed.delete(personId);
+  splitRender();
+  splitSave();
+  setTimeout(()=>document.getElementById(`splitQuickDesc_${personId}`)?.focus(),20);
+};
+window.splitAgregarPersona=()=>{
+  const group=splitCurrent(); if(!group) return;
+  const nombre=prompt('Nombre de la persona:')?.trim(); if(!nombre) return;
+  if((group.participantes||[]).some(person=>person.nombre.toLowerCase()===nombre.toLowerCase())) return showToast('⚠️ Esa persona ya está agregada',true);
+  const person={id:splitId('persona'),nombre};
+  group.participantes.push(person);
+  splitRender();
+  splitSave();
+  setTimeout(()=>document.getElementById(`splitQuickDesc_${person.id}`)?.focus(),20);
+};
+window.splitAgregarPersonaDesdeModal=async()=>{
+  const group=splitCurrent(); if(!group) return;
+  const nombre=prompt('Nombre de la persona:')?.trim(); if(!nombre) return;
+  const person={id:splitId('persona'),nombre}; group.participantes.push(person);
+  document.getElementById('splitExpenseModal')?.remove(); splitRender(); await splitSave(); splitAbrirGasto();
+  const select=document.getElementById('splitExpensePerson'); if(select) select.value=person.id;
+};
+window.splitGuardarGasto=async expenseId=>{
+  const group=splitCurrent(); if(!group) return;
+  const personaId=document.getElementById('splitExpensePerson')?.value;
+  const desc=document.getElementById('splitExpenseDesc')?.value.trim();
+  const amount=parseMontoInput(document.getElementById('splitExpenseAmount'));
+  if(!personaId||!desc||!amount||amount<=0) return showToast('⚠️ Completá persona, descripción y monto',true);
+  const existing=(group.gastos||[]).find(g=>g.id===expenseId);
+  if(existing) Object.assign(existing,{personaId,desc,monto:amount});
+  else group.gastos.push({id:splitId('gasto'),personaId,desc,monto:amount});
+  document.getElementById('splitExpenseModal')?.remove(); splitRender(); await splitSave();
+};
+window.splitBorrarGasto=async expenseId=>{
+  const group=splitCurrent(); if(!group||!confirm('¿Eliminar este gasto?')) return;
+  group.gastos=(group.gastos||[]).filter(g=>g.id!==expenseId);
+  document.getElementById('splitExpenseModal')?.remove(); splitRender(); await splitSave();
+};
+window.splitMarcarSaldado=async()=>{
+  const group=splitCurrent(); if(!group) return;
+  group.saldado=true; group.saldadoAt=Date.now(); await splitSave();
+  showToast('✅ Reparto marcado como saldado'); splitView='evento'; goTab('menu');
 };
 
 
@@ -8294,7 +8923,7 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
               <div class="monto-modo-btn" id="cf-modoCuota" onclick="cfSetMontoCuotasModo('cuota')">Por cuota</div>
             </div>
             <div class="monto-cuotas-row">
-              <input type="text" id="cfMonto" inputmode="numeric" pattern="[0-9.,+*/()-]*" enterkeyhint="done" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
+              <input type="text" id="cfMonto" inputmode="numeric" enterkeyhint="done" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
               <div class="cuotas-input-wrap" id="cfCuotasWrap">
                 <label>Cuotas</label>
                 <input type="number" id="cfCuotas" min="1" max="60" oninput="cfActualizarPreviewCuotas()">
@@ -8827,10 +9456,6 @@ document.addEventListener('DOMContentLoaded', initHelpSystem);
 document.addEventListener('DOMContentLoaded', initAmountFieldEnhancer);
 
 </script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
-<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v8c78df7c7c0f484497ecbca7046644da1771523124516" integrity="sha512-8DS7rgIrAmghBFwoOTujcf6D9rXvH8xm8JQ1Ja01h9QX8EzXldiszufYa4IFfKdLUKTTrnSFXLDkUEOTrZQ8Qg==" data-cf-beacon='{"version":"2024.11.0","token":"8f297bff1f4d48478a506fd072677f90","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
 </html>
 
