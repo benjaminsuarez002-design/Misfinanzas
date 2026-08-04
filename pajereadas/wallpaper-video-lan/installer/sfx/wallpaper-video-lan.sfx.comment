@@ -1,8 +1,0 @@
-;The comment below contains SFX script commands
-
-Path=%USERPROFILE%\WallpaperVideoLAN
-SavePath
-Silent=0
-Overwrite=1
-Title=WallpaperVideoLAN Setup
-Setup=installer\sfx\post-extract-setup.bat
