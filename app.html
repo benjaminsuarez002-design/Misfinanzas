@@ -466,6 +466,51 @@
   .status-chip-text { min-width:0; font-family:'Arial Black',sans-serif; font-size:12px; font-weight:800; white-space:nowrap; }
   .status-chip:has(input:checked) { border-color:color-mix(in srgb,var(--green) 70%,var(--border)); background:color-mix(in srgb,var(--green) 9%,var(--card)); color:var(--green); box-shadow:0 5px 14px color-mix(in srgb,var(--green) 14%,transparent); }
   .status-chip.reminder:has(input:checked) { border-color:color-mix(in srgb,var(--green) 70%,var(--border)); background:color-mix(in srgb,var(--green) 9%,var(--card)); color:var(--green); box-shadow:0 5px 14px color-mix(in srgb,var(--green) 14%,transparent); }
+  /* El alta, la recepcion y el duplicado comparten la misma composicion visual. */
+  #modalCompartidoForm { padding:18px; }
+  #modalCompartidoForm .cf-popup-shell { width:min(720px,100%); max-height:92dvh; overflow-y:auto; scrollbar-width:thin; animation:popIn .25s ease both; }
+  #modalCompartidoForm .cf-popup-card { margin:0; padding:16px 18px; border:1.5px solid var(--border); background:color-mix(in srgb,var(--card) 94%,transparent); }
+  #modalCompartidoForm .cf-popup-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:11px; }
+  #modalCompartidoForm .cf-popup-title { color:var(--text); font-family:'Arial Black',sans-serif; font-size:16px; font-weight:800; }
+  #modalCompartidoForm .cf-popup-subtitle { margin-top:5px; color:var(--muted); font-size:11px; }
+  #modalCompartidoForm .cf-popup-actions { display:flex; align-items:center; gap:7px; }
+  #modalCompartidoForm .cf-popup-action { min-height:34px; padding:0 11px; border:1.5px solid var(--border); border-radius:9px; background:var(--card2); color:var(--muted); font-family:'Arial Black',sans-serif; font-size:11px; cursor:pointer; }
+  #modalCompartidoForm .cf-popup-action.reject { color:var(--red); }
+  #modalCompartidoForm .form-group { margin-bottom:11px; }
+  #modalCompartidoForm .form-group > label { margin-bottom:5px; }
+  #modalCompartidoForm input,#modalCompartidoForm select { padding-top:10px; padding-bottom:10px; }
+  #modalCompartidoForm .tipo-btn { padding:9px 5px; }
+  #modalCompartidoForm .subtipo-wrap,#modalCompartidoForm .subtipo-fijo-wrap { margin-top:7px; margin-bottom:11px; }
+  #modalCompartidoForm .subtipo-btn,#modalCompartidoForm .subtipo-fijo-btn { padding:8px 7px; }
+  #modalCompartidoForm #cfDpText { padding-top:10px !important; padding-bottom:10px !important; }
+  #modalCompartidoForm .cf-credit-config-summary { margin-bottom:11px; padding:9px 11px; }
+  #modalCompartidoForm .credit-config-summary-icon { width:30px; height:30px; flex-basis:30px; }
+  #modalCompartidoForm .cf-form-detail-row { display:grid; grid-template-columns:1fr; gap:10px; }
+  #modalCompartidoForm .cf-form-detail-row.has-rubro { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  #modalCompartidoForm .cf-form-detail-row > .form-group { min-width:0; }
+  #modalCompartidoForm .form-status-row { margin-bottom:11px; }
+  #modalCompartidoForm .status-chip { min-height:40px; padding:6px 10px; }
+  #modalCompartidoForm .cf-dup-group { margin-top:0; padding:8px 12px; border:1px solid var(--border); border-radius:13px; background:color-mix(in srgb,var(--card2) 78%,transparent); }
+  #modalCompartidoForm .dup-days-label { margin-bottom:5px; }
+  #modalCompartidoForm .dup-days-chips { margin-top:2px; margin-bottom:1px; }
+  #modalCompartidoForm .dup-day-chip { background:var(--card); }
+  #modalCompartidoForm .dup-day-chip { padding-top:6px; padding-bottom:6px; }
+  #modalCompartidoForm .dup-day-chip.active { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 11%,var(--card)); color:var(--blue); }
+  #modalCompartidoForm .btn-submit { margin-top:2px; padding-top:13px; padding-bottom:13px; }
+  @media (max-width:600px) {
+    #modalCompartidoForm { align-items:flex-end; padding:0; }
+    #modalCompartidoForm .cf-popup-shell { width:100%; max-height:94dvh; }
+    #modalCompartidoForm .cf-popup-card { padding:12px 12px calc(14px + env(safe-area-inset-bottom)); border-width:1.5px 0 0; border-radius:22px 22px 0 0 !important; }
+    #modalCompartidoForm .cf-popup-head { margin-bottom:9px; }
+    #modalCompartidoForm .cf-popup-title { font-size:15px; }
+    #modalCompartidoForm .cf-popup-action { padding:0 9px; font-size:10px; }
+    #modalCompartidoForm .form-group { margin-bottom:10px; }
+    #modalCompartidoForm .cf-form-detail-row.has-rubro { gap:8px; }
+    #modalCompartidoForm .cf-form-detail-row input,#modalCompartidoForm .cf-form-detail-row select { padding-left:10px; padding-right:10px; font-size:14px; }
+    #modalCompartidoForm .cf-credit-config-summary { margin-bottom:10px; }
+    #modalCompartidoForm .dup-days-chips { gap:7px; }
+    #modalCompartidoForm .dup-day-chip { min-width:52px; padding:6px 11px; }
+  }
   .form-sheet-overlay { position:fixed; inset:0; z-index:7100; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(35,27,65,.42); backdrop-filter:blur(7px); }
   body.form-sheet-open { overflow:hidden; }
   .form-sheet-overlay.open { display:flex; }
@@ -3035,6 +3080,11 @@ function aplicarConfigActual(){
   }
   mesVista = periodoMes;
   anioVista = periodoAnio;
+  if(userConfig.ultimoSubtipoCredito === 'personal' || userConfig.ultimoSubtipoCredito === 'tarjeta'){
+    subtipoActual = userConfig.ultimoSubtipoCredito;
+    document.getElementById('btn-sub-personal')?.classList.toggle('active', subtipoActual === 'personal');
+    document.getElementById('btn-sub-tarjeta')?.classList.toggle('active', subtipoActual === 'tarjeta');
+  }
   syncHelpVisibility(document);
 }
 async function guardarConfig() {
@@ -4706,6 +4756,16 @@ async function guardarUltimaTarjeta(id){
 }
 window.selTarjeta=id=>{tarjetaSeleccionada=id;guardarUltimaTarjeta(id);renderTarjetaChips();actualizarResumenCredito();};
 
+async function guardarUltimoSubtipoCredito(subtipo){
+  if(subtipo !== 'personal' && subtipo !== 'tarjeta') return;
+  userConfig.ultimoSubtipoCredito = subtipo;
+  const key=configCacheKey();
+  if(key) localStorage.setItem(key,JSON.stringify(userConfig));
+  guardarAppCacheLocal();
+  if(!currentUser) return;
+  try{await setDoc(userDoc('config','preferencias'),{ultimoSubtipoCredito:subtipo},{merge:true});}catch(e){console.warn('guardarUltimoSubtipoCredito error:',e);}
+}
+
 window.editarConfigTarjeta = id => {
   const t = tarjetas.find(t=>t.id===id);
   if(!t) return;
@@ -6373,6 +6433,7 @@ window.setSubtipo = s => {
   tipoActual = s === 'tarjeta' ? 'tarjeta' : 'credito';
   document.getElementById('tarjetaSelWrap').classList.toggle('visible', s==='tarjeta');
   document.getElementById('creditCardRow')?.classList.toggle('visible', s==='tarjeta');
+  if(!window._cfConfigPrincipalActivo) guardarUltimoSubtipoCredito(s);
   actualizarResumenCredito();
 };
 window.setSubtipoFijo = s => {
@@ -6407,6 +6468,7 @@ window.abrirConfigCredito=()=>{
   document.body.classList.add('form-sheet-open');
 };
 window.cerrarConfigCredito=()=>{
+  if(window._cfConfigPrincipalActivo) cfAplicarConfigPrincipal();
   document.getElementById('creditConfigOverlay')?.classList.remove('open');
   if(!document.getElementById('cardsManagerOverlay')?.classList.contains('open')) document.body.classList.remove('form-sheet-open');
 };
@@ -8636,6 +8698,7 @@ async function cfReversaCompartido(idResuelto = null) {
 }
 
 let cfPopupState = null;
+let cfConfigPrincipalBackup = null;
 
 function cfFormatMontoValor(valor) {
   if(valor === null || valor === undefined || valor === '') return '';
@@ -8672,20 +8735,98 @@ window.cfMontoInput = el => {
 
 window.cfActualizarPreviewCuotas = () => {
   const prev = document.getElementById('cfCuotaPreview');
-  if(!prev || !cfPopupState) return;
+  if(!cfPopupState) return;
   const monto = cfMontoGetValue();
-  const cuotas = parseInt(document.getElementById('cfCuotas')?.value || '1', 10) || 1;
+  const cuotas = Math.max(1, parseInt(cfPopupState.cuotas || '1', 10) || 1);
+  const esModoTotal = cfPopupState.montoModo !== 'cuota';
+  const total = esModoTotal ? monto : monto * cuotas;
+  const creditMeta = document.getElementById('cfCreditConfigMeta');
+  if(creditMeta) creditMeta.textContent = `${cuotas} cuota${cuotas === 1 ? '' : 's'} · ${esModoTotal ? 'Total' : 'Por cuota'} · Total ${fmtARS(total)}`;
+  if(!prev) return;
   if(cuotas <= 1 || monto === 0 || !(cfPopupState.tipoActual === 'tarjeta' || cfPopupState.tipoActual === 'credito')){
     prev.classList.remove('visible');
     prev.innerHTML = '';
     return;
   }
-  const esModoTotal = cfPopupState.montoModo !== 'cuota';
   const cuota = esModoTotal ? Math.round(monto / cuotas) : monto;
-  const total = esModoTotal ? monto : monto * cuotas;
   prev.classList.add('visible');
   prev.innerHTML = `💳 <strong>${fmtARS(cuota)}/mes</strong> × ${cuotas} cuotas = <strong>${fmtARS(total)}</strong> total`;
 };
+
+window.cfToggleCurrencyMenu = event => {
+  event?.stopPropagation();
+  document.getElementById('cfCurrencyMenu')?.classList.toggle('open');
+};
+
+window.abrirConfigCreditoCompartido = () => {
+  if(!cfPopupState || !(cfPopupState.tipoActual === 'credito' || cfPopupState.tipoActual === 'tarjeta')) return;
+  const creditOverlay = document.getElementById('creditConfigOverlay');
+  const cardsOverlay = document.getElementById('cardsManagerOverlay');
+  if(creditOverlay?.parentElement !== document.body) document.body.appendChild(creditOverlay);
+  if(cardsOverlay?.parentElement !== document.body) document.body.appendChild(cardsOverlay);
+  const fMonto = document.getElementById('fMonto');
+  const fCuotas = document.getElementById('fCuotas');
+  cfConfigPrincipalBackup = {
+    tipoActual,
+    subtipoActual,
+    tarjetaSeleccionada,
+    montoModo: window._montoCuotasModo || 'total',
+    monto: fMonto?.value || '',
+    cuotas: fCuotas?.value || '1'
+  };
+  window._cfConfigPrincipalActivo = true;
+  subtipoActual = cfPopupState.subtipoActual;
+  tipoActual = subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito';
+  tarjetaSeleccionada = cfPopupState.tarjetaId;
+  window._montoCuotasModo = cfPopupState.montoModo || 'total';
+  if(fMonto) fMonto.value = document.getElementById('cfMonto')?.value || '';
+  if(fCuotas) fCuotas.value = String(cfPopupState.cuotas || 1);
+  document.getElementById('subtipoWrap')?.classList.add('visible');
+  document.getElementById('cuotasWrap')?.classList.add('visible');
+  document.getElementById('montoModoToggle')?.classList.add('visible');
+  setSubtipo(subtipoActual);
+  tarjetaSeleccionada = cfPopupState.tarjetaId;
+  renderTarjetaChips();
+  setMontoCuotasModo(window._montoCuotasModo);
+  abrirConfigCredito();
+};
+
+function cfAplicarConfigPrincipal(){
+  if(!window._cfConfigPrincipalActivo) return;
+  if(cfPopupState){
+    cfPopupState.subtipoActual = subtipoActual;
+    cfPopupState.tipoBase = 'credito';
+    cfPopupState.tipoActual = subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito';
+    cfPopupState.tarjetaId = tarjetaSeleccionada;
+    cfPopupState.montoModo = window._montoCuotasModo || 'total';
+    cfPopupState.cuotas = Math.max(1, parseInt(document.getElementById('fCuotas')?.value || '1', 10) || 1);
+  }
+  const backup = cfConfigPrincipalBackup;
+  window._cfConfigPrincipalActivo = false;
+  cfConfigPrincipalBackup = null;
+  if(backup){
+    const fMonto = document.getElementById('fMonto');
+    const fCuotas = document.getElementById('fCuotas');
+    if(fMonto) fMonto.value = backup.monto;
+    if(fCuotas) fCuotas.value = backup.cuotas;
+    subtipoActual = backup.subtipoActual;
+    tarjetaSeleccionada = backup.tarjetaSeleccionada;
+    window._montoCuotasModo = backup.montoModo;
+    setSubtipo(subtipoActual);
+    tarjetaSeleccionada = backup.tarjetaSeleccionada;
+    renderTarjetaChips();
+    setMontoCuotasModo(backup.montoModo);
+    tipoActual = backup.tipoActual;
+    const backupEsCredito = backup.tipoActual === 'credito' || backup.tipoActual === 'tarjeta';
+    const backupEsTarjeta = backupEsCredito && backup.subtipoActual === 'tarjeta';
+    document.getElementById('subtipoWrap')?.classList.toggle('visible', backupEsCredito);
+    document.getElementById('cuotasWrap')?.classList.toggle('visible', backupEsCredito);
+    document.getElementById('montoModoToggle')?.classList.toggle('visible', backupEsCredito);
+    document.getElementById('tarjetaSelWrap')?.classList.toggle('visible', backupEsTarjeta);
+    document.getElementById('creditCardRow')?.classList.toggle('visible', backupEsTarjeta);
+  }
+  cfAplicarTipoUI();
+}
 
 function cfRenderTarjetaChips() {
   const el = document.getElementById('cfTarjetaChips');
@@ -8713,11 +8854,14 @@ function cfAplicarTipoUI() {
   document.getElementById('cfSubtipoWrap')?.classList.toggle('visible', esCredito);
   document.getElementById('cfSubtipoFijoWrap')?.classList.toggle('visible', esFijo);
   document.getElementById('cfTarjetaSelWrap')?.classList.toggle('visible', esTarjeta);
-  document.getElementById('cfCuotasWrap')?.classList.toggle('visible', esCredito);
-  document.getElementById('cfMontoModoToggle')?.classList.toggle('visible', esCredito);
+  document.getElementById('cfCreditConfigSummary')?.classList.toggle('visible', esCredito);
   const recWrap = document.getElementById('cfRecordatorioWrap');
-  if(recWrap) recWrap.style.display = (tipoBase === 'gasto' || esCredito) ? 'block' : 'none';
-  document.getElementById('cfRubroWrap')?.classList.toggle('visible', tipoBase === 'gasto' || esCredito);
+  const muestraRecordatorio = tipoBase === 'gasto' || esCredito;
+  if(recWrap) recWrap.hidden = !muestraRecordatorio;
+  document.getElementById('cfFormStatusRow')?.classList.toggle('has-recordatorio', muestraRecordatorio);
+  const muestraRubro = tipoBase === 'gasto' || esCredito;
+  document.getElementById('cfRubroWrap')?.classList.toggle('visible', muestraRubro);
+  document.getElementById('cfFormDetailRow')?.classList.toggle('has-rubro', muestraRubro);
 
   document.getElementById('cf-btn-sub-personal')?.classList.toggle('active', cfPopupState.subtipoActual === 'personal');
   document.getElementById('cf-btn-sub-tarjeta')?.classList.toggle('active', cfPopupState.subtipoActual === 'tarjeta');
@@ -8731,15 +8875,22 @@ function cfAplicarTipoUI() {
   document.getElementById('cf-modoCuota')?.classList.toggle('active', cfPopupState.montoModo === 'cuota');
 
   if(!esCredito){
-    const cuotas = document.getElementById('cfCuotas');
-    if(cuotas) cuotas.value = '';
+    cfPopupState.cuotas = 1;
     cfPopupState.montoModo = 'total';
     document.getElementById('cf-modoTotal')?.classList.add('active');
     document.getElementById('cf-modoCuota')?.classList.remove('active');
   }
 
   const label = document.getElementById('cfLabelMonto');
-  if(label) label.textContent = cfPopupState.montoModo === 'cuota' ? 'Monto por cuota' : 'Monto Total';
+  if(label) label.textContent = cfPopupState.montoModo === 'cuota' ? 'Monto por cuota' : 'Monto';
+  const currencyTrigger = document.getElementById('cfCurrencyTrigger');
+  if(currencyTrigger) currencyTrigger.textContent = cfPopupState.moneda === 'USD' ? '💵 USD Of. ▾' : (cfPopupState.moneda === 'USD_TAR' ? '💳 USD Tarj. ▾' : '$ ARS ▾');
+  const cuotasResumen = Math.max(1, parseInt(cfPopupState.cuotas || '1', 10) || 1);
+  const tarjetaNombre = tarjetas.find(t => t.id === cfPopupState.tarjetaId)?.nombre || 'Tarjeta de crédito';
+  const creditTitle = document.getElementById('cfCreditConfigTitle');
+  const creditMeta = document.getElementById('cfCreditConfigMeta');
+  if(creditTitle) creditTitle.textContent = esTarjeta ? tarjetaNombre : 'Crédito personal';
+  if(creditMeta) creditMeta.textContent = `${cuotasResumen} cuota${cuotasResumen === 1 ? '' : 's'} · ${cfPopupState.montoModo === 'cuota' ? 'Por cuota' : 'Total'}`;
 
   cfRenderTarjetaChips();
   cfActualizarPreviewCuotas();
@@ -8777,6 +8928,7 @@ window.cfSetSubtipoFijo = s => {
 window.cfSetMoneda = m => {
   if(!cfPopupState) return;
   cfPopupState.moneda = m;
+  document.getElementById('cfCurrencyMenu')?.classList.remove('open');
   cfAplicarTipoUI();
 };
 
@@ -8808,7 +8960,8 @@ function cfCrearEstadoPopup(g) {
     subtipoFijoActual,
     moneda: g.moneda || 'ARS',
     montoModo: 'total',
-    tarjetaId: g.tarjetaId || null
+    tarjetaId: g.tarjetaId || null,
+    cuotas: 1
   };
 }
 
@@ -8867,16 +9020,16 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
   const textoGuardar = opts.textoGuardar || 'Cargar movimiento';
   return `
     <div class="modal-overlay" id="modalCompartidoForm" style="z-index:600">
-      <div style="max-width:440px;width:100%;max-height:90vh;overflow-y:auto;padding:0;animation:popIn .25s ease both">
-        <div class="form-card" style="border-radius:24px;padding:18px 18px 20px;margin:0">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px">
+      <div class="cf-popup-shell">
+        <div class="form-card cf-popup-card">
+          <div class="cf-popup-head">
             <div>
-              <div style="font-family:'Arial Black',sans-serif;font-size:15px;font-weight:800;color:var(--text)">${titulo}</div>
-              ${subtitulo ? `<div style="font-size:11px;color:var(--muted);margin-top:6px">${subtitulo}</div>` : ''}
+              <div class="cf-popup-title">${titulo}</div>
+              ${subtitulo ? `<div class="cf-popup-subtitle">${subtitulo}</div>` : ''}
             </div>
-            <div style="display:flex;gap:8px;align-items:center">
-              <button onclick="cfCerrarPopup()" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;color:var(--muted);font-weight:700">Cerrar</button>
-              ${mostrarRechazar ? `<button onclick="cfRechazar('${g.id}')" style="background:none;border:1.5px solid var(--border);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer;color:var(--red);font-weight:700">Rechazar</button>` : ''}
+            <div class="cf-popup-actions">
+              <button type="button" class="cf-popup-action" onclick="cfCerrarPopup()">Cerrar</button>
+              ${mostrarRechazar ? `<button type="button" class="cf-popup-action reject" onclick="cfRechazar('${g.id}')">Rechazar</button>` : ''}
             </div>
           </div>
 
@@ -8890,13 +9043,6 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
             </div>
           </div>
 
-          <div class="subtipo-wrap" id="cfSubtipoWrap">
-            <div class="subtipo-btns">
-              <div class="subtipo-btn" id="cf-btn-sub-personal" onclick="cfSetSubtipo('personal')">👤 Crédito personal</div>
-              <div class="subtipo-btn" id="cf-btn-sub-tarjeta" onclick="cfSetSubtipo('tarjeta')">💳 Tarjeta de crédito</div>
-            </div>
-          </div>
-
           <div class="subtipo-fijo-wrap" id="cfSubtipoFijoWrap">
             <div class="subtipo-btns">
               <div class="subtipo-fijo-btn" id="cf-btn-fijo-medeben" onclick="cfSetSubtipoFijo('me_deben')">💰 Me deben</div>
@@ -8904,74 +9050,66 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
             </div>
           </div>
 
-          <div class="form-group tarjeta-sel-wrap" id="cfTarjetaSelWrap">
-            <label>Tarjeta</label>
-            <div class="tarjeta-chips" id="cfTarjetaChips"></div>
-          </div>
-
           <div class="form-group">
             <label>Descripción</label>
-            <input type="text" id="cfDesc" placeholder="Ej: Comida, Luz, Cuota...">
-          </div>
-
-          <div class="form-group rubro-field" id="cfRubroWrap"><label>Rubro</label><select id="cfRubro">${rubroOptionsHTML(g.rubro||'otros')}</select></div>
-
-          <div class="form-group">
-            <label id="cfLabelMonto">Monto Total</label>
-            <div class="monto-modo-toggle" id="cfMontoModoToggle">
-              <div class="monto-modo-btn active" id="cf-modoTotal" onclick="cfSetMontoCuotasModo('total')">Total</div>
-              <div class="monto-modo-btn" id="cf-modoCuota" onclick="cfSetMontoCuotasModo('cuota')">Por cuota</div>
-            </div>
-            <div class="monto-cuotas-row">
-              <input type="text" id="cfMonto" inputmode="numeric" enterkeyhint="done" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
-              <div class="cuotas-input-wrap" id="cfCuotasWrap">
-                <label>Cuotas</label>
-                <input type="number" id="cfCuotas" min="1" max="60" oninput="cfActualizarPreviewCuotas()">
-              </div>
-            </div>
-            <div class="cuota-preview" id="cfCuotaPreview"></div>
+            <input type="text" id="cfDesc" placeholder="Ej: Sueldo, Comida, Luz...">
           </div>
 
           <div class="form-group">
-            <label>Moneda</label>
-            <div class="moneda-toggle">
-              <div class="moneda-btn" id="cf-mBtn-ars" onclick="cfSetMoneda('ARS')">$ ARS</div>
-              <div class="moneda-btn" id="cf-mBtn-usd" onclick="cfSetMoneda('USD')">💵 USD Of.</div>
-              <div class="moneda-btn" id="cf-mBtn-usd-tar" onclick="cfSetMoneda('USD_TAR')">💳 USD Tarj.</div>
+            <label id="cfLabelMonto">Monto</label>
+            <div class="amount-currency-shell">
+              <div class="amount-field-host">
+                <input type="text" id="cfMonto" inputmode="numeric" enterkeyhint="done" placeholder="0" oninput="cfMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)" style="text-align:left">
+              </div>
+              <div class="form-currency-picker">
+                <button type="button" class="form-currency-trigger" id="cfCurrencyTrigger" onclick="cfToggleCurrencyMenu(event)">$ ARS ▾</button>
+                <div class="form-currency-menu" id="cfCurrencyMenu">
+                  <div class="moneda-btn" id="cf-mBtn-ars" onclick="cfSetMoneda('ARS')">$ ARS</div>
+                  <div class="moneda-btn" id="cf-mBtn-usd" onclick="cfSetMoneda('USD')">💵 USD Of.</div>
+                  <div class="moneda-btn" id="cf-mBtn-usd-tar" onclick="cfSetMoneda('USD_TAR')">💳 USD Tarj.</div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label>Fecha</label>
-            <div class="date-picker-wrap" id="cfDpWrap">
-              <div class="date-picker-display" id="cfDpDisplay" style="padding:0;overflow:hidden;">
-                <input id="cfDpText" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
-                  style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
-                  oninput="dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup')"
-                  onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup',true);}"
-                >
-                <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('cf','cfDpPopup','cfFecha','cfDpText')">📅</span>
-              </div>
-              <div class="dp-popup" id="cfDpPopup" style="display:none"></div>
-            </div>
-            <input type="hidden" id="cfFecha">
+          <div class="credit-config-summary cf-credit-config-summary" id="cfCreditConfigSummary">
+            <span class="credit-config-summary-icon">💳</span>
+            <span class="credit-config-summary-copy"><strong id="cfCreditConfigTitle">Crédito personal</strong><small id="cfCreditConfigMeta">1 cuota · Total</small></span>
+            <span class="credit-config-summary-actions"><button type="button" class="credit-config-open" onclick="abrirConfigCreditoCompartido()">Configurar ›</button></span>
           </div>
 
-          <div class="form-group" id="cfRecordatorioWrap" style="display:none">
-            <label onclick="document.getElementById('cfRecordatorio').click()" style="cursor:pointer" class="recordatorio-row">
-              <div>
-                <div class="recordatorio-label">⏰ Avisarme 3 días antes</div>
-                <div class="recordatorio-sub">Te mandamos un email de recordatorio</div>
+          <div class="cf-form-detail-row" id="cfFormDetailRow">
+            <div class="form-group rubro-field" id="cfRubroWrap"><label>Rubro</label><select id="cfRubro">${rubroOptionsHTML(g.rubro||'otros')}</select></div>
+            <div class="form-group">
+              <label>Fecha</label>
+              <div class="date-picker-wrap" id="cfDpWrap">
+                <div class="date-picker-display" id="cfDpDisplay" style="padding:0;overflow:hidden;">
+                  <input id="cfDpText" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
+                    style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
+                    oninput="dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup')"
+                    onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('cf',this.value,'cfFecha','cfDpText','cfDpPopup',true);}"
+                  >
+                  <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('cf','cfDpPopup','cfFecha','cfDpText')">📅</span>
+                </div>
+                <div class="dp-popup" id="cfDpPopup" style="display:none"></div>
               </div>
-              <label class="toggle-switch" onclick="event.stopPropagation()">
-                <input type="checkbox" id="cfRecordatorio" checked>
-                <span class="toggle-slider"></span>
-              </label>
+              <input type="hidden" id="cfFecha">
+            </div>
+          </div>
+
+          <div class="form-status-row" id="cfFormStatusRow">
+            <label class="status-chip" id="cfActivoWrap">
+              <input type="checkbox" id="cfConfirmado" checked onchange="if(this.checked)document.getElementById('cfRecordatorio').checked=false">
+              <span class="status-chip-icon">✓</span><span class="status-chip-text">Activo en saldo</span>
+            </label>
+            <label class="status-chip reminder" id="cfRecordatorioWrap" hidden>
+              <input type="checkbox" id="cfRecordatorio" onchange="if(this.checked)document.getElementById('cfConfirmado').checked=false">
+              <span class="status-chip-icon">⏰</span><span class="status-chip-text">Recordatorio</span>
             </label>
           </div>
 
           ${opts.mostrarDuplicarDias ? `
-          <div class="form-group" style="margin-top:2px">
+          <div class="form-group cf-dup-group">
             <div class="dup-days-head" id="cfDupDaysHead">
               <div class="dup-days-label">Duplicar también en</div>
             </div>
@@ -8980,7 +9118,7 @@ function cfConstruirPopupHTML(g, resto, opts = {}) {
               <button type="button" class="dup-day-chip" data-days="14" onclick="dupToggleChip(this)">+14</button>
               <button type="button" class="dup-day-chip" data-days="21" onclick="dupToggleChip(this)">+21</button>
               <button type="button" class="dup-day-chip" data-days="28" onclick="dupToggleChip(this)">+28</button>
-              <button type="button" class="dup-day-chip" data-period="next" onclick="dupToggleChip(this)">Misma fecha próximo periodo</button>
+              <button type="button" class="dup-day-chip" data-period="next" onclick="dupToggleChip(this)">Misma fecha próximo período</button>
             </div>
           </div>` : ''}
 
@@ -9095,12 +9233,14 @@ function mostrarFormularioCompartido(gastos) {
   const desc = document.getElementById('cfDesc');
   const monto = document.getElementById('cfMonto');
   const rec = document.getElementById('cfRecordatorio');
+  const confirmado = document.getElementById('cfConfirmado');
   const fecha = document.getElementById('cfFecha');
   const fechaTxt = document.getElementById('cfDpText');
 
   if(desc) desc.value = (g.desc || '').replace(/\s*\(compartido\)\s*/gi, '').replace(/\s*\(\d+\/\d+\)\s*$/, '').trim();
   if(monto) monto.value = cfFormatMontoValor(g.montoCompartido || g.monto || 0);
-  if(rec) rec.checked = true;
+  if(rec) rec.checked = false;
+  if(confirmado) confirmado.checked = true;
   if(fecha) fecha.value = '';
   if(fechaTxt) fechaTxt.value = '';
   if(typeof dpModInit === 'function') dpModInit('cf', null);
@@ -9122,8 +9262,7 @@ function mostrarFormularioCompartido(gastos) {
 
   const cuotasDefault = cfGetCuotasDefault(g);
   if(cuotasDefault > 0) {
-    const fc = document.getElementById('cfCuotas');
-    if(fc) fc.value = cuotasDefault;
+    cfPopupState.cuotas = cuotasDefault;
   }
 
   cfAplicarTipoUI();
@@ -9160,12 +9299,14 @@ function mostrarFormularioDuplicado(mov) {
   const desc = document.getElementById('cfDesc');
   const monto = document.getElementById('cfMonto');
   const rec = document.getElementById('cfRecordatorio');
+  const confirmado = document.getElementById('cfConfirmado');
   const fecha = document.getElementById('cfFecha');
   const fechaTxt = document.getElementById('cfDpText');
 
   if(desc) desc.value = mov.desc || '';
   if(monto) monto.value = cfFormatMontoValor(mov.monto || 0);
   if(rec) rec.checked = !!mov.recordatorio;
+  if(confirmado) confirmado.checked = mov.confirmado !== false && !mov.recordatorio;
 
   const fechaDup = cfNormalizarFechaISO(mov.fecha);
   if(fecha) fecha.value = fechaDup || '';
@@ -9177,8 +9318,7 @@ function mostrarFormularioDuplicado(mov) {
 
   const cuotas = parseInt(mov.cuotas, 10);
   if(cuotas > 1) {
-    const fc = document.getElementById('cfCuotas');
-    if(fc) fc.value = cuotas;
+    cfPopupState.cuotas = cuotas;
   }
 
   cfAplicarTipoUI();
@@ -9207,6 +9347,7 @@ window.cfGuardarCompartido = async () => {
   const montoRaw = cfMontoGetValue();
   const fechaVal = document.getElementById('cfFecha')?.value || null;
   const recordatorio = !!document.getElementById('cfRecordatorio')?.checked;
+  const confirmado = !!document.getElementById('cfConfirmado')?.checked;
   const rubro = document.getElementById('cfRubro')?.value || 'otros';
   const btn = document.getElementById('cfBtnGuardar');
   const esDuplicado = window._compartidoPendiente?.modo === 'duplicar';
@@ -9250,7 +9391,7 @@ window.cfGuardarCompartido = async () => {
         showToast('✅ Mov. fijo guardado!');
       }
     } else {
-      const cuotasActual = parseInt(document.getElementById('cfCuotas')?.value || '1', 10) || 1;
+      const cuotasActual = Math.max(1, parseInt(cfPopupState.cuotas || '1', 10) || 1);
       const esConCuotas = (cfPopupState.tipoActual === 'tarjeta' || cfPopupState.tipoActual === 'credito') && cuotasActual > 1;
       const esModoTotal = cfPopupState.montoModo !== 'cuota';
       const cuotaMonto = esConCuotas ? (esModoTotal ? Math.round(monto / cuotasActual) : monto) : monto;
@@ -9288,7 +9429,7 @@ window.cfGuardarCompartido = async () => {
               cuotaNum: i + 1,
               montoTotal,
               grupoId,
-              confirmado: true,
+              confirmado,
               fecha: fechaCuota,
               rubro,
               recordatorio,
@@ -9318,7 +9459,7 @@ window.cfGuardarCompartido = async () => {
             anio: p.anio,
             moneda: cfPopupState.moneda,
             timestamp: Date.now() + i,
-            confirmado: true,
+            confirmado,
             fecha: fechaDestino || null,
             rubro,
             recordatorio,
