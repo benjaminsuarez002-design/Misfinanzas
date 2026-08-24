@@ -1933,6 +1933,15 @@
   .balance-week-copy strong { color:var(--blue); font-family:Arial Black,sans-serif; font-size:11px; white-space:nowrap; }
   .balance-week-copy small { color:var(--muted); font-size:8px; margin-top:3px; white-space:nowrap; }
   .balance-week-saldo { min-width:74px; padding:7px 7px; border-radius:8px; background:var(--card2); font-family:Arial Black,sans-serif; font-size:11px; text-align:center; white-space:nowrap; }
+  .balance-more-wrap { position:relative; flex:0 0 auto; }
+  .balance-more-btn { width:30px; height:30px; padding:0; border:1px solid var(--border); border-radius:9px; background:var(--card2); color:var(--blue); font-family:Arial Black,sans-serif; font-size:17px; line-height:1; cursor:pointer; }
+  .balance-more-btn:hover,.balance-more-btn[aria-expanded="true"] { border-color:var(--blue); background:color-mix(in srgb,var(--blue) 10%,var(--card)); }
+  .balance-more-menu { position:absolute; z-index:80; top:calc(100% + 7px); right:0; min-width:158px; padding:6px; border:1px solid var(--border); border-radius:11px; background:var(--card); box-shadow:0 12px 30px rgba(20,16,48,.22); }
+  .balance-more-menu[hidden] { display:none; }
+  .balance-more-menu button { width:100%; padding:10px 11px; border:0; border-radius:8px; background:transparent; color:var(--text); text-align:left; font-size:12px; font-weight:800; cursor:pointer; white-space:nowrap; }
+  .balance-more-menu button:hover { background:color-mix(in srgb,var(--blue) 11%,transparent); color:var(--blue); }
+  .reserve-mov-item { background:linear-gradient(90deg,rgba(108,140,255,.08),transparent); }
+  .reserve-badge { color:var(--blue); }
   .balance-selection-summary { display:inline-flex; align-items:center; gap:6px; min-height:30px; margin-right:auto; padding:5px 9px; border:1px solid color-mix(in srgb,var(--blue) 38%,var(--border)); border-radius:9px; background:color-mix(in srgb,var(--blue) 11%,var(--card)); color:var(--blue); white-space:nowrap; }
   .balance-selection-summary[hidden] { display:none; }
   .balance-selection-summary span { font-size:11px; font-weight:800; }
@@ -2517,6 +2526,10 @@
               <span class="balance-week-copy"><strong id="balanceWeekLabel">Semana —</strong><small id="balanceWeekDates">—</small></span>
               <button type="button" id="balanceWeekNext" onclick="cambiarSemanaBalance(1)" aria-label="Semana siguiente">›</button>
               <strong class="balance-week-saldo" id="balanceWeekSaldo">$0</strong>
+              <span class="balance-more-wrap">
+                <button type="button" class="balance-more-btn" id="balanceMoreBtn" onclick="toggleBalanceMore(event)" aria-label="Más opciones" aria-haspopup="menu" aria-expanded="false">•••</button>
+                <span class="balance-more-menu" id="balanceMoreMenu" role="menu" hidden><button type="button" role="menuitem" onclick="cerrarBalanceMore();abrirReserva()">💰 Mover saldo</button></span>
+              </span>
             </div>
             <div class="balance-view-toggle" role="group" aria-label="Vista del balance">
               <button type="button" class="balance-view-btn" data-balance-view="mensual" aria-pressed="false" onclick="setBalanceViewMode('mensual')">Mensual</button>
@@ -5405,6 +5418,7 @@ window.dpModSelect = (ns, y, m, d, hiddenId, textId, popupId) => {
   const h=document.getElementById(hiddenId); if(h) h.value=val;
   const t=document.getElementById(textId); if(t) t.value=d+'/'+(m+1)+'/'+y;
   const p=document.getElementById(popupId); if(p) p.style.display='none';
+  if(ns==='reserva'||ns==='reservaEdit') document.querySelectorAll(`#${ns==='reserva'?'reservaDiasChips':'reservaEditDiasChips'} .dup-day-chip`).forEach(chip=>chip.classList.remove('active'));
 };
 window.dpModHoy = (ns, hiddenId, textId, popupId) => {
   const t=new Date(); const s=_dpS(ns); s.year=t.getFullYear(); s.month=t.getMonth();
@@ -5428,6 +5442,7 @@ window.dpModParseText = (ns, val, hiddenId, textId, popupId, confirm=false) => {
   const fecha=new Date(y,m-1,d); if(isNaN(fecha.getTime())) return;
   const s=_dpS(ns); s.year=y; s.month=m-1; s.selected=fecha;
   const h=document.getElementById(hiddenId); if(h) h.value=y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+  if(ns==='reserva'||ns==='reservaEdit') document.querySelectorAll(`#${ns==='reserva'?'reservaDiasChips':'reservaEditDiasChips'} .dup-day-chip`).forEach(chip=>chip.classList.remove('active'));
   if(confirm){
     const t=document.getElementById(textId); if(t) t.value=d+'/'+m+'/'+y;
     const p=document.getElementById(popupId); if(p) p.style.display='none';
@@ -5941,15 +5956,19 @@ window.minimizeCalcPanel = () => {
 
 const movSelectorState = { filters:new Set(['todos']), selected:new Set(), expandedWeeks:new Set() };
 function movSelectorType(d){
-  if(d.tipo === 'ingreso' || d.tipo === 'fijo_medeben') return 'ingreso';
+  if(d.tipo === 'ingreso' || d.tipo === 'fijo_medeben' || d.tipo === 'reserva_entrada') return 'ingreso';
   if(d.tipo === 'tarjeta') return 'tarjeta';
   return 'gasto';
 }
 function movSelectorSignedAmount(d){
   const amount = toARS(Number(d.monto)||0, d.moneda);
+  if(d.tipo === 'reserva_entrada') return amount;
+  if(d.tipo === 'reserva_salida') return -amount;
   return movSelectorType(d) === 'ingreso' ? amount : -amount;
 }
 function movSelectorTypeLabel(d){
+  if(d.tipo === 'reserva_entrada') return '💰 Reserva disponible';
+  if(d.tipo === 'reserva_salida') return '💰 Dinero reservado';
   if(d.tipo === 'tarjeta') return '💳 Tarjeta de crédito';
   if(d.tipo === 'ingreso') return '🟢 Ingreso';
   if(d.tipo === 'credito') return '🟠 Crédito';
@@ -6762,6 +6781,14 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
   if(balanceRow&&balanceViewMode==='semanal'){
     acciones.unshift({clase:'select',icono:'✓',label:'Seleccionar',accion:()=>activarSeleccionBalance(id,balanceRow)});
   }
+  if(modo==='reserva'){
+    const reserva=(window._mesMov||[]).find(d=>String(d.id)===String(id))||(data||[]).find(d=>String(d.id)===String(id));
+    acciones=acciones.filter(({clase})=>clase==='select'||clase==='edit'||clase==='del2');
+    const editar=acciones.find(({clase})=>clase==='edit');
+    if(editar) editar.accion=()=>editarReserva(id);
+    const eliminar=acciones.find(({clase})=>clase==='del2');
+    if(eliminar){ eliminar.label='Eliminar reserva'; eliminar.accion=()=>borrarReserva(reserva?.reservaId); }
+  }
   if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
   acciones.forEach(({clase,icono,label,accion})=>{
     const btn=document.createElement('button');
@@ -7163,6 +7190,199 @@ function renderProximosMovimientos(mesMov){
   el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${d.desc}</strong><small>${d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
 }
 
+function fechaISOReserva(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+window.cerrarBalanceMore=()=>{
+  const menu=document.getElementById('balanceMoreMenu'), btn=document.getElementById('balanceMoreBtn');
+  if(menu) menu.hidden=true;
+  if(btn) btn.setAttribute('aria-expanded','false');
+};
+window.toggleBalanceMore=event=>{
+  event?.stopPropagation();
+  const menu=document.getElementById('balanceMoreMenu'), btn=document.getElementById('balanceMoreBtn');
+  if(!menu||!btn) return;
+  const estabaAbierto=!menu.hidden;
+  cerrarBalanceMore();
+  const abrir=!estabaAbierto;
+  menu.hidden=!abrir;
+  btn.setAttribute('aria-expanded',String(abrir));
+};
+document.addEventListener('click',event=>{
+  if(!event.target.closest('.balance-more-wrap')) cerrarBalanceMore();
+});
+
+window.abrirMenuSaldoSemana=(event,grupoId,trigger)=>{
+  if(balanceViewMode!=='mensual') return;
+  event.preventDefault(); event.stopPropagation();
+  const grupo=(window._balanceGrupos||[]).find(g=>String(g.id)===String(grupoId));
+  if(!grupo) return;
+  cerrarMovActions();
+  const popover=document.createElement('div');
+  popover.className='mov-actions-popover'; popover.setAttribute('role','menu'); popover.setAttribute('aria-label',`Opciones de ${grupo.label}`);
+  const btn=document.createElement('button'); btn.type='button'; btn.className='action-btn edit'; btn.setAttribute('role','menuitem');
+  const icon=document.createElement('span'); icon.className='mov-action-icon'; icon.textContent='💰';
+  const label=document.createElement('span'); label.className='mov-action-label'; label.textContent='Mover saldo';
+  btn.append(icon,label);
+  btn.onclick=e=>{
+    e.stopPropagation(); cerrarMovActions();
+    const semanas=getSemanas(mesVista,anioVista), primera=semanas[0];
+    const idNumerico=Number(grupo.id);
+    abrirReserva({...grupo,id:Number.isFinite(idNumerico)?idNumerico:1,desde:grupo.desde||primera?.desde,hasta:grupo.hasta||primera?.hasta});
+  };
+  popover.appendChild(btn); document.body.appendChild(popover);
+  const left=Math.max(10,Math.min(window.innerWidth-popover.offsetWidth-10,event.clientX));
+  const top=Math.max(10,Math.min(window.innerHeight-popover.offsetHeight-10,event.clientY));
+  popover.style.left=`${left}px`; popover.style.top=`${top}px`;
+  window._movActionsTrigger=trigger;
+};
+
+window.abrirReserva=(origenForzado=null)=>{
+  if(!origenForzado&&balanceViewMode!=='semanal') return showToast('Elegí una semana para crear una reserva',true);
+  const origen=origenForzado||(window._balanceGrupos||[]).find(g=>String(g.id)===String(balanceSemanaVista));
+  if(!origen) return showToast('No se encontró la semana de origen',true);
+  const fechaInicial=new Date(origen.desde); fechaInicial.setDate(fechaInicial.getDate()+7);
+  const fechaInicialIso=fechaISOReserva(fechaInicial);
+  const fechaInicialTexto=`${fechaInicial.getDate()}/${fechaInicial.getMonth()+1}/${fechaInicial.getFullYear()}`;
+  const saldoOrigen=Number(origen.sI||0)-Number(origen.sG||0)-Number(origen.sPag||0)-Number(origen.sTar||0)+Number(origen.sReservaEntrada||0)-Number(origen.sReservaSalida||0);
+  const ov=document.createElement('div'); ov.className='modal-overlay'; ov.id='modalReserva';
+  ov.innerHTML=`<div class="modal-box">
+    <div class="modal-title">💰 Reservar para otra semana</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.45;margin:4px 0 18px">Se aparta de <strong>${origen.label}</strong>. No cuenta como gasto ni como ingreso.</p>
+    <div class="modal-group"><label>Concepto</label><input id="reservaDesc" value="Alquiler" placeholder="Ej: Alquiler"></div>
+    <div class="modal-group"><label>Monto disponible: ${fmtARS(saldoOrigen)}</label><input id="reservaMonto" type="text" inputmode="numeric" value="${saldoOrigen>0?Math.round(saldoOrigen).toLocaleString('es-AR'):''}" oninput="formatMontoInput(this)"></div>
+    <div class="modal-group">
+      <label>Disponible en</label>
+      <div class="date-picker-wrap" id="reservaDpWrap">
+        <div class="date-picker-display" id="reservaDpDisplay" style="padding:0;overflow:hidden">
+          <input id="reservaDpText" type="text" inputmode="numeric" placeholder="Ej: 5/9 o 5-9-26" autocomplete="off" value="${fechaInicialTexto}"
+            style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%"
+            oninput="dpModParseText('reserva',this.value,'reservaFecha','reservaDpText','reservaDpPopup')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('reserva',this.value,'reservaFecha','reservaDpText','reservaDpPopup',true)}">
+          <span class="dp-icon" style="padding-right:14px;cursor:pointer" onclick="dpModToggle('reserva','reservaDpPopup','reservaFecha','reservaDpText')">📅</span>
+        </div>
+        <div class="dp-popup" id="reservaDpPopup" style="display:none"></div>
+      </div>
+      <input type="hidden" id="reservaFecha" value="${fechaInicialIso}">
+      <div class="dup-days-chips" id="reservaDiasChips" style="margin-top:10px">
+        <button type="button" class="dup-day-chip active" data-days="7" onclick="reservaSetDias(this,7)">+7</button>
+        <button type="button" class="dup-day-chip" data-days="14" onclick="reservaSetDias(this,14)">+14</button>
+        <button type="button" class="dup-day-chip" data-days="21" onclick="reservaSetDias(this,21)">+21</button>
+        <button type="button" class="dup-day-chip" data-days="28" onclick="reservaSetDias(this,28)">+28</button>
+      </div>
+    </div>
+    <div class="modal-btns"><button class="modal-btn-cancel" onclick="cerrarModal()">Cancelar</button><button class="modal-btn-ok" onclick="guardarReserva()">Crear reserva</button></div>
+  </div>`;
+  ov._reservaOrigen=origen; ov._saldoOrigen=saldoOrigen;
+  document.body.appendChild(ov);
+  dpModInit('reserva',fechaInicialIso);
+};
+
+window.reservaSetDias=(chip,dias,modo='crear')=>{
+  const editando=modo==='edit';
+  const ov=document.getElementById(editando?'modalEditarReserva':'modalReserva'), origen=ov?._reservaOrigen; if(!origen) return;
+  const fecha=new Date(origen.desde); fecha.setDate(fecha.getDate()+Number(dias||0));
+  document.querySelectorAll(`#${editando?'reservaEditDiasChips':'reservaDiasChips'} .dup-day-chip`).forEach(el=>el.classList.toggle('active',el===chip));
+  const hidden=document.getElementById(editando?'reservaEditFecha':'reservaFecha'), texto=document.getElementById(editando?'reservaEditDpText':'reservaDpText');
+  if(hidden) hidden.value=fechaISOReserva(fecha);
+  if(texto) texto.value=`${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear()}`;
+  dpModInit(editando?'reservaEdit':'reserva',fechaISOReserva(fecha));
+};
+
+window.editarReserva=async id=>{
+  const actual=(data||[]).find(d=>String(d.id)===String(id));
+  if(!actual?.reservaId) return showToast('No se encontró la reserva',true);
+  try{
+    const snap=await getDocs(query(userCol('movimientos'),where('reservaId','==',actual.reservaId)));
+    const docs=snap.docs.map(d=>({id:d.id,ref:d.ref,...d.data()}));
+    const salida=docs.find(d=>d.tipo==='reserva_salida'), entrada=docs.find(d=>d.tipo==='reserva_entrada');
+    if(!salida||!entrada) return showToast('La reserva está incompleta',true);
+    const origenDate=new Date(salida.fecha+'T12:00:00'), destinoDate=new Date(entrada.fecha+'T12:00:00');
+    const diferencia=Math.round((destinoDate-origenDate)/86400000);
+    const fechaTexto=`${destinoDate.getDate()}/${destinoDate.getMonth()+1}/${destinoDate.getFullYear()}`;
+    const ov=document.createElement('div'); ov.className='modal-overlay'; ov.id='modalEditarReserva';
+    ov.innerHTML=`<div class="modal-box">
+      <div class="modal-title">✏️ Editar reserva</div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.45;margin:4px 0 18px">Los cambios se aplican a la salida y a la entrada de la reserva.</p>
+      <div class="modal-group"><label>Concepto</label><input id="reservaEditDesc" value="${escapeMovSelectorHtml(salida.desc||'Reserva')}"></div>
+      <div class="modal-group"><label>Monto</label><input id="reservaEditMonto" type="text" inputmode="numeric" value="${Math.round(Number(salida.monto)||0).toLocaleString('es-AR')}" oninput="formatMontoInput(this)"></div>
+      <div class="modal-group">
+        <label>Disponible en</label>
+        <div class="date-picker-wrap"><div class="date-picker-display" style="padding:0;overflow:hidden">
+          <input id="reservaEditDpText" type="text" inputmode="numeric" value="${fechaTexto}" autocomplete="off"
+            style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%"
+            oninput="dpModParseText('reservaEdit',this.value,'reservaEditFecha','reservaEditDpText','reservaEditDpPopup')"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('reservaEdit',this.value,'reservaEditFecha','reservaEditDpText','reservaEditDpPopup',true)}">
+          <span class="dp-icon" style="padding-right:14px;cursor:pointer" onclick="dpModToggle('reservaEdit','reservaEditDpPopup','reservaEditFecha','reservaEditDpText')">📅</span>
+        </div><div class="dp-popup" id="reservaEditDpPopup" style="display:none"></div></div>
+        <input type="hidden" id="reservaEditFecha" value="${entrada.fecha}">
+        <div class="dup-days-chips" id="reservaEditDiasChips" style="margin-top:10px">
+          ${[7,14,21,28].map(d=>`<button type="button" class="dup-day-chip ${diferencia===d?'active':''}" onclick="reservaSetDias(this,${d},'edit')">+${d}</button>`).join('')}
+        </div>
+      </div>
+      <div class="modal-btns"><button class="modal-btn-cancel" onclick="cerrarModal()">Cancelar</button><button class="modal-btn-ok" onclick="guardarEdicionReserva()">Guardar cambios</button></div>
+    </div>`;
+    ov._reservaDocs=docs; ov._reservaOrigen={desde:origenDate};
+    document.body.appendChild(ov); dpModInit('reservaEdit',entrada.fecha);
+  }catch(e){ console.error(e); showToast('❌ No se pudo abrir la reserva',true); }
+};
+
+window.guardarEdicionReserva=async()=>{
+  const ov=document.getElementById('modalEditarReserva'); if(!ov) return;
+  const desc=document.getElementById('reservaEditDesc').value.trim()||'Reserva';
+  const monto=parseMontoInput(document.getElementById('reservaEditMonto'));
+  const fechaDestino=document.getElementById('reservaEditFecha').value;
+  const salida=ov._reservaDocs.find(d=>d.tipo==='reserva_salida');
+  const entrada=ov._reservaDocs.find(d=>d.tipo==='reserva_entrada');
+  if(!monto||monto<=0||!fechaDestino||!salida||!entrada) return showToast('Completá un monto y una fecha válidos',true);
+  const destinoDate=new Date(fechaDestino+'T12:00:00'), origenDate=new Date(salida.fecha+'T12:00:00');
+  const periodoOrigen=getPeriodo(origenDate,'ingreso',null), periodoDestino=getPeriodo(destinoDate,'ingreso',null);
+  if(destinoDate<=origenDate||(periodoOrigen.mes===periodoDestino.mes&&periodoOrigen.anio===periodoDestino.anio&&Number(periodoOrigen.semana)===Number(periodoDestino.semana))) return showToast('Elegí una fecha de una semana posterior',true);
+  const btn=ov.querySelector('.modal-btn-ok'); btn.disabled=true; btn.textContent='Guardando...';
+  try{
+    const batch=writeBatch(db), editadoEn=Date.now();
+    ov._reservaDocs.forEach(d=>{
+      const cambios={desc,monto,editadoEn};
+      if(d.tipo==='reserva_entrada') Object.assign(cambios,{fecha:fechaDestino,mes:periodoDestino.mes,anio:periodoDestino.anio,semana:periodoDestino.semana});
+      batch.update(d.ref,cambios);
+    });
+    await batch.commit(); cerrarModal(); showToast('✅ Reserva actualizada en ambas semanas');
+  }catch(e){ console.error(e); btn.disabled=false; btn.textContent='Guardar cambios'; showToast('❌ No se pudo actualizar la reserva',true); }
+};
+
+window.guardarReserva=async()=>{
+  const ov=document.getElementById('modalReserva'); if(!ov) return;
+  const desc=document.getElementById('reservaDesc').value.trim()||'Reserva';
+  const monto=parseMontoInput(document.getElementById('reservaMonto'));
+  const fechaDestino=document.getElementById('reservaFecha').value;
+  if(!monto||monto<=0||!fechaDestino) return showToast('Ingresá un monto y una fecha válidos',true);
+  if(monto>ov._saldoOrigen) return showToast('La reserva supera el saldo disponible de esa semana',true);
+  const origen=ov._reservaOrigen, reservaId=`reserva_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+  const destinoDate=new Date(fechaDestino+'T12:00:00');
+  const destino=getPeriodo(destinoDate,'ingreso',null);
+  if(destino.mes===mesVista&&destino.anio===anioVista&&Number(destino.semana)===Number(origen.id)) return showToast('Elegí una fecha de una semana posterior',true);
+  if(destinoDate<=new Date(origen.desde)) return showToast('La fecha de destino debe ser posterior a la semana de origen',true);
+  const btn=ov.querySelector('.modal-btn-ok'); btn.disabled=true; btn.textContent='Guardando...';
+  try{
+    const batch=writeBatch(db), salidaRef=doc(userCol('movimientos')), entradaRef=doc(userCol('movimientos'));
+    const base={reservaId,desc,monto,moneda:'ARS',confirmado:true,timestamp:Date.now(),esReserva:true};
+    batch.set(salidaRef,{...base,tipo:'reserva_salida',fecha:fechaISOReserva(origen.desde),mes:mesVista,anio:anioVista,semana:Number(origen.id)});
+    batch.set(entradaRef,{...base,tipo:'reserva_entrada',fecha:fechaDestino,mes:destino.mes,anio:destino.anio,semana:destino.semana});
+    await batch.commit(); cerrarModal(); showToast(`✅ ${fmtARS(monto)} disponibles el ${destinoDate.toLocaleDateString('es-AR')}`);
+  }catch(e){ console.error(e); btn.disabled=false; btn.textContent='Crear reserva'; showToast('❌ No se pudo crear la reserva',true); }
+};
+
+window.borrarReserva=async reservaId=>{
+  if(!confirm('¿Eliminar esta reserva? Se quitará tanto del origen como del destino.')) return;
+  try{
+    const snap=await getDocs(query(userCol('movimientos'),where('reservaId','==',reservaId)));
+    const batch=writeBatch(db); snap.docs.forEach(d=>batch.delete(d.ref)); await batch.commit();
+    showToast('✅ Reserva eliminada');
+  }catch(e){ console.error(e); showToast('❌ No se pudo eliminar la reserva',true); }
+};
+
 function renderResumen(){
   const container=document.getElementById('movPorSemana');
   const openSemanas=container.innerHTML?new Set([...container.querySelectorAll('.sem-group.open')].map(el=>el.id.replace('semgroup-',''))):new Set();
@@ -7238,9 +7458,11 @@ function renderResumen(){
     const sI=movNormal.filter(d=>d.tipo==='ingreso').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
     const sG=movNormal.filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&!d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
     const sPag=movNormal.filter(d=>d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
+    const sReservaEntrada=movNormal.filter(d=>d.tipo==='reserva_entrada').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
+    const sReservaSalida=movNormal.filter(d=>d.tipo==='reserva_salida').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
     const sTar=tarjetasResumen.reduce((a,d)=>a+d.monto,0);
     const _sems=getSemanas(mesVista,anioVista);
-    grupos = [{ id:'mes', label:'Todo el mes', fechas: _sems.length ? `${fmtF(_sems[0].desde)} → ${fmtF(_sems[_sems.length-1].hasta)}` : '', movs: [...movNormal], tarjetas: [...tarjetasResumen], sI, sG, sPag, sTar }];
+    grupos = [{ id:'mes', label:'Todo el mes', fechas: _sems.length ? `${fmtF(_sems[0].desde)} → ${fmtF(_sems[_sems.length-1].hasta)}` : '', movs: [...movNormal], tarjetas: [...tarjetasResumen], sI, sG, sPag, sTar, sReservaEntrada, sReservaSalida }];
   } else {
     // Inicializar grupos vacíos para todas las semanas/quincenas
     const gruposMap = semanas.map(s => ({
@@ -7300,13 +7522,25 @@ function renderResumen(){
       const sI=g.movs.filter(d=>d.tipo==='ingreso').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
       const sG=g.movs.filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&!d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
       const sPag=g.movs.filter(d=>d.esPagoTarjeta).reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
+      const sReservaEntrada=g.movs.filter(d=>d.tipo==='reserva_entrada').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
+      const sReservaSalida=g.movs.filter(d=>d.tipo==='reserva_salida').reduce((a,d)=>a+toARS(d.monto,d.moneda),0);
       const sTar=g.tarjetas.reduce((a,d)=>a+d.monto,0);
-      grupos.push({...g, sI, sG, sPag, sTar});
+      grupos.push({...g, sI, sG, sPag, sTar, sReservaEntrada, sReservaSalida});
     }
   }
 
   // Renderizar grupos
   function renderMovItem(d){
+    if(d.esReserva){
+      const entrada=d.tipo==='reserva_entrada';
+      const balanceSelectId=escapeMovSelectorHtml(String(d.id));
+      const balanceSelected=balanceSelectionState.selected.has(String(d.id));
+      return `<div class="mov-item reserve-mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}" ${movContextMenuAttrs(d.id,'reserva')}>
+        <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
+        <div class="balance-mov-copy"><div class="mov-nombre">${d.desc}</div><div class="mov-meta reserve-badge">💰 ${entrada?'Reserva disponible':'Dinero reservado'} · no cuenta como ${entrada?'ingreso':'gasto'}</div></div>
+        <div class="mov-actions-trigger"><div class="mov-monto ${entrada?'pos':'neg'}">${entrada?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</div>${movMoreButtonHTML(d.id,'reserva')}</div>
+      </div>`;
+    }
     const balanceSelectId=escapeMovSelectorHtml(String(d.id));
     const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const usdTag=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
@@ -7356,7 +7590,7 @@ function renderResumen(){
     balanceSemanaPeriodoVista=periodoBalanceKey;
     balanceSemanaVista=null;
   }
-  const getSaldoGrupo=g=>g.sI-g.sG-g.sPag-(g.sTar||0);
+  const getSaldoGrupo=g=>g.sI-g.sG-g.sPag-(g.sTar||0)+(g.sReservaEntrada||0)-(g.sReservaSalida||0);
   const getBodyGrupo=g=>{
     const hasContent=g.movs.length||(g.tarjetas?.length);
     return hasContent
@@ -7399,7 +7633,7 @@ function renderResumen(){
     const hasContent=g.movs.length||(g.tarjetas?.length);
     const saldoTxt=hasContent?fmtARS(saldoGrupo):'';
     const saldoPct=hasContent?Math.max(4,Math.round(Math.abs(saldoGrupo)/maxSaldo*100)):0;
-    html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}">
+    html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}" oncontextmenu="abrirMenuSaldoSemana(event,'${g.id}',this)">
       <div class="sem-header" onclick="toggleSemana('${g.id}')">
         <div class="sem-header-left"><span class="sem-calendar">▦</span><span class="sem-chevron">▾</span>
           <div><div class="sem-title">${g.label}</div><div class="sem-fechas">${g.fechas}</div></div>
