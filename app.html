@@ -2136,6 +2136,39 @@
     .rubro-chart-layout { grid-template-columns:120px 1fr; padding:16px 12px; }.rubro-donut { width:116px; }.rubro-donut>div { width:62px; }.rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 25px; font-size:9px; }
     .upcoming-row { grid-template-columns:36px minmax(0,1fr) minmax(48px,max-content) max-content; padding:9px; }.upcoming-date { white-space:nowrap; }.upcoming-amount { font-size:9px; }
     .mov-item { align-items:flex-start; gap:10px; padding:13px 12px; }.mov-item>.balance-mov-copy { min-width:0; }.mov-item>div:last-child { flex-wrap:wrap; justify-content:flex-end; }.mov-nombre { font-size:13px; overflow-wrap:anywhere; }.mov-monto { font-size:13px; white-space:nowrap; }.action-btn { padding:4px; }
+    /* Panel semanal compacto: se reduce el espacio vertical manualmente,
+       sin zoom ni transform para conservar el comportamiento táctil. */
+    .weekly-dashboard-panel .dashboard-panel-header { min-height:38px; padding:6px 8px; gap:6px; }
+    .weekly-dashboard-panel .dashboard-panel-icon { width:21px; height:21px; border-radius:6px; font-size:11px; }
+    .weekly-dashboard-panel .balance-panel-header h3 { min-width:0; font-size:11px; }
+    .weekly-dashboard-panel .balance-view-toggle { gap:1px; padding:1px; border-radius:8px; }
+    .weekly-dashboard-panel .balance-view-btn { min-width:53px; height:26px; padding:0 5px; border-radius:7px; font-size:9px; }
+    .weekly-dashboard-panel .balance-week-picker { gap:2px; }
+    .weekly-dashboard-panel .balance-week-picker>button { width:24px; height:24px; font-size:14px; }
+    .weekly-dashboard-panel .balance-week-copy { min-width:52px; }
+    .weekly-dashboard-panel .balance-week-copy strong { font-size:9px; }
+    .weekly-dashboard-panel .balance-week-copy small { font-size:7px; margin-top:1px; }
+    .weekly-dashboard-panel .balance-week-saldo { min-width:60px; padding:4px 4px; border-radius:7px; font-size:9px; }
+    .weekly-dashboard-panel .balance-more-btn { width:24px; height:24px; border-radius:7px; font-size:14px; }
+    .weekly-dashboard-panel #movPorSemana { padding:0 5px 5px; }
+    .weekly-dashboard-panel .balance-week-detail { margin-top:3px; border-radius:8px; }
+    .weekly-dashboard-panel .sem-group { margin-top:4px; border-radius:9px; }
+    .weekly-dashboard-panel .sem-header { min-height:38px; gap:5px; padding:6px 7px; }
+    .weekly-dashboard-panel .sem-calendar { width:22px; height:22px; border-radius:6px; font-size:12px; }
+    .weekly-dashboard-panel .sem-header-left { gap:5px; }
+    .weekly-dashboard-panel .sem-title { font-size:10px; }
+    .weekly-dashboard-panel .sem-fechas { font-size:7px; margin-top:1px; }
+    .weekly-dashboard-panel .sem-saldo { font-size:10px; }
+    .weekly-dashboard-panel .balance-week-detail .mov-item,
+    .weekly-dashboard-panel .sem-body .mov-item { align-items:center; gap:6px; padding:8px 8px; }
+    .weekly-dashboard-panel .mov-nombre { font-size:11px; line-height:1.15; }
+    .weekly-dashboard-panel .mov-meta { margin-top:1px; font-size:9px; line-height:1.15; }
+    .weekly-dashboard-panel .mov-monto { font-size:11px; line-height:1.1; }
+    .weekly-dashboard-panel .mov-actions-trigger { gap:3px; }
+    .weekly-dashboard-panel .confirm-toggle { width:30px; height:17px; border-radius:9px; }
+    .weekly-dashboard-panel .confirm-toggle::after { top:2px; left:2px; width:13px; height:13px; }
+    .weekly-dashboard-panel .confirm-toggle.checked::after { transform:translateX(13px); }
+    .weekly-dashboard-panel .mov-more-btn { width:24px; height:23px; padding-bottom:5px; font-size:15px; }
     .cfg-rubro-row { grid-template-columns:10px 34px minmax(0,1fr) auto; }.cfg-rubro-row .cfg-rubro-icon { grid-column:2; grid-row:1; }.cfg-rubro-row .cfg-rubro-action-rename { grid-column:2/4; grid-row:2; }.cfg-rubro-row .cfg-rubro-action-toggle { grid-column:4; grid-row:2; }
     .cfg-icon-editor { padding:17px; }.cfg-icon-grid { grid-template-columns:repeat(6,1fr); gap:6px; }
     .btn-duplicar-mes { margin-top:14px; }
@@ -2311,9 +2344,6 @@
      mínimo únicamente en pantallas táctiles pequeñas evita ese zoom
      sin cambiar la escala general ni el aspecto de escritorio. */
   @media (max-width: 600px) {
-    /* Compacta la interfaz visualmente sin reducir el tamaño interno de
-       los campos (Safari necesita 16px para no hacer zoom al escribir). */
-    body { zoom: .9; }
     input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
