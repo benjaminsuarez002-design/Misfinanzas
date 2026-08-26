@@ -2311,6 +2311,9 @@
      mínimo únicamente en pantallas táctiles pequeñas evita ese zoom
      sin cambiar la escala general ni el aspecto de escritorio. */
   @media (max-width: 600px) {
+    /* Compacta la interfaz visualmente sin reducir el tamaño interno de
+       los campos (Safari necesita 16px para no hacer zoom al escribir). */
+    body { zoom: .9; }
     input:not([type="checkbox"]):not([type="radio"]),
     select,
     textarea {
