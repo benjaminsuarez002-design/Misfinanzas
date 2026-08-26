@@ -2306,6 +2306,17 @@
     .rubro-legend-row { grid-template-columns:8px minmax(60px,1fr) auto 34px; }
   }
 
+  /* Safari en iPhone amplía automáticamente la página al enfocar
+     controles de texto con una fuente menor a 16px. Mantener este
+     mínimo únicamente en pantallas táctiles pequeñas evita ese zoom
+     sin cambiar la escala general ni el aspecto de escritorio. */
+  @media (max-width: 600px) {
+    input:not([type="checkbox"]):not([type="radio"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
 </style>
 </head>
 <body>
