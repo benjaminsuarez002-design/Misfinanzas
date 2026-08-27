@@ -9203,7 +9203,8 @@ function aplicarNotificacionesCompartidasLista(rows = []) {
   actualizarBadge();
   renderNotifPanel();
 
-  if(gastosComp.length === 0 && document.getElementById('modalCompartidoForm') && window._compartidoPendiente?.modo !== 'duplicar'){
+  const modoPopup = window._compartidoPendiente?.modo;
+  if(gastosComp.length === 0 && document.getElementById('modalCompartidoForm') && !['duplicar','voz'].includes(modoPopup)){
     cfCerrarPopup();
   }
 
