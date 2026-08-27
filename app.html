@@ -3124,6 +3124,7 @@ function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('i
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
 const VOICE_CAPTURE_URL = 'https://misfinanzas-carga-rapida.benjaminsuarez002.workers.dev';
+const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/3dcd205288df431eb804a0feb46ec62b';
 let capturasVozPendientes = [];
 
 async function voiceFetch(path, options = {}) {
@@ -3269,15 +3270,21 @@ function mostrarDatosVinculacionSiri(token) {
   overlay.style.zIndex = '900';
   overlay.innerHTML = `<div class="form-card" style="max-width:520px;width:calc(100% - 28px);padding:22px">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px">
-      <strong style="font-family:'Arial Black',sans-serif;color:var(--text)">🎙️ Vincular Siri</strong>
+      <strong style="font-family:'Arial Black',sans-serif;color:var(--text)">🎙️ Instalar carga rápida</strong>
       <button type="button" class="cf-popup-action" onclick="document.getElementById('voicePairOverlay')?.remove()">Cerrar</button>
     </div>
-    <div style="color:var(--muted);font-size:13px;line-height:1.5;margin-bottom:12px">La llave ya está creada. Copiala: en el siguiente paso la pegaremos una sola vez dentro del Atajo del iPhone.</div>
-    <input class="voice-pair-token" id="voicePairToken" readonly value="${token}">
-    <button type="button" class="cfg-voice-btn" style="margin-top:12px" onclick="copiarTokenSiri()">Copiar llave</button>
-    <div style="margin-top:14px;color:var(--muted);font-size:12px">No compartas esta llave. Si se pierde, podés generar otra desde Configuración.</div>
+    <div style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:14px">
+      <b style="color:var(--text)">1.</b> Tocá el botón de abajo.<br>
+      <b style="color:var(--text)">2.</b> En Atajos, tocá <b>Agregar atajo</b>.<br>
+      <b style="color:var(--text)">3.</b> Cuando pida la clave, mantené apretado y elegí <b>Pegar</b>.
+    </div>
+    <input class="voice-pair-token" id="voicePairToken" type="password" readonly aria-label="Clave de vinculación">
+    <button type="button" class="cfg-voice-btn" style="margin-top:12px" onclick="instalarAtajoSiri()">Copiar clave e instalar Atajo</button>
+    <button type="button" class="cf-popup-action" style="width:100%;margin-top:9px" onclick="copiarTokenSiri()">Solo copiar clave</button>
+    <div style="margin-top:12px;color:var(--muted);font-size:12px">La clave es personal. No la compartas con otras personas.</div>
   </div>`;
   document.body.appendChild(overlay);
+  document.getElementById('voicePairToken').value = token;
 }
 
 window.copiarTokenSiri = async () => {
@@ -3286,6 +3293,27 @@ window.copiarTokenSiri = async () => {
   input.select();
   try { await navigator.clipboard.writeText(input.value); showToast('✅ Llave copiada'); }
   catch(_) { document.execCommand('copy'); showToast('✅ Llave copiada'); }
+};
+
+window.instalarAtajoSiri = async () => {
+  const input = document.getElementById('voicePairToken');
+  if(!input) return;
+  let copiada = false;
+  try {
+    await navigator.clipboard.writeText(input.value);
+    copiada = true;
+  } catch(_) {
+    input.type = 'text';
+    input.select();
+    copiada = document.execCommand('copy');
+    input.type = 'password';
+  }
+  if(!copiada) {
+    showToast('❌ No se pudo copiar la clave. Usá “Solo copiar clave”.', true);
+    return;
+  }
+  showToast('✅ Clave copiada. Pegala cuando Atajos la solicite.');
+  setTimeout(() => { window.location.href = SIRI_SHORTCUT_TEMPLATE_URL; }, 250);
 };
 
 document.addEventListener('visibilitychange', () => {
@@ -4022,7 +4050,7 @@ window.abrirConfig = () => {
           <div class="cfg-section-title">🎙️ Carga rápida con Siri</div>
           <div class="cfg-voice-card">
             <p>Decí “Gasté 500 en pan”. Siri lo guarda sin abrir la app y después lo ordenás desde Resumen.</p>
-            <button type="button" class="cfg-voice-btn" onclick="vincularSiri()">Vincular este iPhone</button>
+            <button type="button" class="cfg-voice-btn" onclick="vincularSiri()">Vincular e instalar</button>
           </div>
         </div>
 
