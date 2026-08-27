@@ -112,6 +112,12 @@
   .user-badge { font-size: 11px; color: var(--muted); background: rgba(255,255,255,.7); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-family: 'Arial Black', sans-serif; }
   .logout-btn { background: none; border: 1.5px solid var(--border); color: var(--muted); padding: 6px 14px; border-radius: 10px; font-family: 'Arial Black', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; transition: border-color .2s, color .2s; }
   .logout-btn:hover { border-color: var(--red); color: var(--red); }
+  .header-notif-btn {
+    width: 34px; height: 30px; padding: 0;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    background: none; font-size: 15px;
+  }
 
 
   /* ── USD BAR NUEVA ── */
@@ -2043,6 +2049,7 @@
     header .sync-label { position:fixed; z-index:190; left:14px; bottom:150px; font-size:10px; }
     header .user-badge { position:fixed; z-index:190; left:14px; bottom:120px; width:212px; max-width:212px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center; }
     header .logout-btn { display:none; }
+    header .header-notif-btn { display:none; }
     .usd-bar { position:fixed; z-index:170; left:0; top:46px; width:240px; height:69px; min-height:0; margin:0; padding:0 10px 9px; flex-direction:column; align-items:stretch; justify-content:flex-start; gap:0; overflow:visible; background:color-mix(in srgb,var(--card) 86%,transparent); border-right:1px solid var(--border); border-bottom:1px solid var(--border); }
     .usd-pills { width:100%; display:grid; grid-template-columns:1fr 1fr; gap:6px; }
     .usd-pill { min-width:0; width:100%; padding:6px 4px; }
@@ -2063,6 +2070,7 @@
     .desktop-bottom-actions button:last-child { flex:1; }
     .desktop-bottom-actions button { height:32px; padding:0 14px; border:1px solid var(--border); border-radius:9px; background:var(--card); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:11px; font-weight:800; cursor:pointer; }
     .desktop-bottom-actions button:first-child { width:46px; padding:0; font-size:15px; }
+    .desktop-bottom-actions .notif-btn { width:40px; flex:0 0 40px; padding:0; font-size:14px; }
     .desktop-help { position:fixed; z-index:190; left:14px; bottom:14px; width:212px; display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:12px; padding:11px; background:var(--card2); color:var(--blue); text-align:left; cursor:pointer; }
     .desktop-help>span:first-child { width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 15%,transparent); font-weight:900; }
     .desktop-help strong,.desktop-help small { display:block; font-size:9px; }
@@ -2461,6 +2469,7 @@
     <div class="header-right">
       <div class="sync-label"><span class="sync-dot" id="syncDot"></span><span id="syncLabel">Conectando</span></div>
       <span class="user-badge" id="userBadge"></span>
+      <button class="notif-btn header-notif-btn" id="notifBtn" data-notif-trigger onclick="event.stopPropagation();toggleNotifPanel()" title="Notificaciones" aria-label="Abrir notificaciones">🔔<span class="notif-badge" id="notifBadge" style="display:none">0</span></button>
       <button class="logout-btn" onclick="doLogout()">Salir</button>
     </div>
   </header>
@@ -2579,6 +2588,7 @@
     <button class="desktop-calc-row desktop-nav-item" onclick="toggleMovSelector()"><span class="selection-check-icon" aria-hidden="true">✓</span> Calcular movimientos</button>
     <div class="desktop-bottom-actions">
       <button onclick="abrirConfig()" title="Configuración">⚙️</button>
+      <button class="notif-btn" id="notifBtnDesktop" data-notif-trigger onclick="event.stopPropagation();toggleNotifPanel()" title="Notificaciones" aria-label="Abrir notificaciones">🔔<span class="notif-badge" id="notifBadgeDesktop" style="display:none">0</span></button>
       <button onclick="doLogout()">Salir</button>
     </div>
     <button class="desktop-help" onclick="mostrarAyuda('tab_resumen')"><span>?</span><span><strong>¿Necesitás ayuda?</strong><small>Ver guía rápida</small></span></button>
@@ -9874,11 +9884,11 @@ function iniciarNotificaciones() {
 }
 
 function actualizarBadge() {
-  const badge = document.getElementById('notifBadge');
-  if(!badge) return;
   const count = notificaciones.length;
-  badge.style.display = count > 0 ? 'flex' : 'none';
-  badge.textContent = count > 9 ? '9+' : count;
+  document.querySelectorAll('.notif-badge').forEach(badge => {
+    badge.style.display = count > 0 ? 'flex' : 'none';
+    badge.textContent = count > 9 ? '9+' : count;
+  });
 }
 
 function renderNotifPanel() {
@@ -9912,8 +9922,8 @@ window.toggleNotifPanel = () => {
 // Cerrar panel al hacer click afuera
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
-  const btn = document.getElementById('notifBtn');
-  if(panel && btn && !panel.contains(e.target) && !btn.contains(e.target)){
+  const btn = e.target.closest('[data-notif-trigger]');
+  if(panel && !panel.contains(e.target) && !btn){
     panel.classList.remove('open');
   }
 });
