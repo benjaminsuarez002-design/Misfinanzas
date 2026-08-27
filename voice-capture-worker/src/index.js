@@ -63,7 +63,8 @@ async function pairDevice(request, env, uid) {
 }
 
 async function createCapture(request, env) {
-  const token = request.headers.get('x-voice-token')?.trim();
+  const body = await readJson(request);
+  const token = String(request.headers.get('x-voice-token') || body.token || '').trim();
   if (!token) throw httpError(401, 'Falta vincular el Atajo con Mis Finanzas.');
 
   const tokenHash = await sha256(token);
@@ -72,7 +73,6 @@ async function createCapture(request, env) {
   ).bind(tokenHash).first();
   if (!device) throw httpError(401, 'El Atajo no está autorizado.');
 
-  const body = await readJson(request);
   const rawText = cleanText(body.text, 300);
   if (!rawText) throw httpError(400, 'No se recibió ningún movimiento.');
 
