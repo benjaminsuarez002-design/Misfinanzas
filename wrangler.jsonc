@@ -1,0 +1,11 @@
+{
+  "$schema": "./voice-capture-worker/node_modules/wrangler/config-schema.json",
+  "name": "misfinanzas",
+  "compatibility_date": "2026-08-27",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "."
+  }
+}

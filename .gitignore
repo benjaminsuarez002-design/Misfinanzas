@@ -1,0 +1,5 @@
+voice-capture-worker/node_modules/
+voice-capture-worker/.wrangler/
+.wrangler/
+.deploy-static/
+*.log

@@ -1,0 +1,12 @@
+{
+  "name": "misfinanzas-voice-capture-worker",
+  "private": true,
+  "scripts": {
+    "check": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.127.0"
+  }
+}

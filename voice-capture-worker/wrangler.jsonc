@@ -1,0 +1,20 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "misfinanzas-carga-rapida",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-27",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "misfinanzas-carga-rapida-db",
+      "database_id": "36d5f0a0-874e-4188-a215-2423b4cb13d6",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "FIREBASE_API_KEY": "AIzaSyCh6JqWC6X3y3PQONWT08phT9upIHQf8Lw"
+  }
+}
