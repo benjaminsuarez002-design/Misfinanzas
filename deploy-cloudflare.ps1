@@ -15,7 +15,8 @@ $publicFiles = @(
   'apple-touch-icon.png',
   'MisFinanzas-web.apk',
   'MisFinanzas-widget.apk',
-  'MisFinanzas-widget-gemini.apk'
+  'MisFinanzas-widget-gemini.apk',
+  'MisFinanzas-microfono-v5.apk'
 )
 
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
