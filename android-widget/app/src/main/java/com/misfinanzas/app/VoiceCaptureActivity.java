@@ -52,7 +52,7 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
         input.setHint("Clave de Mis Finanzas");
         new android.app.AlertDialog.Builder(this)
             .setTitle("Configurar carga rápida")
-            .setMessage("Copiá la clave desde Mis Finanzas → Configuración → Carga rápida con Android / Gemini.")
+            .setMessage("Copiá la clave desde Mis Finanzas → Configuración → Carga rápida con Android.")
             .setView(input)
             .setPositiveButton("Guardar", (d, w) -> {
                 String value = input.getText().toString().trim();

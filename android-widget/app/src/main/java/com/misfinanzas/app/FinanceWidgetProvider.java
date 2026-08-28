@@ -22,6 +22,7 @@ public class FinanceWidgetProvider extends AppWidgetProvider {
     private static void updateWidget(Context context, AppWidgetManager manager, int id) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.finance_widget);
         views.setOnClickPendingIntent(R.id.widgetHeader, openApp(context, null, 100));
+        views.setOnClickPendingIntent(R.id.widgetVoz, openVoice(context, 105));
         views.setOnClickPendingIntent(R.id.widgetIngreso, openApp(context, "ingreso", 101));
         views.setOnClickPendingIntent(R.id.widgetGasto, openApp(context, "gasto", 102));
         views.setOnClickPendingIntent(R.id.widgetCredito, openApp(context, "credito", 103));
@@ -31,6 +32,12 @@ public class FinanceWidgetProvider extends AppWidgetProvider {
     private static PendingIntent openApp(Context context, String type, int requestCode) {
         Intent intent = new Intent(context, MainActivity.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         if (type != null) intent.putExtra(MainActivity.EXTRA_MOVEMENT_TYPE, type);
+        return PendingIntent.getActivity(context, requestCode, intent, FLAGS);
+    }
+    private static PendingIntent openVoice(Context context, int requestCode) {
+        Intent intent = new Intent(context, VoiceCaptureActivity.class)
+            .setAction("com.misfinanzas.app.ANOTAR_GASTO")
+            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return PendingIntent.getActivity(context, requestCode, intent, FLAGS);
     }
 }

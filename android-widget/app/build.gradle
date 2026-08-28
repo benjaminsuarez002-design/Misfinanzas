@@ -1,6 +1,6 @@
 plugins { id 'com.android.application' }
 
 android { namespace 'com.misfinanzas.app'; compileSdk 35
-    defaultConfig { applicationId 'com.misfinanzas.app'; minSdk 23; targetSdk 35; versionCode 3; versionName '3.0-source' }
+    defaultConfig { applicationId 'com.misfinanzas.app'; minSdk 23; targetSdk 35; versionCode 4; versionName '4.0-widget-voice' }
     compileOptions { sourceCompatibility JavaVersion.VERSION_11; targetCompatibility JavaVersion.VERSION_11 }
 }
