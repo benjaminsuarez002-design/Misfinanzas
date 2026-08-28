@@ -3,6 +3,8 @@ const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/voz') url.pathname = '/';
+    else if (url.pathname.startsWith('/voz/')) url.pathname = url.pathname.slice(4);
 
     if (request.method === 'OPTIONS') return corsResponse(null, 204);
 

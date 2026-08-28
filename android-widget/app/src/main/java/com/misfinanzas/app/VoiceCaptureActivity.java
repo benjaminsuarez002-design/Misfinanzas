@@ -29,7 +29,7 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
     private static final int REQUEST_AUDIO = 41;
     private static final String PREFS = "misfinanzas_voice";
     private static final String TOKEN = "voice_token";
-    private static final String CAPTURE_URL = "https://misfinanzas-carga-rapida.benjaminsuarez002.workers.dev/capture";
+    private static final String CAPTURE_URL = "https://misfinanzas.uk/voz/capture";
     private SpeechRecognizer recognizer;
     private TextView status;
     private ProgressBar progress;

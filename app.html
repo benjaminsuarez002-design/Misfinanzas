@@ -3148,9 +3148,9 @@ function aplicarEntradaWidget(){
 function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); cargarCapturasVoz(); sincronizarVinculoAndroid(); setTimeout(aplicarEntradaWidget,0); }
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
-const VOICE_CAPTURE_URL = 'https://misfinanzas-carga-rapida.benjaminsuarez002.workers.dev';
+const VOICE_CAPTURE_URL = 'https://misfinanzas.uk/voz';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/9eec9677c1244c39a6708cb63260a991';
-const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-widget.apk?v=9';
+const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-widget.apk?v=10';
 let capturasVozPendientes = [];
 
 async function sincronizarVinculoAndroid() {
@@ -4119,7 +4119,7 @@ window.abrirConfig = () => {
             <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
-              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget-v9.apk">🤖 Android</a>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget-v10.apk">🤖 Android</a>
             </div>
           </div>
         </div>
