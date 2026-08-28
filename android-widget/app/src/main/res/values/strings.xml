@@ -1,1 +1,1 @@
-<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Mis Finanzas</string><string name="widget_description">Accesos rápidos para cargar movimientos</string></resources>
+<?xml version="1.0" encoding="utf-8"?><resources><string name="app_name">Mis Finanzas</string><string name="widget_description">Accesos rápidos para cargar movimientos</string><string name="shortcut_short_label">Anotar gasto</string><string name="shortcut_long_label">Anotar gasto por voz</string></resources>

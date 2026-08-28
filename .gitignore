@@ -3,3 +3,10 @@ voice-capture-worker/.wrangler/
 .wrangler/
 .deploy-static/
 *.log
+
+# Android build artifacts
+android-widget/.gradle/
+android-widget/build/
+android-widget/manual-build-*/
+android-widget/local.properties
+*.idsig
