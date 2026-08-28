@@ -2636,7 +2636,7 @@
         <div class="value" id="sumTar">$0</div>
       </div>
       <div class="sum-card sal"><div class="label">Saldo</div><div class="value" id="sumSal">$0</div></div>
-      <div class="sum-card pre"><div class="label">Presupuesto Est.</div><div class="value" id="sumPre">$0</div></div>
+      <div class="sum-card pre"><div class="label">Sobrante mensual</div><div class="value" id="sumPre">$0</div></div>
       <div class="sum-card fijo clickable" onclick="toggleFijoPanel()"><div class="label">Mov. Fijos 📌</div><div class="value"><span class="fijo-deben" id="sumFijoDeben">$0</span><span class="fijo-sep">/</span><span class="fijo-debo" id="sumFijoDebo">$0</span></div></div>
     </div>
     <div class="mov-panel summary-fullscreen-panel" id="ingPanel" role="dialog" aria-modal="true" aria-label="Ingresos del mes" style="display:none;"></div>
@@ -5002,7 +5002,7 @@ const HELP_CONTENT = {
   sum_gastos: { title: 'Gastos', subtitle: 'Resume egresos y consumos del período activo.', items: [ { title: 'Toque rápido', text: 'Si lo tocás, se abre el detalle completo de gastos.' } ] },
   sum_tarjetas: { title: 'Tarjetas', subtitle: 'Acumula la deuda o el consumo pendiente de tarjetas.', items: [ { title: 'Qué muestra', text: 'Incluye el total consumido en tarjetas y cuántas tienen deuda activa.' }, { title: 'Toque rápido', text: 'Abre el panel por tarjeta con deuda, pagos y movimientos asociados.' } ] },
   sum_saldo: { title: 'Saldo', subtitle: 'Es la diferencia entre ingresos confirmados y egresos confirmados.', items: [ { title: 'Cómo leerlo', text: 'Si está positivo, te quedó margen; si está negativo, gastaste más de lo confirmado.' } ] },
-  sum_presupuesto: { title: 'Presupuesto estimado', subtitle: 'Calcula un resultado proyectado usando todo lo cargado.', items: [ { title: 'Para qué sirve', text: 'Te deja anticipar cómo cerraría el período si todo lo pendiente realmente ocurre.' } ] },
+  sum_presupuesto: { title: 'Sobrante mensual', subtitle: 'Calcula un resultado proyectado usando todo lo cargado.', items: [ { title: 'Para qué sirve', text: 'Te deja anticipar cómo cerraría el período si todo lo pendiente realmente ocurre.' } ] },
   sum_fijos: { title: 'Movimientos fijos', subtitle: 'Agrupa lo que te deben y lo que debés en movimientos de seguimiento.', items: [ { title: 'Toque rápido', text: 'Abre el panel para ver detalle, pagos parciales y saldos pendientes.' } ] },
   tarjetas_panel: { title: 'Tarjetas del mes', subtitle: 'Panel detallado de consumos y pagos por tarjeta.', items: [ { title: 'Qué podés hacer', text: 'Cambiar entre tarjetas, revisar deuda del período y registrar pagos.' } ] },
   fijo_panel: { title: 'Movimientos fijos', subtitle: 'Panel para deudas o cobros que se van cancelando en partes.', items: [ { title: 'Cómo funciona', text: 'Cada movimiento fijo puede recibir pagos o cobros parciales hasta quedar saldado.' } ] },
