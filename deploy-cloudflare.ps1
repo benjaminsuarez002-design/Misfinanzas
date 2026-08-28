@@ -15,6 +15,7 @@ $publicFiles = @(
   'apple-touch-icon.png',
   'MisFinanzas-web.apk',
   'MisFinanzas-widget.apk',
+  'MisFinanzas-widget-v9.apk',
   'MisFinanzas-widget-gemini.apk',
   'MisFinanzas-microfono-v5.apk'
 )
