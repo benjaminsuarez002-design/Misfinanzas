@@ -3284,6 +3284,40 @@ window.vincularSiri = async () => {
   }
 };
 
+window.vincularAndroid = async () => {
+  try {
+    const payload = await voiceFetch('/devices/pair', { method:'POST', body:JSON.stringify({ label:'Android Gemini' }) });
+    mostrarDatosVinculacionAndroid(payload.token);
+  } catch(e) {
+    showToast('❌ ' + (e.message || 'No se pudo configurar Android'), true);
+  }
+};
+
+function mostrarDatosVinculacionAndroid(token) {
+  document.getElementById('voicePairOverlay')?.remove();
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'voicePairOverlay';
+  overlay.style.zIndex = '900';
+  overlay.innerHTML = `<div class="form-card" style="max-width:520px;width:calc(100% - 28px);padding:22px">
+    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px">
+      <strong style="font-family:'Arial Black',sans-serif;color:var(--text)">🤖 Configurar Android</strong>
+      <button type="button" class="cf-popup-action" onclick="document.getElementById('voicePairOverlay')?.remove()">Cerrar</button>
+    </div>
+    <div style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:14px">
+      <b style="color:var(--text)">1.</b> Copiá esta clave.<br>
+      <b style="color:var(--text)">2.</b> Descargá e instalá el APK de Mis Finanzas.<br>
+      <b style="color:var(--text)">3.</b> Abrí el acceso directo <b>Anotar gasto</b> desde el ícono de Mis Finanzas y pegala cuando la solicite.
+    </div>
+    <input class="voice-pair-token" id="voicePairToken" type="password" readonly aria-label="Clave de Android">
+    <button type="button" class="cfg-voice-btn" style="margin-top:12px" onclick="copiarTokenSiri()">📋 Copiar clave para Android</button>
+    <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:9px" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" target="_blank" rel="noopener">⬇️ Descargar APK</a>
+    <div style="margin-top:12px;color:var(--muted);font-size:12px">Esta clave es personal y distinta de la de otros dispositivos.</div>
+  </div>`;
+  document.body.appendChild(overlay);
+  document.getElementById('voicePairToken').value = token;
+}
+
 function mostrarDatosVinculacionSiri(token) {
   document.getElementById('voicePairOverlay')?.remove();
   const overlay = document.createElement('div');
@@ -4072,11 +4106,12 @@ window.abrirConfig = () => {
         <div style="margin-top:18px">
           <div class="cfg-section-title">🤖 Carga rápida con Android / Gemini</div>
           <div class="cfg-voice-card">
-            <p>Instalá el asistente de Mis Finanzas y usá “Hey Google, abrir Anotar gasto” para dictar algo como “gasté 500 en pan”. Se guarda sin abrir la app principal y después lo ordenás desde Resumen.</p>
-            <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget-gemini.apk" target="_blank" rel="noopener">⬇️ Descargar para Android</a>
+            <p>Instalá Mis Finanzas en Android y usá “Hey Google, abrir Anotar gasto” para dictar algo como “gasté 500 en pan”. Se guarda sin abrir la app principal y después lo ordenás desde Resumen.</p>
+            <button type="button" class="cfg-voice-btn" onclick="vincularAndroid()">🔑 Configurar Android</button>
+            <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:9px" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" target="_blank" rel="noopener">⬇️ Descargar Mis Finanzas para Android</a>
             <details style="margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5">
               <summary style="cursor:pointer;color:var(--text);font-weight:700">Cómo dejarlo listo</summary>
-              <div style="padding-top:8px">1. Instalá el APK descargado.<br>2. Abrí “Anotar gasto” una vez y pegá tu clave de Mis Finanzas.<br>3. En Gemini/Asistente de Google, agregá el acceso directo de Mis Finanzas y asignale una frase, por ejemplo “Anotar gasto”.<br><small>Android pide confirmar la instalación y el acceso directo por seguridad; no se puede automatizar completamente desde una página web.</small></div>
+              <div style="padding-top:8px">1. Tocá <b>Configurar Android</b> y copiá la clave que aparece.<br>2. Descargá e instalá Mis Finanzas para Android.<br>3. Abrí el acceso directo <b>Anotar gasto</b> desde el ícono de Mis Finanzas y pegá esa clave una sola vez.<br>4. En Gemini/Asistente de Google, asigná la frase “Anotar gasto”.<br><small>No es otra aplicación: “Anotar gasto” es el acceso rápido que está dentro de Mis Finanzas. Android pide confirmar la instalación y el acceso directo por seguridad.</small></div>
             </details>
           </div>
         </div>
