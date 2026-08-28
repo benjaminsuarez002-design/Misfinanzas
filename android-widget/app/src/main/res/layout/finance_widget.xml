@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical" android:background="@drawable/widget_background" android:padding="12dp" android:layout_width="match_parent" android:layout_height="match_parent">
+    <LinearLayout android:id="@+id/widgetHeader" android:gravity="center_vertical" android:orientation="horizontal" android:paddingHorizontal="6dp" android:layout_width="match_parent" android:layout_height="42dp">
+        <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/ic_money" />
+        <TextView android:text="Mis Finanzas" android:textSize="17sp" android:textStyle="bold" android:textColor="#242238" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:paddingStart="9dp" />
+        <TextView android:text="Abrir  ›" android:textSize="12sp" android:textStyle="bold" android:textColor="#8f6bff" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+    </LinearLayout>
+    <TextView android:text="＋ Cargar movimiento" android:textSize="12sp" android:textStyle="bold" android:textColor="#74708f" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="5dp" android:layout_marginBottom="7dp" />
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
+        <Button android:id="@+id/widgetIngreso" android:text="💚 Ingreso" style="@style/WidgetButton" />
+        <Button android:id="@+id/widgetGasto" android:text="🔴 Gasto" style="@style/WidgetButton" />
+    </LinearLayout>
+    <LinearLayout android:orientation="horizontal" android:layout_width="match_parent" android:layout_height="0dp" android:layout_marginTop="6dp" android:layout_weight="1">
+        <Button android:id="@+id/widgetCredito" android:text="💳 Crédito" style="@style/WidgetButton" />
+        <Button android:id="@+id/widgetFijo" android:text="📌 Mov. fijo" style="@style/WidgetButton" />
+    </LinearLayout>
+</LinearLayout>
