@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut android:shortcutId="anotar_gasto" android:enabled="true" android:shortcutShortLabel="@string/shortcut_short_label" android:shortcutLongLabel="@string/shortcut_long_label">
-        <intent android:action="com.misfinanzas.app.ANOTAR_GASTO" />
+        <intent android:action="com.misfinanzas.app.ANOTAR_GASTO" android:targetPackage="com.misfinanzas.app" android:targetClass="com.misfinanzas.app.VoiceCaptureActivity" />
     </shortcut>
 </shortcuts>

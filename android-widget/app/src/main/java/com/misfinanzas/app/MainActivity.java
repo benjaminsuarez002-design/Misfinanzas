@@ -17,6 +17,10 @@ import java.net.URLEncoder;
 /** Reconstructed source for Mis Finanzas widget APK. */
 public class MainActivity extends Activity {
     private static final String APP_URL = "https://misfinanzas.uk/app";
+    private static final String VOICE_PREFS = "misfinanzas_voice";
+    private static final String VOICE_TOKEN = "voice_token";
+    private static final String SETUP_PREFS = "misfinanzas_setup";
+    private static final String SETUP_SHOWN = "voice_setup_shown";
     public static final String EXTRA_MOVEMENT_TYPE = "movement_type";
     private WebView webView;
 
@@ -44,7 +48,19 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
+        abrirConfiguracionVozLaPrimeraVez();
         openIntent(getIntent());
+    }
+
+    private void abrirConfiguracionVozLaPrimeraVez() {
+        String token = getSharedPreferences(VOICE_PREFS, MODE_PRIVATE).getString(VOICE_TOKEN, "");
+        boolean mostrada = getSharedPreferences(SETUP_PREFS, MODE_PRIVATE).getBoolean(SETUP_SHOWN, false);
+        if (token == null || token.trim().isEmpty()) {
+            if (!mostrada) {
+                getSharedPreferences(SETUP_PREFS, MODE_PRIVATE).edit().putBoolean(SETUP_SHOWN, true).apply();
+                startActivity(new Intent(this, VoiceCaptureActivity.class).setAction("com.misfinanzas.app.ANOTAR_GASTO"));
+            }
+        }
     }
 
     @Override protected void onNewIntent(Intent intent) {
