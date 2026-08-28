@@ -3207,11 +3207,15 @@ function interpretarCapturaVoz(captura) {
   const original = String(captura?.raw_text || '').trim();
   const plano = normalizarTextoVoz(original);
   const esIngreso = /\b(cobre|recibi|ingrese|gane|sueldo|ingreso)\b/.test(plano);
+  const montoConMatch = original.match(/\$?\s*(\d[\d.,]*)\s+(?:con|coma|punto)\s+(\d{1,2})\b/i);
   const montoMatch = original.match(/\$?\s*(\d[\d.,]*)/);
-  const monto = parseMontoVoz(montoMatch?.[1] || '0');
+  const monto = montoConMatch
+    ? parseMontoVoz(montoConMatch[1]) + (Number(montoConMatch[2]) / Math.pow(10, montoConMatch[2].length))
+    : parseMontoVoz(montoMatch?.[1] || '0');
   let desc = original
+    .replace(/^\s*(?:anoche\s+)?(?:carg[aá]me|anot[aá]me|registr[aá]me)\s+(?:un\s+)?(?:gasto|ingreso)(?:\s+(?:de|por))?\s*/i, '')
     .replace(/^\s*(?:yo\s+)?(gast[eé]|pagu[eé]|compr[eé]|anot[aá]|registr[aá]|cobr[eé]|recib[ií]|ingres[eé]|gan[eé])\s*/i, '')
-    .replace(/\$?\s*\d[\d.,]*/, '')
+    .replace(/\$?\s*\d[\d.,]*(?:\s+(?:con|coma|punto)\s+\d{1,2})?/i, '')
     .replace(/^\s*(?:pesos?|ars)\b\s*/i, '')
     .replace(/^\s*(?:en|de|por)\s+/i, '')
     .replace(/^\s*(?:un|una|el|la|los|las)\s+/i, '')
