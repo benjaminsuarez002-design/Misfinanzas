@@ -1335,6 +1335,11 @@
   .cfg-option-copy { flex: 1; min-width: 0; }
   .cfg-option-label { font-family: Arial Black,sans-serif; font-size: 13px; font-weight: 700; color: var(--text); }
   .cfg-option-sub { font-size: 11px; color: var(--muted); margin-top: 1px; text-transform: uppercase; letter-spacing: .5px; }
+  .cfg-frec-chips { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; }
+  .cfg-frec-chip { min-width:0; min-height:42px; padding:7px 6px; border:1.5px solid var(--border); border-radius:11px; background:rgba(243,236,255,.25); color:var(--muted); cursor:pointer; font-family:Arial Black,sans-serif; font-size:11px; font-weight:700; line-height:1.15; transition:all .15s; }
+  .cfg-frec-chip:hover, .cfg-frec-chip.active { border-color:var(--blue); color:var(--blue); background:rgba(108,140,255,.1); }
+  .cfg-frec-chip small { display:block; margin-top:3px; color:var(--muted); font-family:inherit; font-size:8px; font-weight:400; }
+  .cfg-frec-chip.active small { color:var(--blue); }
   .cfg-help-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .cfg-help-row-copy { flex: 1; min-width: 0; }
   .cfg-weekly-info-btn {
@@ -1869,6 +1874,12 @@
   .cfg-dia-cobro-wrap { margin-bottom: 18px; display: none; }
   .cfg-dia-cobro-wrap.visible { display: block; }
   .cfg-dias-semana { display: flex; gap: 6px; }
+  .cfg-date-row { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; margin-bottom:18px; }
+  .cfg-date-field { min-width:0; }
+  .cfg-date-label { display:block; margin-bottom:6px; color:var(--blue); font-family:Arial Black,sans-serif; font-size:10px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; }
+  .cfg-date-select { width:100%; height:40px; padding:0 10px; border:1.5px solid var(--border); border-radius:10px; background:rgba(243,236,255,.3); color:var(--text); font-family:Arial,sans-serif; font-size:13px; outline:none; }
+  .cfg-date-select:focus { border-color:var(--blue); box-shadow:0 0 0 3px color-mix(in srgb,var(--blue) 12%,transparent); }
+  .cfg-date-select:disabled { opacity:.55; cursor:not-allowed; }
   .cfg-dia-sem {
     flex: 1; padding: 10px 4px; border-radius: 10px;
     border: 1.5px solid var(--border); background: rgba(243,236,255,.3);
@@ -4000,8 +4011,12 @@ window.abrirConfig = () => {
   const overlay = document.createElement('div');
   overlay.className = 'cfg-overlay'; overlay.id = 'cfgOverlay';
 
-  const diasHTML = Array.from({length:28},(_,i)=>i+1).map(d=>
-    `<div class="cfg-dia ${userConfig.diaCorte===d?'active':''}" onclick="setCfgDia(${d})">${d}</div>`
+  const diasCobro = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+  const diasCobroHTML = diasCobro.map((nombre, i) =>
+    `<option value="${i}" ${userConfig.diaCobro===i?'selected':''}>${nombre}</option>`
+  ).join('');
+  const diasCorteHTML = Array.from({length:28},(_,i)=>i+1).map(d =>
+    `<option value="${d}" ${userConfig.diaCorte===d?'selected':''}>Día ${d}</option>`
   ).join('');
 
   overlay.innerHTML = `
@@ -4023,37 +4038,26 @@ window.abrirConfig = () => {
       <div id="cfgPanelGeneral" class="cfg-panel ${userConfig.configTab==='general'?'active':''}">
         <div style="margin-bottom:18px">
           <div class="cfg-section-title">📅 Frecuencia de cobro</div>
-          <label class="cfg-option ${userConfig.frecuencia==='mensual'?'active':''}" onclick="setCfgFrec('mensual')">
-            <input type="radio" name="cfgFrec" ${userConfig.frecuencia==='mensual'?'checked':''}><div>
-            <div class="cfg-option-label">Mensual</div>
-            <div class="cfg-option-sub">Cobro una vez por mes</div></div>
-          </label>
-          <label class="cfg-option ${userConfig.frecuencia==='quincenal'?'active':''}" onclick="setCfgFrec('quincenal')">
-            <input type="radio" name="cfgFrec" ${userConfig.frecuencia==='quincenal'?'checked':''}><div>
-            <div class="cfg-option-label">Quincenal</div>
-            <div class="cfg-option-sub">Cobro dos veces por mes</div></div>
-          </label>
-          <label class="cfg-option ${userConfig.frecuencia==='semanal'?'active':''}" onclick="setCfgFrec('semanal')">
-            <input type="radio" name="cfgFrec" ${userConfig.frecuencia==='semanal'?'checked':''}>
-            <div class="cfg-option-main">
-              <div class="cfg-option-copy">
-                <div class="cfg-option-label">Semanal</div>
-                <div class="cfg-option-sub">Cobro cada semana</div>
-              </div>
-              <button type="button" class="cfg-weekly-info-btn" onclick="event.stopPropagation();mostrarInfoSemanal()" aria-label="Ver detalle del modo semanal">i</button>
-            </div>
-          </label>
+          <div class="cfg-frec-chips">
+            <button type="button" class="cfg-frec-chip ${userConfig.frecuencia==='mensual'?'active':''}" data-frec="mensual" onclick="setCfgFrec('mensual')">Mensual<small>Una vez por mes</small></button>
+            <button type="button" class="cfg-frec-chip ${userConfig.frecuencia==='quincenal'?'active':''}" data-frec="quincenal" onclick="setCfgFrec('quincenal')">Quincenal<small>Dos veces por mes</small></button>
+            <button type="button" class="cfg-frec-chip ${userConfig.frecuencia==='semanal'?'active':''}" data-frec="semanal" onclick="setCfgFrec('semanal')">Semanal<small>Cada semana</small></button>
+          </div>
         </div>
 
-        <div id="cfgDiaCobroWrap" class="cfg-dia-cobro-wrap ${userConfig.frecuencia!=='mensual'?'visible':''}">
-          <div class="cfg-section-title">📆 Día de cobro</div>
-          <div class="cfg-dias-semana"><div class="cfg-dia-sem" id="cfgDiaSem0" onclick="setCfgDiaCobro(0)">L</div><div class="cfg-dia-sem" id="cfgDiaSem1" onclick="setCfgDiaCobro(1)">M</div><div class="cfg-dia-sem" id="cfgDiaSem2" onclick="setCfgDiaCobro(2)">M</div><div class="cfg-dia-sem" id="cfgDiaSem3" onclick="setCfgDiaCobro(3)">J</div><div class="cfg-dia-sem" id="cfgDiaSem4" onclick="setCfgDiaCobro(4)">V</div><div class="cfg-dia-sem" id="cfgDiaSem5" onclick="setCfgDiaCobro(5)">S</div><div class="cfg-dia-sem" id="cfgDiaSem6" onclick="setCfgDiaCobro(6)">D</div></div>
-        </div>
-
-        <div>
-          <div class="cfg-section-title">📆 Día de inicio / corte del período</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:10px">El período empieza en este día del mes</div>
-          <div class="cfg-dias" id="cfgDias">${diasHTML}</div>
+        <div class="cfg-date-row">
+          <div class="cfg-date-field">
+            <label class="cfg-date-label" for="cfgDiaCobroSelect">📆 Día de cobro</label>
+            <select class="cfg-date-select" id="cfgDiaCobroSelect" onchange="setCfgDiaCobro(Number(this.value))" ${userConfig.frecuencia==='mensual'?'disabled':''}>
+              ${diasCobroHTML}
+            </select>
+          </div>
+          <div class="cfg-date-field">
+            <label class="cfg-date-label" for="cfgDiaCorteSelect">📆 Día de corte</label>
+            <select class="cfg-date-select" id="cfgDiaCorteSelect" onchange="setCfgDia(Number(this.value))">
+              ${diasCorteHTML}
+            </select>
+          </div>
         </div>
 
         <div style="margin-top:18px">
@@ -4131,25 +4135,24 @@ const cfgResizeHandler = () => window.fitConfigBoxToViewport();
 
 window.setCfgFrec = frec => {
   userConfig.frecuencia = frec;
-  document.querySelectorAll('.cfg-option').forEach(el => {
-    const onclick = el.getAttribute('onclick') || '';
-    el.classList.toggle('active', onclick.includes("'"+frec+"'"));
-    const r = el.querySelector('input[type=radio]');
-    if(r) r.checked = onclick.includes("'"+frec+"'");
-  });
-  const wrap = document.getElementById('cfgDiaCobroWrap');
-  if(wrap) wrap.classList.toggle('visible', frec !== 'mensual');
+  document.querySelectorAll('.cfg-frec-chip').forEach(el => el.classList.toggle('active', el.dataset.frec === frec));
+  const select = document.getElementById('cfgDiaCobroSelect');
+  if(select) select.disabled = frec === 'mensual';
   requestAnimationFrame(window.fitConfigBoxToViewport);
 };
 
 window.setCfgDia = dia => {
   userConfig.diaCorte = dia;
+  const select = document.getElementById('cfgDiaCorteSelect');
+  if(select) select.value = String(dia);
   document.querySelectorAll('.cfg-dia').forEach(b =>
     b.classList.toggle('active', parseInt(b.textContent) === dia)
   );
 };
 window.setCfgDiaCobro = idx => {
   userConfig.diaCobro = idx;
+  const select = document.getElementById('cfgDiaCobroSelect');
+  if(select) select.value = String(idx);
   document.querySelectorAll('.cfg-dia-sem').forEach((b,i) =>
     b.classList.toggle('active', i === idx)
   );
