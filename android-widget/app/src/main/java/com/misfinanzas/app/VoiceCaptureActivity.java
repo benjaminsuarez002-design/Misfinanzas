@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
@@ -89,7 +91,18 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
                 try (OutputStream out = connection.getOutputStream()) { out.write(json.getBytes(StandardCharsets.UTF_8)); }
                 int code = connection.getResponseCode(); InputStream stream = code >= 400 ? connection.getErrorStream() : connection.getInputStream();
                 String response = read(stream); boolean ok = code >= 200 && code < 300 && response.contains("\"ok\":true");
-                runOnUiThread(() -> { if (ok) { FinanceWidgetProvider.showStatus(this, "Listo ✓"); Toast.makeText(this, "✅ Gasto anotado", Toast.LENGTH_SHORT).show(); getWindow().getDecorView().postDelayed(() -> { FinanceWidgetProvider.showStatus(this, "Mis Finanzas"); finish(); }, 1800); } else showError("No se pudo guardar."); });
+                runOnUiThread(() -> {
+                    if (ok) {
+                        FinanceWidgetProvider.showStatus(this, "Listo ✓");
+                        Toast.makeText(getApplicationContext(), "✅ Gasto anotado", Toast.LENGTH_SHORT).show();
+                        new Handler(Looper.getMainLooper()).postDelayed(
+                            () -> FinanceWidgetProvider.showStatus(getApplicationContext(), "Mis Finanzas"), 1800
+                        );
+                        finishAndRemoveTask();
+                    } else {
+                        showError("No se pudo guardar.");
+                    }
+                });
             } catch (Exception e) { runOnUiThread(() -> showError("Sin conexión. Intentá de nuevo.")); } finally { if (connection != null) connection.disconnect(); }
         });
     }

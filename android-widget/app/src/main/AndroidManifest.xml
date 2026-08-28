@@ -7,7 +7,7 @@
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="screenSize|orientation|keyboardHidden">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
-        <activity android:name=".VoiceCaptureActivity" android:exported="true" android:theme="@style/VoiceTheme">
+        <activity android:name=".VoiceCaptureActivity" android:exported="true" android:theme="@style/VoiceTheme" android:taskAffinity="" android:excludeFromRecents="true" android:noHistory="true" android:finishOnTaskLaunch="true">
             <intent-filter><action android:name="com.misfinanzas.app.ANOTAR_GASTO" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
             <intent-filter><action android:name="android.intent.action.VOICE_COMMAND" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
             <intent-filter><action android:name="android.intent.action.PROCESS_TEXT" /><category android:name="android.intent.category.DEFAULT" /><data android:mimeType="text/plain" /></intent-filter>
