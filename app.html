@@ -3146,6 +3146,7 @@ function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('i
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
 const VOICE_CAPTURE_URL = 'https://misfinanzas-carga-rapida.benjaminsuarez002.workers.dev';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/9eec9677c1244c39a6708cb63260a991';
+const ANDROID_APK_DOWNLOAD_URL = 'https://github.com/benjaminsuarez002-design/Misfinanzas/raw/refs/heads/main/MisFinanzas-widget-gemini.apk';
 let capturasVozPendientes = [];
 
 async function voiceFetch(path, options = {}) {
@@ -4065,6 +4066,18 @@ window.abrirConfig = () => {
           <div class="cfg-voice-card">
             <p>Decí “Gasté 500 en pan”. Siri lo guarda sin abrir la app y después lo ordenás desde Resumen.</p>
             <button type="button" class="cfg-voice-btn" onclick="vincularSiri()">Vincular e instalar</button>
+          </div>
+        </div>
+
+        <div style="margin-top:18px">
+          <div class="cfg-section-title">🤖 Carga rápida con Android / Gemini</div>
+          <div class="cfg-voice-card">
+            <p>Instalá el asistente de Mis Finanzas y usá “Hey Google, abrir Anotar gasto” para dictar algo como “gasté 500 en pan”. Se guarda sin abrir la app principal y después lo ordenás desde Resumen.</p>
+            <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget-gemini.apk" target="_blank" rel="noopener">⬇️ Descargar para Android</a>
+            <details style="margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5">
+              <summary style="cursor:pointer;color:var(--text);font-weight:700">Cómo dejarlo listo</summary>
+              <div style="padding-top:8px">1. Instalá el APK descargado.<br>2. Abrí “Anotar gasto” una vez y pegá tu clave de Mis Finanzas.<br>3. En Gemini/Asistente de Google, agregá el acceso directo de Mis Finanzas y asignale una frase, por ejemplo “Anotar gasto”.<br><small>Android pide confirmar la instalación y el acceso directo por seguridad; no se puede automatizar completamente desde una página web.</small></div>
+            </details>
           </div>
         </div>
 
