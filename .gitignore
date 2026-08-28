@@ -9,4 +9,5 @@ android-widget/.gradle/
 android-widget/build/
 android-widget/manual-build-*/
 android-widget/local.properties
+android-widget/*.apk
 *.idsig
