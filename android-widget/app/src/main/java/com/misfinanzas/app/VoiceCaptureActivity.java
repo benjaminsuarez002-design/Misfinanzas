@@ -61,6 +61,7 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) { requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_AUDIO); return; }
         if (!SpeechRecognizer.isRecognitionAvailable(this)) { showError("El reconocimiento de voz no está disponible"); return; }
         status.setText("Escuchando… decí tu gasto");
+        FinanceWidgetProvider.showStatus(this, "Escuchando…");
         progress.setVisibility(ProgressBar.VISIBLE);
         recognizer = SpeechRecognizer.createSpeechRecognizer(this);
         recognizer.setRecognitionListener(this);
@@ -77,6 +78,7 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
     private void sendCapture(String text) {
         if (recognizer != null) recognizer.stopListening();
         status.setText("Guardando…");
+        FinanceWidgetProvider.showStatus(this, "Guardando…");
         executor.execute(() -> {
             HttpURLConnection connection = null;
             try {
@@ -87,13 +89,13 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
                 try (OutputStream out = connection.getOutputStream()) { out.write(json.getBytes(StandardCharsets.UTF_8)); }
                 int code = connection.getResponseCode(); InputStream stream = code >= 400 ? connection.getErrorStream() : connection.getInputStream();
                 String response = read(stream); boolean ok = code >= 200 && code < 300 && response.contains("\"ok\":true");
-                runOnUiThread(() -> { if (ok) { Toast.makeText(this, "✅ Gasto anotado", Toast.LENGTH_SHORT).show(); finish(); } else showError("No se pudo guardar. Revisá la clave."); });
+                runOnUiThread(() -> { if (ok) { FinanceWidgetProvider.showStatus(this, "Listo ✓"); Toast.makeText(this, "✅ Gasto anotado", Toast.LENGTH_SHORT).show(); getWindow().getDecorView().postDelayed(() -> { FinanceWidgetProvider.showStatus(this, "Mis Finanzas"); finish(); }, 1800); } else showError("No se pudo guardar."); });
             } catch (Exception e) { runOnUiThread(() -> showError("Sin conexión. Intentá de nuevo.")); } finally { if (connection != null) connection.disconnect(); }
         });
     }
     private static String read(InputStream stream) throws Exception { if (stream == null) return ""; StringBuilder b = new StringBuilder(); try (BufferedReader r = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) { String line; while ((line = r.readLine()) != null) b.append(line); } return b.toString(); }
     private static String escape(String value) { return String.valueOf(value).replace("\\", "\\\\").replace("\"", "\\\"").replace("\r", "\\r").replace("\n", "\\n"); }
-    private void showError(String message) { if (status != null) status.setText(message); if (progress != null) progress.setVisibility(ProgressBar.INVISIBLE); Toast.makeText(this, message, Toast.LENGTH_LONG).show(); }
+    private void showError(String message) { if (status != null) status.setText(message); if (progress != null) progress.setVisibility(ProgressBar.INVISIBLE); FinanceWidgetProvider.showStatus(this, "Error · reintentar"); Toast.makeText(this, message, Toast.LENGTH_LONG).show(); }
     @Override protected void onDestroy() { if (recognizer != null) recognizer.destroy(); executor.shutdownNow(); super.onDestroy(); }
     @Override public void onReadyForSpeech(Bundle p) {} @Override public void onBeginningOfSpeech() {} @Override public void onRmsChanged(float v) {} @Override public void onBufferReceived(byte[] b) {} @Override public void onEndOfSpeech() { if (status != null) status.setText("Procesando…"); } @Override public void onError(int e) { showError("No entendí. Probá otra vez."); } @Override public void onPartialResults(Bundle b) {} @Override public void onEvent(int e, Bundle b) {}
 }

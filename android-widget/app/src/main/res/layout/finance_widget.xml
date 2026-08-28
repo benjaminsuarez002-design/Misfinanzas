@@ -1,16 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/widgetMicBar"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/widget_mic_background"
     android:elevation="4dp"
-    android:padding="6dp">
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingLeft="12dp"
+    android:paddingTop="4dp"
+    android:paddingRight="6dp"
+    android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/widgetStatus"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:text="Mis Finanzas"
+        android:textColor="#24263A"
+        android:textSize="14sp"
+        android:textStyle="bold" />
 
     <ImageView
-        android:layout_width="34dp"
-        android:layout_height="34dp"
-        android:layout_gravity="center"
+        android:id="@+id/widgetMicButton"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/widget_voice_button"
         android:contentDescription="Dictar gasto"
+        android:padding="8dp"
         android:src="@drawable/ic_mic" />
-</FrameLayout>
+</LinearLayout>

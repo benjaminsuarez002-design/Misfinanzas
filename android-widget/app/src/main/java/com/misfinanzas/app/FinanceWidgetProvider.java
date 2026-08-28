@@ -3,6 +3,7 @@ package com.misfinanzas.app;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.widget.RemoteViews;
@@ -16,8 +17,19 @@ public class FinanceWidgetProvider extends AppWidgetProvider {
     }
     private static void updateWidget(Context context, AppWidgetManager manager, int id) {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.finance_widget);
-        views.setOnClickPendingIntent(R.id.widgetMicBar, openVoice(context, 105));
+        views.setTextViewText(R.id.widgetStatus, "Mis Finanzas");
+        views.setOnClickPendingIntent(R.id.widgetMicButton, openVoice(context, 105));
         manager.updateAppWidget(id, views);
+    }
+    public static void showStatus(Context context, String status) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        int[] ids = manager.getAppWidgetIds(new ComponentName(context, FinanceWidgetProvider.class));
+        for (int id : ids) {
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.finance_widget);
+            views.setTextViewText(R.id.widgetStatus, status);
+            views.setOnClickPendingIntent(R.id.widgetMicButton, openVoice(context, 105));
+            manager.updateAppWidget(id, views);
+        }
     }
     private static PendingIntent openVoice(Context context, int requestCode) {
         Intent intent = new Intent(context, VoiceCaptureActivity.class)
