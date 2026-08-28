@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <application android:theme="@style/AppTheme" android:label="Mis Finanzas" android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher" android:allowBackup="true" android:supportsRtl="true" android:usesCleartextTraffic="false">
+        <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         <activity android:name=".MainActivity" android:exported="true" android:configChanges="screenSize|orientation|keyboardHidden">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+        </activity>
+        <activity android:name=".VoiceCaptureActivity" android:exported="true" android:theme="@style/VoiceTheme">
             <intent-filter><action android:name="com.misfinanzas.app.ANOTAR_GASTO" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
+            <intent-filter><action android:name="android.intent.action.VOICE_COMMAND" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
+            <intent-filter><action android:name="android.intent.action.PROCESS_TEXT" /><category android:name="android.intent.category.DEFAULT" /><data android:mimeType="text/plain" /></intent-filter>
         </activity>
         <receiver android:name=".FinanceWidgetProvider" android:exported="true">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="anotar_gasto" android:enabled="true" android:shortcutShortLabel="Anotar gasto" android:shortcutLongLabel="Anotar gasto por voz">
+        <intent android:action="com.misfinanzas.app.ANOTAR_GASTO" />
+    </shortcut>
+</shortcuts>
