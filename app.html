@@ -4096,23 +4096,13 @@ window.abrirConfig = () => {
         </div>
 
         <div style="margin-top:18px">
-          <div class="cfg-section-title">🎙️ Carga rápida con Siri</div>
+          <div class="cfg-section-title">📱 Instalá Mis Finanzas en tu móvil</div>
           <div class="cfg-voice-card">
-            <p>Decí “Gasté 500 en pan”. Siri lo guarda sin abrir la app y después lo ordenás desde Resumen.</p>
-            <button type="button" class="cfg-voice-btn" onclick="vincularSiri()">Vincular e instalar</button>
-          </div>
-        </div>
-
-        <div style="margin-top:18px">
-          <div class="cfg-section-title">🎙️ Carga rápida con Android</div>
-          <div class="cfg-voice-card">
-            <p>Agregá el widget de Mis Finanzas, tocá el micrófono y decí algo como “gasté 500 en pan”. Se guarda sin abrir la app principal y después lo ordenás desde Resumen.</p>
-            <button type="button" class="cfg-voice-btn" onclick="vincularAndroid()">🔑 Configurar Android</button>
-            <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:9px" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" target="_blank" rel="noopener">⬇️ Descargar Mis Finanzas para Android</a>
-            <details style="margin-top:12px;color:var(--muted);font-size:12px;line-height:1.5">
-              <summary style="cursor:pointer;color:var(--text);font-weight:700">Cómo dejarlo listo</summary>
-              <div style="padding-top:8px">1. Tocá <b>Configurar Android</b> y copiá la clave que aparece.<br>2. Descargá e instalá Mis Finanzas para Android.<br>3. Agregá el widget <b>Mis Finanzas</b> a la pantalla de inicio.<br>4. Tocá <b>🎙️ Dictar gasto</b>, pegá la clave una sola vez y permití el micrófono.<br><small>Después de configurarlo, solamente tocás el micrófono y dictás el movimiento.</small></div>
-            </details>
+            <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+              <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" onclick="vincularAndroid()">🤖 Android</a>
+            </div>
           </div>
         </div>
 
