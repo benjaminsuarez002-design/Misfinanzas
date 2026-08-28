@@ -3203,21 +3203,48 @@ function parseMontoVoz(valor) {
   return Number(limpio.replace(',', '.')) || 0;
 }
 
+function parseNumeroCortoVoz(valor) {
+  const texto = normalizarTextoVoz(valor).replace(/\s+/g, ' ').trim();
+  if(/^\d{1,2}$/.test(texto)) return Number(texto);
+  const directos = {
+    cero:0, un:1, uno:1, una:1, dos:2, tres:3, cuatro:4, cinco:5, seis:6, siete:7, ocho:8, nueve:9,
+    diez:10, once:11, doce:12, trece:13, catorce:14, quince:15, dieciseis:16, diecisiete:17,
+    dieciocho:18, diecinueve:19, veinte:20, veintiuno:21, veintiun:21, veintiuna:21, veintidos:22,
+    veintitres:23, veinticuatro:24, veinticinco:25, veintiseis:26, veintisiete:27, veintiocho:28, veintinueve:29
+  };
+  if(Object.prototype.hasOwnProperty.call(directos, texto)) return directos[texto];
+  const partes = texto.split(/\s+y\s+/);
+  const decenas = { treinta:30, cuarenta:40, cincuenta:50, sesenta:60, setenta:70, ochenta:80, noventa:90 };
+  if(partes.length === 1 && Object.prototype.hasOwnProperty.call(decenas, partes[0])) return decenas[partes[0]];
+  if(partes.length === 2 && Object.prototype.hasOwnProperty.call(decenas, partes[0]) && Object.prototype.hasOwnProperty.call(directos, partes[1])) {
+    return decenas[partes[0]] + directos[partes[1]];
+  }
+  return null;
+}
+
 function interpretarCapturaVoz(captura) {
   const original = String(captura?.raw_text || '').trim();
   const plano = normalizarTextoVoz(original);
   const esIngreso = /\b(cobre|recibi|ingrese|gane|sueldo|ingreso)\b/.test(plano);
-  const montoConMatch = original.match(/\$?\s*(\d[\d.,]*)\s+(?:con|coma|punto)\s+(\d{1,2})\b/i);
+  const montoConMatch = original.match(/\$?\s*(\d[\d.,]*|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)\s+(?:con|coma|punto)\s+(\d{1,2}|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+y\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)?)\b/i);
   const montoMatch = original.match(/\$?\s*(\d[\d.,]*)/);
-  const monto = montoConMatch
-    ? parseMontoVoz(montoConMatch[1]) + (Number(montoConMatch[2]) / Math.pow(10, montoConMatch[2].length))
+  const enteroHablado = montoConMatch ? (/^\d/.test(montoConMatch[1]) ? parseMontoVoz(montoConMatch[1]) : parseNumeroCortoVoz(montoConMatch[1])) : null;
+  const decimalHablado = montoConMatch ? parseNumeroCortoVoz(montoConMatch[2]) : null;
+  const decimalDigitos = montoConMatch
+    ? (/^\d/.test(montoConMatch[2]) ? montoConMatch[2].length : String(decimalHablado ?? '').length)
+    : 0;
+  const montoHabladoValido = enteroHablado !== null && decimalHablado !== null && decimalHablado >= 0 && decimalHablado < 100;
+  const monto = montoHabladoValido
+    ? enteroHablado + (decimalHablado / Math.pow(10, decimalDigitos))
     : parseMontoVoz(montoMatch?.[1] || '0');
+  const montoTexto = String(montoHabladoValido ? montoConMatch[0] : (montoMatch?.[0] || '')).trim();
   let desc = original
     .replace(/^\s*(?:anoche\s+)?(?:carg[aá]me|anot[aá]me|registr[aá]me)\s+(?:un\s+)?(?:gasto|ingreso)(?:\s+(?:de|por))?\s*/i, '')
-    .replace(/^\s*(?:yo\s+)?(gast[eé]|pagu[eé]|compr[eé]|anot[aá]|registr[aá]|cobr[eé]|recib[ií]|ingres[eé]|gan[eé])\s*/i, '')
-    .replace(/\$?\s*\d[\d.,]*(?:\s+(?:con|coma|punto)\s+\d{1,2})?/i, '')
+    .replace(/^\s*(?:yo\s+)?(gast[eé]|pagu[eé]|compr[eé]|anot[aá]|registr[aá]|cobr[eé]|recib[ií]|ingres[eé]|gan[eé])\s*/i, '');
+  if(montoTexto) desc = desc.replace(montoTexto, '');
+  desc = desc
     .replace(/^\s*(?:pesos?|ars)\b\s*/i, '')
-    .replace(/^\s*(?:en|de|por)\s+/i, '')
+    .replace(/^\s*(?:en|de|por)(?:\s+(?:un|una|el|la|los|las))?\s+/i, '')
     .replace(/^\s*(?:un|una|el|la|los|las)\s+/i, '')
     .replace(/\b(ayer|hoy)\b/ig, '')
     .replace(/^[\s,.:;-]+|[\s,.:;-]+$/g, '')
