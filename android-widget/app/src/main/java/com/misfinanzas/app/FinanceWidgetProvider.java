@@ -23,7 +23,7 @@ public class FinanceWidgetProvider extends AppWidgetProvider {
     }
     public static void showStatus(Context context, String status) {
         AppWidgetManager manager = AppWidgetManager.getInstance(context);
-        int[] ids = manager.getAppWidgetIds(new ComponentName(context, FinanceWidgetProvider.class));
+        int[] ids = manager.getAppWidgetIds(new ComponentName(context, CompactFinanceWidgetProvider.class));
         for (int id : ids) {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.finance_widget);
             views.setTextViewText(R.id.widgetStatus, status);

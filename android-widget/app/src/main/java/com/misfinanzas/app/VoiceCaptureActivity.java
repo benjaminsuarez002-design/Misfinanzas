@@ -34,6 +34,7 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
     private TextView status;
     private ProgressBar progress;
     private String pendingText;
+    private boolean captureInProgress;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override protected void onCreate(Bundle state) {
@@ -78,6 +79,8 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
     @Override public void onResults(Bundle results) { ArrayList<String> values = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION); if (values == null || values.isEmpty()) { showError("No entendí el movimiento"); return; } sendCapture(values.get(0)); }
 
     private void sendCapture(String text) {
+        if (captureInProgress) return;
+        captureInProgress = true;
         if (recognizer != null) recognizer.stopListening();
         status.setText("Guardando…");
         FinanceWidgetProvider.showStatus(this, "Guardando…");
@@ -110,5 +113,5 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
     private static String escape(String value) { return String.valueOf(value).replace("\\", "\\\\").replace("\"", "\\\"").replace("\r", "\\r").replace("\n", "\\n"); }
     private void showError(String message) { if (status != null) status.setText(message); if (progress != null) progress.setVisibility(ProgressBar.INVISIBLE); FinanceWidgetProvider.showStatus(this, "Error · reintentar"); Toast.makeText(this, message, Toast.LENGTH_LONG).show(); }
     @Override protected void onDestroy() { if (recognizer != null) recognizer.destroy(); executor.shutdownNow(); super.onDestroy(); }
-    @Override public void onReadyForSpeech(Bundle p) {} @Override public void onBeginningOfSpeech() {} @Override public void onRmsChanged(float v) {} @Override public void onBufferReceived(byte[] b) {} @Override public void onEndOfSpeech() { if (status != null) status.setText("Procesando…"); } @Override public void onError(int e) { showError("No entendí. Probá otra vez."); } @Override public void onPartialResults(Bundle b) {} @Override public void onEvent(int e, Bundle b) {}
+    @Override public void onReadyForSpeech(Bundle p) {} @Override public void onBeginningOfSpeech() {} @Override public void onRmsChanged(float v) {} @Override public void onBufferReceived(byte[] b) {} @Override public void onEndOfSpeech() { if (!captureInProgress && status != null) status.setText("Procesando…"); } @Override public void onError(int e) { if (!captureInProgress) showError("No entendí. Probá otra vez."); } @Override public void onPartialResults(Bundle b) {} @Override public void onEvent(int e, Bundle b) {}
 }

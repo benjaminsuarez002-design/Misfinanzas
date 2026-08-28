@@ -12,7 +12,7 @@
             <intent-filter><action android:name="android.intent.action.VOICE_COMMAND" /><category android:name="android.intent.category.DEFAULT" /></intent-filter>
             <intent-filter><action android:name="android.intent.action.PROCESS_TEXT" /><category android:name="android.intent.category.DEFAULT" /><data android:mimeType="text/plain" /></intent-filter>
         </activity>
-        <receiver android:name=".FinanceWidgetProvider" android:exported="true">
+        <receiver android:name=".CompactFinanceWidgetProvider" android:label="Mis Finanzas 2x1" android:exported="true">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/finance_widget_info" />
         </receiver>
