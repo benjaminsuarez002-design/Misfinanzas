@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -43,24 +42,18 @@ public class VoiceCaptureActivity extends Activity implements RecognitionListene
         CharSequence supplied = getIntent().getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT);
         pendingText = supplied == null ? null : supplied.toString().trim();
         String token = getSharedPreferences(PREFS, MODE_PRIVATE).getString(TOKEN, "");
-        if (token.isEmpty()) askForToken(); else if (pendingText != null && !pendingText.isEmpty()) sendCapture(pendingText); else startListening();
+        if (token.isEmpty()) showSetupNeeded(); else if (pendingText != null && !pendingText.isEmpty()) sendCapture(pendingText); else startListening();
     }
 
-    private void askForToken() {
-        EditText input = new EditText(this);
-        input.setSingleLine(true);
-        input.setHint("Clave de Mis Finanzas");
+    private void showSetupNeeded() {
         new android.app.AlertDialog.Builder(this)
-            .setTitle("Configurar carga rápida")
-            .setMessage("Copiá la clave desde Mis Finanzas → Configuración → Carga rápida con Android.")
-            .setView(input)
-            .setPositiveButton("Guardar", (d, w) -> {
-                String value = input.getText().toString().trim();
-                if (value.isEmpty()) { Toast.makeText(this, "Falta la clave", Toast.LENGTH_SHORT).show(); finish(); return; }
-                getSharedPreferences(PREFS, MODE_PRIVATE).edit().putString(TOKEN, value).apply();
-                if (pendingText != null && !pendingText.isEmpty()) sendCapture(pendingText); else startListening();
+            .setTitle("Activar micrófono")
+            .setMessage("Abrí Mis Finanzas e iniciá sesión una vez. El widget se vincula automáticamente.")
+            .setPositiveButton("Abrir Mis Finanzas", (d, w) -> {
+                startActivity(new Intent(this, MainActivity.class));
+                finish();
             })
-            .setNegativeButton("Cancelar", (d, w) -> finish())
+            .setNegativeButton("Cerrar", (d, w) -> finish())
             .setOnCancelListener(d -> finish()).show();
     }
 

@@ -3145,13 +3145,25 @@ function aplicarEntradaWidget(){
   if(['ingreso','gasto','credito','fijo'].includes(tipo)) setTipo(tipo);
   history.replaceState(null,'',location.pathname);
 }
-function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); cargarCapturasVoz(); setTimeout(aplicarEntradaWidget,0); }
+function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); cargarCapturasVoz(); sincronizarVinculoAndroid(); setTimeout(aplicarEntradaWidget,0); }
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
 const VOICE_CAPTURE_URL = 'https://misfinanzas-carga-rapida.benjaminsuarez002.workers.dev';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/9eec9677c1244c39a6708cb63260a991';
 const ANDROID_APK_DOWNLOAD_URL = 'MisFinanzas-widget.apk';
 let capturasVozPendientes = [];
+
+async function sincronizarVinculoAndroid() {
+  const bridge = window.MisFinanzasAndroid;
+  if(!bridge || typeof bridge.guardarTokenVoz !== 'function') return;
+  try {
+    if(typeof bridge.tieneTokenVoz === 'function' && bridge.tieneTokenVoz()) return;
+    const payload = await voiceFetch('/devices/pair', { method:'POST', body:JSON.stringify({ label:'Widget Android' }) });
+    if(payload?.token) bridge.guardarTokenVoz(payload.token);
+  } catch(e) {
+    console.warn('Vinculación automática de Android:', e.message || e);
+  }
+}
 
 async function voiceFetch(path, options = {}) {
   if(!currentUser) throw new Error('Iniciá sesión nuevamente.');
@@ -3318,40 +3330,6 @@ window.vincularSiri = async () => {
     showToast('❌ ' + (e.message || 'No se pudo vincular Siri'), true);
   }
 };
-
-window.vincularAndroid = async () => {
-  try {
-    const payload = await voiceFetch('/devices/pair', { method:'POST', body:JSON.stringify({ label:'Android Gemini' }) });
-    mostrarDatosVinculacionAndroid(payload.token);
-  } catch(e) {
-    showToast('❌ ' + (e.message || 'No se pudo configurar Android'), true);
-  }
-};
-
-function mostrarDatosVinculacionAndroid(token) {
-  document.getElementById('voicePairOverlay')?.remove();
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-  overlay.id = 'voicePairOverlay';
-  overlay.style.zIndex = '900';
-  overlay.innerHTML = `<div class="form-card" style="max-width:520px;width:calc(100% - 28px);padding:22px">
-    <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px">
-      <strong style="font-family:'Arial Black',sans-serif;color:var(--text)">🤖 Configurar Android</strong>
-      <button type="button" class="cf-popup-action" onclick="document.getElementById('voicePairOverlay')?.remove()">Cerrar</button>
-    </div>
-    <div style="color:var(--muted);font-size:13px;line-height:1.55;margin-bottom:14px">
-      <b style="color:var(--text)">1.</b> Copiá esta clave.<br>
-      <b style="color:var(--text)">2.</b> Descargá e instalá el APK de Mis Finanzas.<br>
-      <b style="color:var(--text)">3.</b> Agregá el widget de Mis Finanzas, tocá <b>🎙️ Dictar gasto</b> y pegala cuando la solicite.
-    </div>
-    <input class="voice-pair-token" id="voicePairToken" type="password" readonly aria-label="Clave de Android">
-    <button type="button" class="cfg-voice-btn" style="margin-top:12px" onclick="copiarTokenSiri()">📋 Copiar clave para Android</button>
-    <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none;margin-top:9px" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" target="_blank" rel="noopener">⬇️ Descargar APK</a>
-    <div style="margin-top:12px;color:var(--muted);font-size:12px">Esta clave es personal y distinta de la de otros dispositivos.</div>
-  </div>`;
-  document.body.appendChild(overlay);
-  document.getElementById('voicePairToken').value = token;
-}
 
 function mostrarDatosVinculacionSiri(token) {
   document.getElementById('voicePairOverlay')?.remove();
@@ -4136,7 +4114,7 @@ window.abrirConfig = () => {
             <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
-              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk" onclick="vincularAndroid()">🤖 Android</a>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget.apk">🤖 Android</a>
             </div>
           </div>
         </div>

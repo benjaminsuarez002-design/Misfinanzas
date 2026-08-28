@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.view.WindowInsets;
 import android.webkit.CookieManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -19,8 +20,6 @@ public class MainActivity extends Activity {
     private static final String APP_URL = "https://misfinanzas.uk/app";
     private static final String VOICE_PREFS = "misfinanzas_voice";
     private static final String VOICE_TOKEN = "voice_token";
-    private static final String SETUP_PREFS = "misfinanzas_setup";
-    private static final String SETUP_SHOWN = "voice_setup_shown";
     public static final String EXTRA_MOVEMENT_TYPE = "movement_type";
     private WebView webView;
 
@@ -46,20 +45,21 @@ public class MainActivity extends Activity {
         settings.setMediaPlaybackRequiresUserGesture(false);
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true);
+        webView.addJavascriptInterface(new AndroidBridge(), "MisFinanzasAndroid");
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new WebChromeClient());
-        abrirConfiguracionVozLaPrimeraVez();
         openIntent(getIntent());
     }
 
-    private void abrirConfiguracionVozLaPrimeraVez() {
-        String token = getSharedPreferences(VOICE_PREFS, MODE_PRIVATE).getString(VOICE_TOKEN, "");
-        boolean mostrada = getSharedPreferences(SETUP_PREFS, MODE_PRIVATE).getBoolean(SETUP_SHOWN, false);
-        if (token == null || token.trim().isEmpty()) {
-            if (!mostrada) {
-                getSharedPreferences(SETUP_PREFS, MODE_PRIVATE).edit().putBoolean(SETUP_SHOWN, true).apply();
-                startActivity(new Intent(this, VoiceCaptureActivity.class).setAction("com.misfinanzas.app.ANOTAR_GASTO"));
-            }
+    private final class AndroidBridge {
+        @JavascriptInterface public boolean tieneTokenVoz() {
+            String token = getSharedPreferences(VOICE_PREFS, MODE_PRIVATE).getString(VOICE_TOKEN, "");
+            return token != null && !token.trim().isEmpty();
+        }
+
+        @JavascriptInterface public void guardarTokenVoz(String token) {
+            if (token == null || token.trim().isEmpty()) return;
+            getSharedPreferences(VOICE_PREFS, MODE_PRIVATE).edit().putString(VOICE_TOKEN, token.trim()).apply();
         }
     }
 
