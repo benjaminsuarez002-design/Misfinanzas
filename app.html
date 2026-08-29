@@ -3175,7 +3175,31 @@ function aplicarEntradaWidget(){
   if(['ingreso','gasto','credito','fijo'].includes(tipo)) setTipo(tipo);
   history.replaceState(null,'',location.pathname);
 }
-function iniciarApp() { initMesSelect(); refrescarSelectoresRubros(); setTipo('ingreso'); renderTarjetaChips(); cargarTarjetas(); suscribirMovimientos(); suscribirFijos(); iniciarNotificaciones(); cargarCapturasVoz(); sincronizarVinculoAndroid(); setTimeout(aplicarEntradaWidget,0); }
+function iniciarApp() {
+  const estadoActualizacion = consumirEstadoPullRefresh();
+  if(estadoActualizacion){
+    if(Number.isInteger(estadoActualizacion.mesVista)) mesVista=estadoActualizacion.mesVista;
+    if(Number.isInteger(estadoActualizacion.anioVista)) anioVista=estadoActualizacion.anioVista;
+    if(['mensual','semanal'].includes(estadoActualizacion.balanceViewMode)) balanceViewMode=estadoActualizacion.balanceViewMode;
+    balanceSemanaVista=estadoActualizacion.balanceSemanaVista??null;
+    semanaDashboardVista=estadoActualizacion.semanaDashboardVista??null;
+    tarjetaPanelActiva=estadoActualizacion.tarjetaPanelActiva||null;
+  }
+  initMesSelect();
+  refrescarSelectoresRubros();
+  setTipo('ingreso');
+  renderTarjetaChips();
+  cargarTarjetas();
+  suscribirMovimientos();
+  suscribirFijos();
+  iniciarNotificaciones();
+  cargarCapturasVoz();
+  sincronizarVinculoAndroid();
+  setTimeout(()=>{
+    aplicarEntradaWidget();
+    restaurarEstadoPullRefresh(estadoActualizacion);
+  },0);
+}
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
 const VOICE_CAPTURE_URL = 'https://misfinanzas.uk/voz';
@@ -3472,34 +3496,107 @@ let pullRefreshStartY = 0;
 let pullRefreshDistance = 0;
 let pullRefreshActive = false;
 let pullRefreshRunning = false;
+let pullRefreshOrigin = null;
 const PULL_REFRESH_THRESHOLD = 72;
+const PULL_REFRESH_TOP_TOLERANCE = 1;
+const PULL_REFRESH_STATE_KEY = 'misfinanzas:pull-refresh-state:v1';
+
+function guardarEstadoPullRefresh() {
+  const paginaActiva = document.querySelector('.page.active')?.id?.replace(/^tab-/, '') || 'resumen';
+  const panelActivo = [...document.querySelectorAll('.summary-fullscreen-panel')]
+    .find(panel => panel.style.display !== 'none')?.id || null;
+  const estado = {
+    guardadoEn: Date.now(),
+    paginaActiva,
+    panelActivo,
+    mesVista,
+    anioVista,
+    balanceViewMode,
+    balanceSemanaVista,
+    semanaDashboardVista,
+    tarjetaPanelActiva
+  };
+  try { sessionStorage.setItem(PULL_REFRESH_STATE_KEY, JSON.stringify(estado)); }
+  catch(error) { console.warn('No se pudo guardar la vista antes de actualizar:', error); }
+}
+
+function consumirEstadoPullRefresh() {
+  try {
+    const raw = sessionStorage.getItem(PULL_REFRESH_STATE_KEY);
+    sessionStorage.removeItem(PULL_REFRESH_STATE_KEY);
+    if(!raw) return null;
+    const estado = JSON.parse(raw);
+    if(!estado?.guardadoEn || Date.now() - estado.guardadoEn > 120000) return null;
+    return estado;
+  } catch(error) {
+    console.warn('No se pudo recuperar la vista tras actualizar:', error);
+    return null;
+  }
+}
+
+function restaurarEstadoPullRefresh(estado) {
+  if(!estado) return;
+  const paginasPermitidas = ['resumen','cargar','menu','informe','compartir'];
+  const pagina = paginasPermitidas.includes(estado.paginaActiva) ? estado.paginaActiva : 'resumen';
+  goTab(pagina);
+  if(pagina !== 'resumen') return;
+
+  if(estado.panelActivo === 'tarjetasPanel') toggleTarjetasPanel();
+  else if(estado.panelActivo === 'ingPanel') toggleMovPanel('ing');
+  else if(estado.panelActivo === 'gasPanel') toggleMovPanel('gas');
+  else if(estado.panelActivo === 'fijoPanel') toggleFijoPanel();
+}
 
 function pullRefreshScrollTop() {
-  return document.scrollingElement?.scrollTop || document.documentElement.scrollTop || window.scrollY || 0;
+  return Math.max(
+    0,
+    document.scrollingElement?.scrollTop || 0,
+    document.documentElement.scrollTop || 0,
+    document.body?.scrollTop || 0,
+    window.scrollY || 0
+  );
+}
+
+function pullRefreshIsAtStart(target) {
+  if(pullRefreshScrollTop() > PULL_REFRESH_TOP_TOLERANCE) return false;
+
+  let element = target instanceof Element ? target : target?.parentElement;
+  while(element && element !== document.body && element !== document.documentElement) {
+    const style = getComputedStyle(element);
+    const canScrollVertically = /^(auto|scroll|overlay)$/.test(style.overflowY)
+      && element.scrollHeight > element.clientHeight + PULL_REFRESH_TOP_TOLERANCE;
+    if(canScrollVertically && element.scrollTop > PULL_REFRESH_TOP_TOLERANCE) return false;
+    element = element.parentElement;
+  }
+
+  return true;
 }
 
 function pullRefreshReset() {
+  if(pullRefreshRunning) return;
+  pullRefreshActive = false;
+  pullRefreshDistance = 0;
+  pullRefreshOrigin = null;
   const indicator = document.getElementById('pullRefreshIndicator');
-  if(!indicator || pullRefreshRunning) return;
+  if(!indicator) return;
   indicator.style.opacity = '0';
   indicator.style.transform = 'translate(-50%,-70px)';
   document.getElementById('pullRefreshText').textContent = 'Deslizá para actualizar';
-  pullRefreshActive = false;
-  pullRefreshDistance = 0;
 }
 
 document.addEventListener('touchstart', event => {
-  if(pullRefreshRunning || event.touches.length !== 1 || pullRefreshScrollTop() > 0) return;
+  if(pullRefreshRunning || event.touches.length !== 1 || !pullRefreshIsAtStart(event.target)) return;
   if(event.target.closest('input,textarea,select,button,.modal-overlay,.cfg-overlay')) return;
   pullRefreshStartY = event.touches[0].clientY;
   pullRefreshDistance = 0;
+  pullRefreshOrigin = event.target;
   pullRefreshActive = true;
 }, { passive:true });
 
 document.addEventListener('touchmove', event => {
   if(!pullRefreshActive || event.touches.length !== 1) return;
   const dy = event.touches[0].clientY - pullRefreshStartY;
-  if(dy <= 0 || pullRefreshScrollTop() > 0) { pullRefreshReset(); return; }
+  if(dy <= 0 || !pullRefreshIsAtStart(pullRefreshOrigin)) { pullRefreshReset(); return; }
   event.preventDefault();
   pullRefreshDistance = Math.min(120, dy);
   const visibleDistance = Math.min(82, pullRefreshDistance * .62);
@@ -3514,6 +3611,7 @@ document.addEventListener('touchmove', event => {
 document.addEventListener('touchend', () => {
   if(!pullRefreshActive) return;
   if(pullRefreshDistance < PULL_REFRESH_THRESHOLD) { pullRefreshReset(); return; }
+  guardarEstadoPullRefresh();
   pullRefreshRunning = true;
   pullRefreshActive = false;
   const indicator = document.getElementById('pullRefreshIndicator');
