@@ -780,6 +780,12 @@
     background: rgba(255,77,109,.18);
     border-color: var(--red);
   }
+  .super-voice-row { display:flex; align-items:center; gap:10px; margin:-2px 0 14px; }
+  .super-voice-btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; min-height:42px; padding:9px 14px; border:1.5px solid rgba(108,140,255,.4); border-radius:13px; background:rgba(255,255,255,.82); color:var(--blue); font-family:'Arial Black',sans-serif; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 6px 18px rgba(108,140,255,.1); }
+  .super-voice-btn.listening { color:#fff; border-color:transparent; background:linear-gradient(135deg,var(--blue),var(--accent)); animation:superVoicePulse 1s ease-in-out infinite; }
+  .super-voice-btn:disabled { opacity:.55; cursor:not-allowed; }
+  .super-voice-status { color:var(--muted); font-size:11px; line-height:1.3; }
+  @keyframes superVoicePulse { 50% { transform:scale(1.035); box-shadow:0 0 0 7px rgba(108,140,255,.12); } }
 
 
   /* ── STICKY HEADER COLAPSABLE ── */
@@ -2896,6 +2902,11 @@
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button class="super-nueva-btn" style="margin-bottom:0;flex:1" onclick="superNuevaCompra()">＋ Nueva compra</button>
       <button class="super-borrar-btn" onclick="superBorrarCompra()">🗑</button>
+    </div>
+
+    <div class="super-voice-row">
+      <button type="button" class="super-voice-btn" id="superVoiceBtn" onclick="superVoiceToggle()" aria-label="Agregar artículo por voz" aria-pressed="false">🎙️ <span>Agregar por voz</span></button>
+      <span class="super-voice-status" id="superVoiceStatus" aria-live="polite">Decí: “2600 un Rexona”</span>
     </div>
 
     <!-- TOTAL -->
@@ -8881,6 +8892,73 @@ window.superAddRow=()=>{
   const tbody=document.getElementById('superBody');
   if(tbody){ const idx=superGetItems().length-1; tbody.appendChild(superRenderRow(idx)); const inp=document.querySelector('#super-row-'+idx+' .super-inp-precio'); if(inp) inp.focus(); }
   superCalcTotal();
+};
+
+let superVoiceRecognition=null;
+let superVoiceListening=false;
+
+function superVoiceSetState(listening,message){
+  superVoiceListening=listening;
+  const btn=document.getElementById('superVoiceBtn');
+  const status=document.getElementById('superVoiceStatus');
+  btn?.classList.toggle('listening',listening);
+  btn?.setAttribute('aria-pressed',String(listening));
+  const label=btn?.querySelector('span');
+  if(label) label.textContent=listening?'Escuchando…':'Agregar por voz';
+  if(status&&message) status.textContent=message;
+}
+
+function superAgregarItemVoz(transcript){
+  const interpretado=interpretarCapturaVoz({raw_text:transcript});
+  if(!(interpretado.monto>0)||!interpretado.desc||interpretado.desc==='Gasto rápido'){
+    superVoiceSetState(false,'No entendí. Probá: “2600 un Rexona”');
+    showToast('⚠️ No pude reconocer precio y artículo',true);
+    return;
+  }
+
+  const items=superGetItems();
+  let idx=items.findIndex(item=>!item.precio&&!item.cant&&!String(item.desc||'').trim());
+  const nuevo={_id:idx>=0?(items[idx]._id||superItemId()):superItemId(),precio:String(interpretado.monto),cant:'1',desc:interpretado.desc};
+  if(idx>=0) items[idx]=nuevo;
+  else { items.push(nuevo); idx=items.length-1; }
+  _superSave();
+  superRender();
+  document.getElementById('super-row-'+idx)?.scrollIntoView({behavior:'smooth',block:'center'});
+  superVoiceSetState(false,`Agregado: ${interpretado.desc} · ${superFmt(interpretado.monto)}`);
+  showToast(`🎙️ ${interpretado.desc} agregado`);
+}
+
+window.superVoiceToggle=()=>{
+  if(superVoiceListening){ superVoiceRecognition?.stop(); return; }
+  const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SpeechRecognition){
+    superVoiceSetState(false,'El reconocimiento de voz no está disponible en este navegador.');
+    showToast('⚠️ Tu navegador no permite carga por voz',true);
+    return;
+  }
+
+  const recognition=new SpeechRecognition();
+  superVoiceRecognition=recognition;
+  recognition.lang='es-AR';
+  recognition.interimResults=false;
+  recognition.maxAlternatives=1;
+  recognition.onstart=()=>superVoiceSetState(true,'Te escucho… decí el precio y el artículo.');
+  recognition.onresult=event=>{
+    const transcript=event.results?.[0]?.[0]?.transcript?.trim()||'';
+    superVoiceSetState(false,transcript?`Escuché: “${transcript}”`:'No escuché nada.');
+    if(transcript) superAgregarItemVoz(transcript);
+  };
+  recognition.onerror=event=>{
+    const mensaje=event.error==='not-allowed'?'Necesito permiso para usar el micrófono.':event.error==='no-speech'?'No escuché nada. Probá de nuevo.':'No pude usar el micrófono. Probá de nuevo.';
+    superVoiceSetState(false,mensaje);
+    if(event.error!=='no-speech') showToast('⚠️ '+mensaje,true);
+  };
+  recognition.onend=()=>{
+    if(superVoiceListening) superVoiceSetState(false,'Decí: “2600 un Rexona”');
+    if(superVoiceRecognition===recognition) superVoiceRecognition=null;
+  };
+  try { recognition.start(); }
+  catch(error) { superVoiceSetState(false,'No pude iniciar el micrófono. Probá de nuevo.'); }
 };
 window.superDelRow=idx=>{
   if(superGetItems().length<=1) return;
