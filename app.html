@@ -6,7 +6,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mis Finanzas</title>
 <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=1">
 <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
@@ -34,6 +34,7 @@
 
   /* ── RESET & BASE ── */
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body, #app-wrapper { touch-action: pan-x pan-y; }
 
   @keyframes pulse        { 0%,100%{opacity:1}50%{opacity:.3} }
   @keyframes spin         { to { transform: rotate(360deg); } }
@@ -2960,6 +2961,14 @@ const supabase = (SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includ
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
 const visualTestMode = location.hostname === '127.0.0.1' && new URLSearchParams(location.search).has('visualTest');
+
+// Mantener la interfaz en escala 1: bloquea pellizco, doble toque y atajos de zoom.
+['gesturestart','gesturechange','gestureend'].forEach(type=>document.addEventListener(type,event=>event.preventDefault(),{passive:false}));
+document.addEventListener('wheel',event=>{ if(event.ctrlKey) event.preventDefault(); },{passive:false});
+document.addEventListener('keydown',event=>{
+  if((event.ctrlKey||event.metaKey)&&['+','=','-','0'].includes(event.key)) event.preventDefault();
+});
+document.addEventListener('dblclick',event=>event.preventDefault(),{passive:false});
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 const DEFAULT_RUBROS = [
