@@ -8709,9 +8709,11 @@ function superParseLocale(value){
   entero=entero.replace(/^0+(?=\d)/,'')||'';
   return {entero,decimal,tieneComa:comma>=0,numero:Number((entero||'0')+(decimal?'.'+decimal:''))||0};
 }
-function superFmtInput(value,moneda=false){
+function superFmtInput(value,moneda=false,valorCanonico=true){
   if(value===''||value===null||value===undefined) return '';
-  const raw=String(value).replace('.',',');
+  // Los valores guardados usan punto decimal; mientras se escribe, los puntos
+  // visibles son separadores de miles y no deben convertirse en decimales.
+  const raw=valorCanonico?String(value).replace('.',','):String(value);
   const p=superParseLocale(raw), entero=(p.entero||'0').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return `${moneda?'$':''}${entero}${p.tieneComa?','+p.decimal:''}`;
 }
@@ -8797,7 +8799,7 @@ window.superFieldInput=(event,idx,field)=>{
     let raw=el.value, caret=el.selectionStart??raw.length;
     if(event.data==='.'&&caret>0){raw=raw.slice(0,caret-1)+','+raw.slice(caret);el.value=raw;}
     const logicosAntes=raw.slice(0,caret).replace(/[$.\s]/g,'').length;
-    const formatted=superFmtInput(raw,field==='precio');
+    const formatted=superFmtInput(raw,field==='precio',false);
     let vistos=0,nuevoCaret=formatted.length;
     for(let i=0;i<formatted.length;i++){if(!/[$.\s]/.test(formatted[i]))vistos++;if(vistos>=logicosAntes){nuevoCaret=i+1;break;}}
     el.value=formatted; el.setSelectionRange(nuevoCaret,nuevoCaret);
