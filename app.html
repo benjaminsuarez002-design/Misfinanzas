@@ -3299,6 +3299,27 @@ function parseNumeroCortoVoz(valor) {
   return null;
 }
 
+function parseNumeroCompletoVoz(valor) {
+  const original=String(valor||'').replace(/[$\s]/g,'');
+  if(/^[\d.,]+$/.test(original)) return parseMontoVoz(original);
+  const texto=normalizarTextoVoz(valor).replace(/[^a-zñ\s]/g,' ').replace(/\s+/g,' ').trim();
+  if(!texto) return null;
+  const unidades={cero:0,un:1,uno:1,una:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintiun:21,veintiuna:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29};
+  const decenas={treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90};
+  const centenas={cien:100,ciento:100,doscientos:200,doscientas:200,trescientos:300,trescientas:300,cuatrocientos:400,cuatrocientas:400,quinientos:500,quinientas:500,seiscientos:600,seiscientas:600,setecientos:700,setecientas:700,ochocientos:800,ochocientas:800,novecientos:900,novecientas:900};
+  let total=0,parcial=0;
+  for(const token of texto.split(' ')){
+    if(token==='y') continue;
+    if(Object.prototype.hasOwnProperty.call(unidades,token)){ parcial+=unidades[token]; continue; }
+    if(Object.prototype.hasOwnProperty.call(decenas,token)){ parcial+=decenas[token]; continue; }
+    if(Object.prototype.hasOwnProperty.call(centenas,token)){ parcial+=centenas[token]; continue; }
+    if(token==='mil'){ total+=(parcial||1)*1000; parcial=0; continue; }
+    if(token==='millon'||token==='millones'){ total+=(parcial||1)*1000000; parcial=0; continue; }
+    return null;
+  }
+  return total+parcial;
+}
+
 const VOICE_DESTINATION_CONNECTORS = ['con la', 'con mi', 'con', 'a la', 'a mi'];
 
 function escaparRegexVoz(valor) {
@@ -8913,19 +8934,23 @@ function superVoiceSetState(listening,message){
 }
 
 function superInterpretarItemVoz(transcript){
-  const match=String(transcript||'').trim().match(/^(.+?)\s+a\s+\$?\s*(\d[\d.,]*)\s*(?:pesos?|ars)?\s*$/i);
+  let texto=String(transcript||'').trim().replace(/[.!?]+$/g,'').replace(/\s+/g,' ');
+  texto=texto.replace(/\s+(?:pesos?|ars)$/i,'').trim();
+  let match=texto.match(/^(.+?)\s+(?:a|al|por|ha|ah)\s+(.+)$/i);
+  if(!match) match=texto.match(/^(.+?)\s+(\$?\s*\d[\d.,]*)$/i);
   if(!match) return null;
   const partes=match[1].trim().split(/\s+/);
   let cantidad=null;
   let cantidadPartes=0;
-  for(let largo=Math.min(3,partes.length-1);largo>=1;largo--){
-    const candidato=partes.slice(0,largo).join(' ');
-    const valor=/^\d{1,3}$/.test(candidato)?Number(candidato):parseNumeroCortoVoz(candidato);
+  for(let largo=Math.min(5,partes.length-1);largo>=1;largo--){
+    const candidato=partes.slice(0,largo).join(' ').replace(/^[,;:]+|[,;:]+$/g,'');
+    const valor=parseNumeroCompletoVoz(candidato);
     if(valor&&valor<=999){ cantidad=valor; cantidadPartes=largo; break; }
   }
-  const monto=parseMontoVoz(match[2]);
+  const monto=parseNumeroCompletoVoz(match[2]);
   let desc=partes.slice(cantidadPartes).join(' ')
     .trim()
+    .replace(/^[,;:]+|[,;:]+$/g,'')
     .replace(/^(?:un|una|unos|unas|el|la|los|las)\s+/i,'')
     .replace(/\s+/g,' ');
   if(!cantidad||!monto||!desc) return null;
@@ -8936,7 +8961,7 @@ function superInterpretarItemVoz(transcript){
 function superAgregarItemVoz(transcript){
   const interpretado=superInterpretarItemVoz(transcript);
   if(!interpretado){
-    superVoiceSetState(false,'Usá: “un arroz a 1800” o “12 tomates a 680 pesos”');
+    superVoiceSetState(false,`Escuché: “${transcript}”. Usá: “dos leches a 9600”`);
     showToast('⚠️ Decí cantidad, producto y después el precio',true);
     return;
   }
