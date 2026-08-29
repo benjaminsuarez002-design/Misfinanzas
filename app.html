@@ -8908,11 +8908,29 @@ function superVoiceSetState(listening,message){
   if(status&&message) status.textContent=message;
 }
 
-function superAgregarItemVoz(transcript){
+function superInterpretarItemVoz(transcript){
   const interpretado=interpretarCapturaVoz({raw_text:transcript});
+  let cantidad=1;
+  const montoInicial=String(transcript||'').match(/^\s*\$?\s*\d[\d.,]*/);
+  const despuesDelMonto=montoInicial?String(transcript).slice(montoInicial[0].length):'';
+  const cantidadExplicita=despuesDelMonto.match(/^\s*[,;:]?\s*(\d{1,2})\s+(?:unidades?\s+(?:de\s+)?)?(.+)$/i);
+  if(cantidadExplicita){
+    const valor=Number(cantidadExplicita[1]);
+    if(valor>=1&&valor<=99){
+      cantidad=valor;
+      interpretado.desc=cantidadExplicita[2];
+    }
+  }
   interpretado.desc=String(interpretado.desc||'')
+    .trim()
+    .replace(/^(?:un|una|unos|unas|el|la|los|las)\s+/i,'')
     .replace(/^(?:(?:sí|si|y|e|eh|que|q)\s+|\d[\d.,]*\s+)+/i,'')
     .trim();
+  return {...interpretado,cantidad};
+}
+
+function superAgregarItemVoz(transcript){
+  const interpretado=superInterpretarItemVoz(transcript);
   if(!(interpretado.monto>0)||!interpretado.desc||interpretado.desc==='Gasto rápido'){
     superVoiceSetState(false,'No entendí. Probá: “2600 un Rexona”');
     showToast('⚠️ No pude reconocer precio y artículo',true);
@@ -8921,13 +8939,14 @@ function superAgregarItemVoz(transcript){
 
   const items=superGetItems();
   let idx=items.findIndex(item=>!item.precio&&!item.cant&&!String(item.desc||'').trim());
-  const nuevo={_id:idx>=0?(items[idx]._id||superItemId()):superItemId(),precio:String(interpretado.monto),cant:'1',desc:interpretado.desc};
+  const nuevo={_id:idx>=0?(items[idx]._id||superItemId()):superItemId(),precio:String(interpretado.monto),cant:String(interpretado.cantidad),desc:interpretado.desc};
   if(idx>=0) items[idx]=nuevo;
   else { items.push(nuevo); idx=items.length-1; }
   _superSave();
   superRender();
   document.getElementById('super-row-'+idx)?.scrollIntoView({behavior:'smooth',block:'center'});
-  superVoiceSetState(false,`Agregado: ${interpretado.desc} · ${superFmt(interpretado.monto)}`);
+  const cantidadTexto=interpretado.cantidad>1?` · ×${interpretado.cantidad}`:'';
+  superVoiceSetState(false,`Agregado: ${interpretado.desc}${cantidadTexto} · ${superFmt(interpretado.monto)}`);
   showToast(`🎙️ ${interpretado.desc} agregado`);
 }
 
@@ -8974,13 +8993,20 @@ window.superVoiceToggle=()=>{
   recognition.lang='es-AR';
   recognition.interimResults=false;
   recognition.maxAlternatives=5;
+  let resultadoProcesado=false;
   recognition.onstart=()=>superVoiceSetState(true,'Te escucho… decí el precio y el artículo.');
   recognition.onresult=event=>{
+    resultadoProcesado=true;
     const transcript=superElegirTranscripcionVoz(event.results?.[0]);
     superVoiceSetState(false,transcript?`Escuché: “${transcript}”`:'No escuché nada.');
     if(transcript) superAgregarItemVoz(transcript);
   };
   recognition.onerror=event=>{
+    if(resultadoProcesado) return;
+    if(event.error==='aborted'){
+      superVoiceSetState(false,'Micrófono detenido.');
+      return;
+    }
     const mensaje=event.error==='not-allowed'?'Necesito permiso para usar el micrófono.':event.error==='no-speech'?'No escuché nada. Probá de nuevo.':'No pude usar el micrófono. Probá de nuevo.';
     superVoiceSetState(false,mensaje);
     if(event.error!=='no-speech') showToast('⚠️ '+mensaje,true);
