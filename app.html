@@ -667,9 +667,24 @@
   .super-table th:nth-child(3) { text-align: left; }
   .super-table tbody tr { border-bottom: 1px solid rgba(227,220,255,.4); transition: background .15s; }
   .super-table tbody tr:hover { background: rgba(240,238,255,.4); }
+  .super-table tbody tr:focus { outline:2px solid color-mix(in srgb,var(--blue) 55%,transparent); outline-offset:-2px; }
+  .super-table th.super-col-selected { background:rgba(108,140,255,.16); box-shadow:inset 0 -3px 0 var(--blue); }
+  .super-table td.super-col-selected { background:rgba(108,140,255,.07); }
   .super-table td { padding: 8px 6px; text-align: center; vertical-align: middle; }
   .super-table td:nth-child(3) { text-align: left; }
+  .super-th-main { display:inline-flex;align-items:center;justify-content:center;gap:4px; }
+  .super-sort-btn { border:0;background:transparent;color:var(--muted);cursor:pointer;padding:2px;font-size:10px; }
+  .super-combo { position:relative;display:flex;align-items:center; }
+  .super-combo input { padding-right:38px !important; }
+  .super-combo-toggle { position:absolute;right:5px;width:30px;height:30px;border:0;border-radius:8px;background:transparent;color:var(--blue);cursor:pointer;opacity:0;transition:opacity .15s,background .15s; }
+  .super-combo:hover .super-combo-toggle,.super-combo:focus-within .super-combo-toggle { opacity:1; }
+  .super-combo-toggle:hover { background:rgba(108,140,255,.1); }
+  .super-combo-menu { position:absolute;z-index:120;top:calc(100% + 5px);left:0;right:0;max-height:190px;overflow:auto;padding:5px;border:1px solid var(--border);border-radius:11px;background:var(--card);box-shadow:0 12px 28px rgba(20,16,48,.2); }
+  .super-combo-menu[hidden] { display:none; }
+  .super-combo-option { display:block;width:100%;padding:9px 10px;border:0;border-radius:7px;background:transparent;color:var(--text);text-align:left;cursor:pointer; }
+  .super-combo-option.active,.super-combo-option:hover { color:var(--blue);background:rgba(108,140,255,.11); }
   .super-inp { border: 1.5px solid var(--border); border-radius: 10px; padding: 8px 10px; font-size: 14px; color: var(--text); background: rgba(243,236,255,.4); outline: none; transition: border-color .2s, box-shadow .2s; font-family: Arial,sans-serif; width: 100%; }
+  .super-table tbody tr:not(.super-row-editing) .super-inp { cursor:default;caret-color:transparent; }
   .super-inp:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(108,140,255,.12); background: #fff; }
   .super-inp-precio { width: 80px; text-align: right; }
   .super-inp-cant   { width: 68px; min-width: 68px; padding-left: 6px; padding-right: 6px; text-align: center; -moz-appearance: textfield; }
@@ -2896,10 +2911,10 @@
       <table class="super-table" id="superTable">
         <thead>
           <tr>
-            <th>Precio</th>
-            <th>Cant.</th>
-            <th>Descripción</th>
-            <th>Subtotal</th>
+            <th data-super-col="precio" onclick="superSelectColumn(event,'precio')"><span class="super-th-main">Precio <button class="super-sort-btn" onclick="event.stopPropagation();superSort('precio')" title="Ordenar">↕</button></span></th>
+            <th data-super-col="cant" onclick="superSelectColumn(event,'cant')"><span class="super-th-main">Cant. <button class="super-sort-btn" onclick="event.stopPropagation();superSort('cant')" title="Ordenar">↕</button></span></th>
+            <th data-super-col="desc" onclick="superSelectColumn(event,'desc')"><span class="super-th-main">Descripción <button class="super-sort-btn" onclick="event.stopPropagation();superSort('desc')" title="Ordenar">↕</button></span></th>
+            <th data-super-col="subtotal" onclick="superSelectColumn(event,'subtotal')"><span class="super-th-main">Subtotal <button class="super-sort-btn" onclick="event.stopPropagation();superSort('subtotal')" title="Ordenar">↕</button></span></th>
             <th></th>
           </tr>
         </thead>
@@ -8575,6 +8590,27 @@ const MESES_S = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','No
 let superLists = [{ id: Date.now(), nombre: _superNombreHoy(), items: [{ precio:'', cant:'', desc:'' }] }];
 let superListIdx = 0;
 let _superSaveTimer = null;
+const superGridState={selectedCols:new Set(),colAnchor:null,lastInput:null,rowSnapshot:null,sortField:null,sortDir:1,focusViaKeyboard:false};
+
+function superItemId(){ return 'item_'+Date.now()+'_'+Math.random().toString(36).slice(2,8); }
+function superEnsureIds(){ superLists.forEach(l=>(l.items||[]).forEach(i=>{if(!i._id)i._id=superItemId();})); }
+function superParseLocale(value){
+  let raw=String(value??'').replace(/[$\s]/g,'');
+  const comma=raw.indexOf(',');
+  let entero=(comma>=0?raw.slice(0,comma):raw).replace(/\D/g,'');
+  let decimal=comma>=0?raw.slice(comma+1).replace(/\D/g,'').slice(0,2):'';
+  entero=entero.replace(/^0+(?=\d)/,'')||'';
+  return {entero,decimal,tieneComa:comma>=0,numero:Number((entero||'0')+(decimal?'.'+decimal:''))||0};
+}
+function superFmtInput(value,moneda=false){
+  if(value===''||value===null||value===undefined) return '';
+  const raw=String(value).replace('.',',');
+  const p=superParseLocale(raw), entero=(p.entero||'0').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  return `${moneda?'$':''}${entero}${p.tieneComa?','+p.decimal:''}`;
+}
+function superCanonicalInput(value){
+  const p=superParseLocale(value); return p.entero===''&& !p.tieneComa?'':`${p.entero||'0'}${p.decimal?'.'+p.decimal:''}`;
+}
 
 function _superNombreHoy(){
   const d=new Date(); return 'Compra '+d.getDate()+' '+MESES_S[d.getMonth()];
@@ -8588,6 +8624,7 @@ async function superLoad(){
       superListIdx = superLists.length - 1;
     }
   }catch(e){ console.warn('superLoad error',e); }
+  superEnsureIds();
   superRender();
 }
 
@@ -8599,7 +8636,10 @@ function _superSave(){
     catch(e){ console.warn('superSave error',e); }
   }, 800);
 }
-function superFmt(n){ return '$' + Math.round(n).toLocaleString('es-AR'); }
+function superFmt(n){
+  const value=Number(n)||0, tieneDecimales=Math.abs(value-Math.trunc(value))>0.000001;
+  return '$'+value.toLocaleString('es-AR',{minimumFractionDigits:tieneDecimales?2:0,maximumFractionDigits:2});
+}
 function superGetItems(){ return superLists[superListIdx].items; }
 
 function superCalcTotal(){
@@ -8618,19 +8658,22 @@ function superUpdateNav(){
 function superRenderRow(idx){
   const item = superGetItems()[idx];
   const sub = (parseFloat(item.precio)||0)*(parseFloat(item.cant)||0);
-  const tr = document.createElement('tr'); tr.id='super-row-'+idx;
+  const rowId=item._id||(item._id=superItemId());
+  const tr = document.createElement('tr'); tr.id='super-row-'+idx; tr.dataset.itemId=rowId; tr.tabIndex=0;
   tr.innerHTML=`
-    <td><input class="super-inp super-inp-precio" type="number" placeholder="0" value="${item.precio}" oninput="superUpdate(${idx},'precio',this.value)"></td>
-    <td><input class="super-inp super-inp-cant"   type="number" placeholder="1" min="1" value="${item.cant||''}" placeholder="0" oninput="superUpdate(${idx},'cant',this.value)"></td>
-    <td><input class="super-inp super-inp-desc"   type="text"   placeholder="Descripción..." value="${item.desc}" oninput="superUpdate(${idx},'desc',this.value)" onkeydown="if(event.key==='Enter'){ event.preventDefault(); var nx=document.querySelector('#super-row-'+(${idx}+1)+' .super-inp-precio'); if(nx) nx.focus(); else superAddRow(); }"></td>
-    <td><span class="super-subtotal" id="super-sub-${idx}">${sub>0?superFmt(sub):'-'}</span></td>
-    <td><button class="super-del-btn" onclick="superDelRow(${idx})">×</button></td>`;
+    <td data-super-col="precio"><input class="super-inp super-inp-precio" type="text" inputmode="decimal" placeholder="$0" value="${superFmtInput(item.precio,true)}" data-field="precio" oninput="superFieldInput(event,${idx},'precio')" onfocus="superFieldFocus(event,${idx},'precio')" onmouseup="superFieldMouseUp(event)" onkeydown="superFieldKey(event,${idx},'precio')"></td>
+    <td data-super-col="cant"><input class="super-inp super-inp-cant" type="text" inputmode="decimal" placeholder="1" value="${superFmtInput(item.cant,false)}" data-field="cant" oninput="superFieldInput(event,${idx},'cant')" onfocus="superFieldFocus(event,${idx},'cant')" onmouseup="superFieldMouseUp(event)" onkeydown="superFieldKey(event,${idx},'cant')"></td>
+    <td data-super-col="desc"><input class="super-inp super-inp-desc" type="text" placeholder="Descripción..." value="${escapeMovSelectorHtml(item.desc||'')}" data-field="desc" oninput="superFieldInput(event,${idx},'desc')" onfocus="superFieldFocus(event,${idx},'desc')" onmouseup="superFieldMouseUp(event)" onkeydown="superFieldKey(event,${idx},'desc')"></td>
+    <td data-super-col="subtotal"><span class="super-subtotal" id="super-sub-${idx}">${sub>0?superFmt(sub):'-'}</span></td>
+    <td><button class="super-del-btn" onclick="event.stopPropagation();superDelRow(${idx})">×</button></td>`;
+  superGridState.selectedCols.forEach(c=>tr.querySelector(`[data-super-col="${c}"]`)?.classList.add('super-col-selected'));
   return tr;
 }
 function superRender(){
   const tbody=document.getElementById('superBody'); if(!tbody) return;
   tbody.innerHTML='';
   superGetItems().forEach((_,i)=>tbody.appendChild(superRenderRow(i)));
+  document.querySelectorAll('#superTable th[data-super-col]').forEach(th=>th.classList.toggle('super-col-selected',superGridState.selectedCols.has(th.dataset.superCol)));
   superUpdateNav();
   superCalcTotal();
 }
@@ -8641,8 +8684,90 @@ window.superUpdate=(idx,field,val)=>{
   const el=document.getElementById('super-sub-'+idx); if(el) el.textContent=sub>0?superFmt(sub):'-';
   superCalcTotal();
 };
+window.superFieldInput=(event,idx,field)=>{
+  const el=event.target; el.closest('tr')?.classList.add('super-row-editing');
+  if(field==='precio'||field==='cant'){
+    let raw=el.value, caret=el.selectionStart??raw.length;
+    if(event.data==='.'&&caret>0){raw=raw.slice(0,caret-1)+','+raw.slice(caret);el.value=raw;}
+    const logicosAntes=raw.slice(0,caret).replace(/[$.\s]/g,'').length;
+    const formatted=superFmtInput(raw,field==='precio');
+    let vistos=0,nuevoCaret=formatted.length;
+    for(let i=0;i<formatted.length;i++){if(!/[$.\s]/.test(formatted[i]))vistos++;if(vistos>=logicosAntes){nuevoCaret=i+1;break;}}
+    el.value=formatted; el.setSelectionRange(nuevoCaret,nuevoCaret);
+    superUpdate(idx,field,superCanonicalInput(formatted));
+  }else superUpdate(idx,field,el.value);
+};
+window.superFieldFocus=(event,idx)=>{
+  const el=event.target, item=superGetItems()[idx];
+  if(superGridState.rowSnapshot?.id!==item._id) superGridState.rowSnapshot={id:item._id,data:{...item}};
+  const nuevo=superGridState.lastInput!==el;
+  superGridState.lastInput=el;
+  if(!superGridState.focusViaKeyboard) el.closest('tr')?.classList.add('super-row-editing');
+  el._superSelectOnMouseUp=nuevo;
+  if(nuevo) setTimeout(()=>el.select(),0);
+  superGridState.focusViaKeyboard=false;
+};
+window.superFieldMouseUp=event=>{
+  const el=event.currentTarget;
+  if(el._superSelectOnMouseUp){ event.preventDefault(); el.select(); el._superSelectOnMouseUp=false; }
+};
+function superFocusCell(row,col,keyboard=true){
+  const rows=superGetItems(); if(!rows.length)return;
+  row=Math.max(0,Math.min(rows.length-1,row)); col=Math.max(0,Math.min(2,col));
+  superGridState.focusViaKeyboard=keyboard;
+  const el=document.querySelector(`#super-row-${row} .super-inp[data-field="${['precio','cant','desc'][col]}"]`);
+  if(el){ el.focus(); el.select(); }
+}
+window.superFieldKey=(event,row,field)=>{
+  const el=event.currentTarget, fields=['precio','cant','desc'], col=fields.indexOf(field);
+  const full=el.selectionStart===0&&el.selectionEnd===el.value.length;
+  const go=(r,c)=>{event.preventDefault();superFocusCell(r,c,true);};
+  if(event.key==='F2'){
+    event.preventDefault();el.closest('tr')?.classList.add('super-row-editing');
+    if(full) el.setSelectionRange(el.value.length,el.value.length); else el.select();
+    return;
+  }
+  if(event.key==='Escape'){
+    const snap=superGridState.rowSnapshot;
+    if(snap?.id){ const idx=superGetItems().findIndex(i=>i._id===snap.id); if(idx>=0){superGetItems()[idx]={...snap.data};_superSave();superRender();setTimeout(()=>superFocusCell(idx,col,false),0);} }
+    return;
+  }
+  if(event.key==='ArrowUp') return go(event.ctrlKey?0:row-1,col);
+  if(event.key==='ArrowDown') return go(event.ctrlKey?superGetItems().length-1:row+1,col);
+  if(event.key==='ArrowLeft'&&(full||el.selectionStart===0)) return go(row,event.ctrlKey?0:col-1);
+  if(event.key==='ArrowRight'&&(full||el.selectionEnd===el.value.length)) return go(row,event.ctrlKey?2:col+1);
+  if(event.key==='Enter'){
+    event.preventDefault();
+    if(col<2) return superFocusCell(row,col+1,true);
+    if(row<superGetItems().length-1) return superFocusCell(row+1,0,true);
+    const item=superGetItems()[row];
+    if(item.precio||item.cant||item.desc) superAddRow(); else superFocusCell(row,0,true);
+    return;
+  }
+  if(event.key==='Tab'){
+    event.preventDefault();
+    if(event.shiftKey){if(col>0)superFocusCell(row,col-1,true);else if(row>0)superFocusCell(row-1,2,true);}
+    else if(col<2)superFocusCell(row,col+1,true);
+    else if(row<superGetItems().length-1)superFocusCell(row+1,0,true);
+    else document.querySelector('.super-add-btn')?.focus();
+  }
+};
+
+window.superSelectColumn=(event,field)=>{
+  const cols=['precio','cant','desc','subtotal'], idx=cols.indexOf(field), anchor=cols.indexOf(superGridState.colAnchor);
+  if(event.shiftKey&&anchor>=0){if(!event.ctrlKey)superGridState.selectedCols.clear();for(let i=Math.min(anchor,idx);i<=Math.max(anchor,idx);i++)superGridState.selectedCols.add(cols[i]);}
+  else if(event.ctrlKey||event.metaKey){superGridState.selectedCols.has(field)?superGridState.selectedCols.delete(field):superGridState.selectedCols.add(field);superGridState.colAnchor=field;}
+  else{superGridState.selectedCols.clear();superGridState.selectedCols.add(field);superGridState.colAnchor=field;}
+  superRender();
+};
+window.superSort=field=>{
+  const dir=superGridState.sortField===field?-superGridState.sortDir:1; superGridState.sortField=field;superGridState.sortDir=dir;
+  const val=i=>field==='subtotal'?(Number(i.precio)||0)*(Number(i.cant)||0):field==='desc'?String(i.desc||'').toLocaleLowerCase('es'):Number(i[field])||0;
+  superGetItems().sort((a,b)=>{const av=val(a),bv=val(b);return (typeof av==='string'?av.localeCompare(bv,'es'):av-bv)*dir;});
+  _superSave();superRender();
+};
 window.superAddRow=()=>{
-  superGetItems().push({precio:'',cant:'',desc:''});
+  superGetItems().push({_id:superItemId(),precio:'',cant:'',desc:''});
   _superSave();
   const tbody=document.getElementById('superBody');
   if(tbody){ const idx=superGetItems().length-1; tbody.appendChild(superRenderRow(idx)); const inp=document.querySelector('#super-row-'+idx+' .super-inp-precio'); if(inp) inp.focus(); }
@@ -8652,6 +8777,15 @@ window.superDelRow=idx=>{
   if(superGetItems().length<=1) return;
   superGetItems().splice(idx,1); _superSave(); superRender();
 };
+document.addEventListener('paste',event=>{
+  if(!superGridState.selectedCols.size||event.target.closest?.('input,textarea,[contenteditable="true"]'))return;
+  const cols=['precio','cant','desc'].filter(c=>superGridState.selectedCols.has(c)); if(!cols.length)return;
+  const filas=event.clipboardData?.getData('text/plain').replace(/\r/g,'').split('\n').filter((r,i,a)=>r||i<a.length-1).map(r=>r.split('\t'))||[];
+  if(!filas.length)return;event.preventDefault();
+  while(superGetItems().length<filas.length)superGetItems().push({_id:superItemId(),precio:'',cant:'',desc:''});
+  filas.forEach((vals,r)=>cols.forEach((c,ci)=>{if(vals[ci]!==undefined)superGetItems()[r][c]=c==='desc'?vals[ci]:superCanonicalInput(vals[ci]);}));
+  _superSave();superRender();
+});
 window.superNavPrev=()=>{
   if(superListIdx>0){ superListIdx--; superRender(); }
 };
@@ -8659,11 +8793,58 @@ window.superNavNext=()=>{
   if(superListIdx<superLists.length-1){ superListIdx++; superRender(); }
 };
 window.superNuevaCompra=()=>{
-  superLists.push({ id:Date.now(), nombre:_superNombreHoy(), items:[{precio:'',cant:'',desc:''}] });
+  superLists.push({ id:Date.now(), nombre:_superNombreHoy(), items:[{_id:superItemId(),precio:'',cant:'',desc:''}] });
   superListIdx = superLists.length-1;
   _superSave(); superRender();
 };
 
+function superEnhanceRubroSelect(root){
+  const select=root.querySelector('#superRubro');if(!select)return;
+  root._superRubroOriginal=select.value;
+  const options=[...select.options].map(o=>({value:o.value,label:o.textContent.trim()})), selected=options.find(o=>o.value===select.value)||options[0];
+  select.hidden=true;
+  const wrap=document.createElement('div');wrap.className='super-combo';
+  wrap.innerHTML=`<input id="superRubroSearch" type="text" autocomplete="off" data-ignore-amount-tools="1" value="${escapeMovSelectorHtml(selected?.label||'')}"><button type="button" class="super-combo-toggle" aria-label="Desplegar rubros">▾</button><div class="super-combo-menu" hidden></div>`;
+  select.before(wrap);
+  const input=wrap.querySelector('input'),toggle=wrap.querySelector('button'),menu=wrap.querySelector('.super-combo-menu');let active=-1;
+  const render=()=>{const q=input.value.trim().toLocaleLowerCase('es');const filtered=options.filter(o=>!q||o.label.toLocaleLowerCase('es').includes(q));active=Math.min(active,filtered.length-1);menu.innerHTML=filtered.map((o,i)=>`<button type="button" class="super-combo-option ${i===active?'active':''}" data-value="${escapeMovSelectorHtml(o.value)}">${escapeMovSelectorHtml(o.label)}</button>`).join('');menu.hidden=false;menu.querySelectorAll('button').forEach(btn=>btn.onclick=()=>choose(btn.dataset.value));};
+  const choose=value=>{const o=options.find(x=>x.value===value);if(!o)return;select.value=o.value;input.value=o.label;menu.hidden=true;active=-1;input.focus();};
+  input.addEventListener('input',()=>{active=-1;render();});
+  input.addEventListener('keydown',e=>{
+    if(e.key==='F4'){e.preventDefault();menu.hidden?render():menu.hidden=true;return;}
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){if(menu.hidden)render();e.preventDefault();const opts=[...menu.querySelectorAll('button')];if(!opts.length)return;active=Math.max(0,Math.min(opts.length-1,active+(e.key==='ArrowDown'?1:-1)));opts.forEach((b,i)=>b.classList.toggle('active',i===active));opts[active]?.scrollIntoView({block:'nearest'});return;}
+    if(e.key==='Enter'&&!menu.hidden){e.preventDefault();if(!input.value.trim())return;const opts=[...menu.querySelectorAll('button')];if(active>=0)choose(opts[active].dataset.value);return;}
+  });
+  toggle.onclick=()=>menu.hidden?render():menu.hidden=true;
+  wrap.addEventListener('focusout',()=>setTimeout(()=>{if(!wrap.contains(document.activeElement)){menu.hidden=true;const actual=options.find(o=>o.value===select.value);if(actual)input.value=actual.label;}},0));
+  document.addEventListener('pointerdown',e=>{if(!wrap.contains(e.target))menu.hidden=true;},{once:false});
+}
+function superBindPopupFieldFunctions(root){
+  const fields=['superNombreGasto','superRubroSearch','superDpText'].map(id=>root.querySelector('#'+id)).filter(Boolean);
+  const original=new Map(fields.map(el=>[el.id,el.value]));
+  let last=null;
+  fields.forEach((el,index)=>{
+    el.addEventListener('focus',()=>{if(last!==el&&el.select)requestAnimationFrame(()=>el.select());last=el;});
+    el.addEventListener('keydown',event=>{
+      if(event.defaultPrevented)return;
+      const full=typeof el.selectionStart==='number'&&el.selectionStart===0&&el.selectionEnd===el.value.length;
+      if(event.key==='F2'&&el.select){event.preventDefault();full?el.setSelectionRange(el.value.length,el.value.length):el.select();return;}
+      if(event.key==='Escape'){
+        event.preventDefault();el.value=original.get(el.id)??'';
+        if(el.id==='superRubroSearch'){const select=root.querySelector('#superRubro');if(select)select.value=root._superRubroOriginal||select.value;root.querySelector('.super-combo-menu')?.setAttribute('hidden','');}
+        if(el.id==='superDpText'){const hidden=root.querySelector('#superFecha');if(hidden)hidden.value=fechaISOReserva(new Date());dpModInit('super',hidden?.value||null);}
+        return;
+      }
+      if(el.id==='superRubroSearch'&&['F4','ArrowDown','ArrowUp'].includes(event.key))return;
+      if(event.key==='ArrowDown'){event.preventDefault();fields[Math.min(fields.length-1,index+1)]?.focus();return;}
+      if(event.key==='ArrowUp'){event.preventDefault();fields[Math.max(0,index-1)]?.focus();return;}
+      if(event.key==='ArrowRight'&&(full||el.selectionEnd===el.value.length)){event.preventDefault();fields[Math.min(fields.length-1,index+1)]?.focus();return;}
+      if(event.key==='ArrowLeft'&&(full||el.selectionStart===0)){event.preventDefault();fields[Math.max(0,index-1)]?.focus();return;}
+      if(event.key==='Enter'&&el.id!=='superDpText'){event.preventDefault();fields[Math.min(fields.length-1,index+1)]?.focus();}
+    });
+  });
+  root.querySelectorAll('.modal-group label').forEach(label=>label.addEventListener('click',()=>{const el=label.closest('.modal-group')?.querySelector('input:not([type="hidden"]),select');el?.focus();el?.select?.();}));
+}
 
 window.superAgregarAGastos = () => {
   const items = superGetItems().filter(i => (parseFloat(i.precio)||0) > 0);
@@ -8678,7 +8859,7 @@ window.superAgregarAGastos = () => {
     <div class="modal-box" style="text-align:center">
       <div style="font-size:32px;margin-bottom:8px">💸</div>
       <div class="modal-title" style="margin-bottom:6px">Agregar a gastos</div>
-      <div style="font-family:'Arial Black',sans-serif;font-size:26px;font-weight:800;color:var(--red);margin-bottom:16px">$${Math.round(total).toLocaleString('es-AR')}</div>
+      <div style="font-family:'Arial Black',sans-serif;font-size:26px;font-weight:800;color:var(--red);margin-bottom:16px">${superFmt(total)}</div>
       <div class="modal-group" style="text-align:left;margin-bottom:12px">
         <label>Nombre del gasto</label>
         <input id="superNombreGasto" type="text" value="${nombre}"
@@ -8693,7 +8874,7 @@ window.superAgregarAGastos = () => {
               value="${hoy.getDate()}/${hoy.getMonth()+1}/${hoy.getFullYear()}"
               style="flex:1;border:none;background:transparent;color:var(--text);font-size:15px;padding:14px 10px 14px 16px;outline:none;width:100%;"
               oninput="dpModParseText('super',this.value,'superFecha','superDpText','superDpPopup')"
-              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('super',this.value,'superFecha','superDpText','superDpPopup',true);}"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();dpModParseText('super',this.value,'superFecha','superDpText','superDpPopup',true);this.closest('.modal-box')?.querySelector('.modal-btn-ok')?.focus();}"
             >
             <span class="dp-icon" style="padding-right:14px;cursor:pointer;" onclick="dpModToggle('super','superDpPopup','superFecha','superDpText')">📅</span>
           </div>
@@ -8708,6 +8889,8 @@ window.superAgregarAGastos = () => {
     </div>`;
   document.body.appendChild(ov);
   dpModInit('super', fechaHoy);
+  superEnhanceRubroSelect(ov);
+  superBindPopupFieldFunctions(ov);
 };
 
 window.superConfirmarGasto = async (total, nombre) => {
@@ -8732,12 +8915,13 @@ window.superConfirmarGasto = async (total, nombre) => {
 window.superBorrarCompra = () => {
   if(superLists.length <= 1) {
     // Si es la única, la resetea en vez de borrar
-    superLists[0] = { id: Date.now(), nombre: _superNombreHoy(), items: [{precio:'',cant:'',desc:''}] };
+    superLists[0] = { id: Date.now(), nombre: _superNombreHoy(), items: [{_id:superItemId(),precio:'',cant:'',desc:''}] };
     superListIdx = 0;
   } else {
     superLists.splice(superListIdx, 1);
     superListIdx = Math.min(superListIdx, superLists.length - 1);
   }
+  superGridState.selectedCols.clear();
   _superSave(); superRender();
 };
 
