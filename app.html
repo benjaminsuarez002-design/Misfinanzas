@@ -3240,12 +3240,48 @@ function parseNumeroCortoVoz(valor) {
   return null;
 }
 
+const VOICE_DESTINATION_CONNECTORS = ['con la', 'con mi', 'con', 'a la', 'a mi'];
+
+function escaparRegexVoz(valor) {
+  return String(valor || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function detectarDestinoVoz(texto) {
+  const original = String(texto || '');
+  const tarjetasDisponibles = Array.isArray(tarjetas) ? tarjetas : [];
+  const candidatos = tarjetasDisponibles.flatMap(tarjeta => {
+    const nombre = String(tarjeta?.nombre || '').trim();
+    const nombreCorto = nombre
+      .replace(/^tarjeta(?:\s+de\s+credito)?\s+/i, '')
+      .replace(/^credito\s+/i, '')
+      .trim();
+    return [nombre, nombreCorto]
+      .filter(alias => alias.length >= 3)
+      .map(alias => ({ tarjeta, alias }));
+  }).sort((a, b) => b.alias.length - a.alias.length);
+
+  for(const { tarjeta, alias } of candidatos) {
+    const conectores = VOICE_DESTINATION_CONNECTORS.map(escaparRegexVoz).join('|');
+    const patron = new RegExp(`\\b(?:${conectores})\\s+(?:(?:la|el|mi)\\s+)?(?:(?:tarjeta(?:\\s+de\\s+credito)?|credito)\\s+)?${escaparRegexVoz(alias)}\\b`, 'i');
+    const match = original.match(patron);
+    if(!match) continue;
+    const textoSinDestino = `${original.slice(0, match.index)} ${original.slice((match.index || 0) + match[0].length)}`
+      .replace(/\s+/g, ' ')
+      .trim();
+    return { tipoOrigen:'tarjeta', tarjetaId:tarjeta.id, textoSinDestino };
+  }
+
+  return { tipoOrigen:null, tarjetaId:null, textoSinDestino:original };
+}
+
 function interpretarCapturaVoz(captura) {
   const original = String(captura?.raw_text || '').trim();
+  const destino = detectarDestinoVoz(original);
+  const textoMovimiento = destino.textoSinDestino;
   const plano = normalizarTextoVoz(original);
   const esIngreso = /\b(cobre|recibi|ingrese|gane|sueldo|ingreso)\b/.test(plano);
-  const montoConMatch = original.match(/\$?\s*(\d[\d.,]*|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)\s+(?:con|coma|punto)\s+(\d{1,2}|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+y\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)?)\b/i);
-  const montoMatch = original.match(/\$?\s*(\d[\d.,]*)/);
+  const montoConMatch = textoMovimiento.match(/\$?\s*(\d[\d.,]*|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)\s+(?:con|coma|punto)\s+(\d{1,2}|[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+(?:\s+y\s+[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)?)\b/i);
+  const montoMatch = textoMovimiento.match(/\$?\s*(\d[\d.,]*)/);
   const enteroHablado = montoConMatch ? (/^\d/.test(montoConMatch[1]) ? parseMontoVoz(montoConMatch[1]) : parseNumeroCortoVoz(montoConMatch[1])) : null;
   const decimalHablado = montoConMatch ? parseNumeroCortoVoz(montoConMatch[2]) : null;
   const decimalDigitos = montoConMatch
@@ -3258,10 +3294,10 @@ function interpretarCapturaVoz(captura) {
   const montoTexto = String(montoHabladoValido ? montoConMatch[0] : (montoMatch?.[0] || '')).trim();
   const montoDetectado = montoHabladoValido ? montoConMatch : montoMatch;
   const textoPosteriorMonto = montoDetectado
-    ? original.slice((montoDetectado.index || 0) + montoDetectado[0].length)
+    ? textoMovimiento.slice((montoDetectado.index || 0) + montoDetectado[0].length)
     : '';
   const desdeSeparador = textoPosteriorMonto.match(/^\s*(?:pesos?|ars)?\s*(?:en)(?:\s+(?:un|una|unos|unas|el|la|los|las))?\s+(.+)$/i);
-  let desc = desdeSeparador?.[1] || original
+  let desc = desdeSeparador?.[1] || textoMovimiento
     .replace(/^\s*(?:anoche\s+)?(?:carg[aá]me|anot[aá]me|registr[aá]me)\s+(?:un\s+)?(?:gasto|ingreso)(?:\s+(?:de|por))?\s*/i, '')
     .replace(/^\s*(?:yo\s+)?(?:me\s+)?(gast[eé]|pagu[eé]|compr[eé]|anot[aá]|registr[aá]|cobr[eé]|recib[ií]|ingres[eé]|gan[eé])\s*/i, '');
   if(montoTexto) desc = desc.replace(montoTexto, '');
@@ -3294,7 +3330,14 @@ function interpretarCapturaVoz(captura) {
   const fechaBase = new Date();
   if(/\bayer\b/.test(plano)) fechaBase.setDate(fechaBase.getDate() - 1);
   const fecha = `${fechaBase.getFullYear()}-${String(fechaBase.getMonth()+1).padStart(2,'0')}-${String(fechaBase.getDate()).padStart(2,'0')}`;
-  return { tipoOrigen: esIngreso ? 'ingreso' : 'gasto', monto, desc, rubro, fecha };
+  return {
+    tipoOrigen: destino.tipoOrigen || (esIngreso ? 'ingreso' : 'gasto'),
+    tarjetaId: destino.tarjetaId,
+    monto,
+    desc,
+    rubro,
+    fecha
+  };
 }
 
 window.abrirPrimeraCapturaVoz = () => {
