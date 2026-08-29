@@ -8910,6 +8910,9 @@ function superVoiceSetState(listening,message){
 
 function superAgregarItemVoz(transcript){
   const interpretado=interpretarCapturaVoz({raw_text:transcript});
+  interpretado.desc=String(interpretado.desc||'')
+    .replace(/^(?:(?:sí|si|y|e|eh|que|q)\s+|\d[\d.,]*\s+)+/i,'')
+    .trim();
   if(!(interpretado.monto>0)||!interpretado.desc||interpretado.desc==='Gasto rápido'){
     superVoiceSetState(false,'No entendí. Probá: “2600 un Rexona”');
     showToast('⚠️ No pude reconocer precio y artículo',true);
@@ -8928,6 +8931,35 @@ function superAgregarItemVoz(transcript){
   showToast(`🎙️ ${interpretado.desc} agregado`);
 }
 
+function superElegirTranscripcionVoz(resultado){
+  const alternativas=Array.from(resultado||[])
+    .map(item=>String(item?.transcript||'').trim())
+    .filter(Boolean);
+  if(!alternativas.length) return '';
+
+  // Preferimos una alternativa que haya conservado el artículo separado:
+  // "4800 un papel" en lugar de "4801 papel".
+  const conArticulo=[...alternativas].sort((a,b)=>{
+    const puntuar=texto=>{
+      const match=texto.match(/^\s*\$?\s*(\d[\d.,]*)\s+(?:pesos?\s+)?(?:un|una|el|la)\s+\S+/i);
+      if(!match) return 0;
+      const monto=parseMontoVoz(match[1]);
+      return 10+(monto>=1000&&monto%100===0?3:0);
+    };
+    return puntuar(b)-puntuar(a);
+  })[0];
+  if(/^\s*\$?\s*\d[\d.,]*\s+(?:pesos?\s+)?(?:un|una|el|la)\s+\S+/i.test(conArticulo)) return conArticulo;
+
+  const principal=alternativas[0];
+  const unido=principal.match(/^\s*\$?\s*(\d[\d.,]*)\s+(.+)$/i);
+  if(!unido) return principal;
+  const monto=parseMontoVoz(unido[1]);
+  // Algunos motores convierten "4800 un" en "4801". La señal segura que
+  // usamos es un importe grande terminado en 01 seguido directamente del producto.
+  if(monto>=1000&&monto%100===1) return `${monto-1} un ${unido[2]}`;
+  return principal;
+}
+
 window.superVoiceToggle=()=>{
   if(superVoiceListening){ superVoiceRecognition?.stop(); return; }
   const SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -8941,10 +8973,10 @@ window.superVoiceToggle=()=>{
   superVoiceRecognition=recognition;
   recognition.lang='es-AR';
   recognition.interimResults=false;
-  recognition.maxAlternatives=1;
+  recognition.maxAlternatives=5;
   recognition.onstart=()=>superVoiceSetState(true,'Te escucho… decí el precio y el artículo.');
   recognition.onresult=event=>{
-    const transcript=event.results?.[0]?.[0]?.transcript?.trim()||'';
+    const transcript=superElegirTranscripcionVoz(event.results?.[0]);
     superVoiceSetState(false,transcript?`Escuché: “${transcript}”`:'No escuché nada.');
     if(transcript) superAgregarItemVoz(transcript);
   };
