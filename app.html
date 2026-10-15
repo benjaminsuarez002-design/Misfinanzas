@@ -7128,7 +7128,7 @@ function renderTarjetaDetail(tid){
     }
   }
   html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Registrar pago</div>
-  <div class="pago-form"><input type="text" inputmode="numeric" id="pagoInput" placeholder="Monto a pagar..." oninput="formatMontoInput(this)"><button onclick="guardarPago('${tid}',${mesVista},${anioVista})">Pagar</button></div>`;
+  <div class="pago-form"><input type="text" inputmode="numeric" id="pagoInput" placeholder="Monto o cuenta: 45,04*1555" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)"><button onclick="guardarPago('${tid}',${mesVista},${anioVista})">Pagar</button></div>`;
   el.innerHTML=html;
 }
 
