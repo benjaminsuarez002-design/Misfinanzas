@@ -7,7 +7,13 @@ voice-capture-worker/.wrangler/
 # Android build artifacts
 android-widget/.gradle/
 android-widget/build/
+android-widget/app/build/
 android-widget/manual-build-*/
 android-widget/local.properties
 android-widget/*.apk
 *.idsig
+*.p12
+*.jks
+*.keystore
+credenciales.json
+push-notifications/node_modules/

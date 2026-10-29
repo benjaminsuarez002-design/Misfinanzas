@@ -2,9 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.misfinanzas.app">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <application android:theme="@style/AppTheme" android:label="Mis Finanzas" android:icon="@drawable/ic_launcher" android:roundIcon="@drawable/ic_launcher" android:allowBackup="true" android:supportsRtl="true" android:usesCleartextTraffic="false">
         <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
-        <activity android:name=".MainActivity" android:exported="true" android:configChanges="screenSize|orientation|keyboardHidden">
+        <service android:name=".PushService" android:exported="false">
+            <intent-filter><action android:name="com.google.firebase.MESSAGING_EVENT" /></intent-filter>
+        </service>
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="misfinanzas_avisos" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_money" />
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop" android:configChanges="screenSize|orientation|keyboardHidden">
             <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
         </activity>
         <activity android:name=".VoiceCaptureActivity" android:exported="true" android:theme="@style/VoiceTheme" android:taskAffinity="" android:excludeFromRecents="true" android:noHistory="true" android:finishOnTaskLaunch="true">

@@ -1,6 +1,10 @@
+import { registerPushDevice, runPushReminders } from './push.js';
 const JSON_HEADERS = { 'content-type': 'application/json; charset=utf-8' };
 
 export default {
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runPushReminders(env));
+  },
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/voz') url.pathname = '/';
@@ -16,6 +20,11 @@ export default {
       if (request.method === 'POST' && url.pathname === '/devices/pair') {
         const uid = await requireFirebaseUser(request, env);
         return pairDevice(request, env, uid);
+      }
+
+      if (request.method === 'POST' && url.pathname === '/android-push/device') {
+        const uid = await requireFirebaseUser(request, env);
+        return json(await registerPushDevice(await readJson(request), env, uid));
       }
 
       if (request.method === 'POST' && url.pathname === '/capture') {

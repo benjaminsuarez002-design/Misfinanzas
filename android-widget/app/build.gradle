@@ -1,6 +1,31 @@
 plugins { id 'com.android.application' }
 
 android { namespace 'com.misfinanzas.app'; compileSdk 35
-    defaultConfig { applicationId 'com.misfinanzas.app'; minSdk 23; targetSdk 35; versionCode 10; versionName '10.0-branded-endpoint' }
+    defaultConfig {
+        applicationId 'com.misfinanzas.app'; minSdk 23; targetSdk 35
+        versionCode 11; versionName '11.0-notifications'
+        buildConfigField 'String', 'FIREBASE_ANDROID_APP_ID', '"' + providers.gradleProperty('firebaseAndroidAppId').getOrElse('1:933125362701:android:11ec37cc38a90fec3ef144') + '"'
+        // FirebaseInitProvider also needs these when Android starts the messaging
+        // service without opening MainActivity.
+        resValue 'string', 'google_app_id', providers.gradleProperty('firebaseAndroidAppId').getOrElse('1:933125362701:android:11ec37cc38a90fec3ef144')
+        resValue 'string', 'google_api_key', 'AIzaSyCYTvwDEd4Hg9OCydPvrqywSmKb2gPivIk'
+        resValue 'string', 'gcm_defaultSenderId', '933125362701'
+        resValue 'string', 'project_id', 'finanzas-51439'
+    }
+    buildFeatures { buildConfig true }
+    signingConfigs {
+        release {
+            if (System.getenv('MISFINANZAS_SIGNING_STORE')) {
+                storeFile file(System.getenv('MISFINANZAS_SIGNING_STORE'))
+                storeType 'PKCS12'
+                storePassword System.getenv('MISFINANZAS_SIGNING_PASSWORD')
+                keyAlias 'misfinanzas'
+                keyPassword System.getenv('MISFINANZAS_SIGNING_PASSWORD')
+            }
+        }
+    }
+    buildTypes { release { signingConfig signingConfigs.release } }
     compileOptions { sourceCompatibility JavaVersion.VERSION_11; targetCompatibility JavaVersion.VERSION_11 }
 }
+
+dependencies { implementation 'com.google.firebase:firebase-messaging:24.1.0' }

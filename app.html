@@ -2524,6 +2524,11 @@
         <span>🔔 Notificaciones</span>
         <button onclick="toggleNotifPanel()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted)">✕</button>
       </div>
+      <div id="androidPushControls" hidden style="padding:12px 16px;border-bottom:1px solid var(--border)">
+        <button type="button" onclick="activarPushAndroid(true)">🔔 Activar y probar avisos en este teléfono</button>
+        <button type="button" onclick="desactivarPushAndroid()">Desactivar</button>
+        <div id="androidPushStatus" aria-live="polite" style="font-size:12px;margin-top:8px"></div>
+      </div>
       <div id="notifList"></div>
     </div>
   </div>
@@ -3152,7 +3157,12 @@ window.doLogin = async () => {
 };
 document.getElementById('loginPass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 document.getElementById('loginEmail').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('loginPass').focus(); });
-window.doLogout = async () => { if(!confirm('¿Cerrar sesión?')) return; limpiarApp(); await signOut(auth); };
+window.doLogout = async () => {
+  if(!confirm('¿Cerrar sesión?')) return;
+  try { await desvincularPushAndroid(); }
+  catch(error) { showToast('No se pudo desvincular el teléfono. Reintentá cerrar sesión con conexión.',true); return; }
+  limpiarApp(); await signOut(auth);
+};
 
 function limpiarApp() {
   if(movListener) { movListener(); movListener = null; }
@@ -3179,6 +3189,12 @@ function limpiarApp() {
 }
 function aplicarEntradaWidget(){
   const params=new URLSearchParams(location.search);
+  if(params.get('aviso')==='1'){
+    goTab('resumen');
+    document.getElementById('notifPanel')?.classList.add('open');
+    history.replaceState(null,'',location.pathname);
+    return;
+  }
   if(params.get('widget')!=='1') return;
   const tipo=params.get('tipo');
   goTab('cargar');
@@ -3206,6 +3222,7 @@ function iniciarApp() {
   iniciarNotificaciones();
   cargarCapturasVoz();
   sincronizarVinculoAndroid();
+  iniciarPushAndroid();
   setTimeout(()=>{
     aplicarEntradaWidget();
     restaurarEstadoPullRefresh(estadoActualizacion);
@@ -3213,9 +3230,57 @@ function iniciarApp() {
 }
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
+let androidPushEnCurso=false;
+const pushPreferenceKey=()=>`misfinanzas-push-enabled:${currentUser?.uid||''}`;
+const pushStatus=message=>{const el=document.getElementById('androidPushStatus');if(el)el.textContent=message;};
+
+async function llamarPushAndroid(options){
+  const token=window.MisFinanzasAndroid?.pushToken?.();
+  if(!token) throw new Error('El teléfono todavía no tiene un registro de notificaciones.');
+  return voiceFetch('/android-push/device',{method:'POST',body:JSON.stringify({token,...options})});
+}
+
+function iniciarPushAndroid(){
+  if(!window.MisFinanzasAndroid?.pushStatus) return;
+  document.getElementById('androidPushControls').hidden=false;
+  if(localStorage.getItem(pushPreferenceKey())==='1') activarPushAndroid(false);
+}
+
+window.activarPushAndroid=async(test=true)=>{
+  const bridge=window.MisFinanzasAndroid;
+  if(!currentUser||!bridge?.pushStatus||androidPushEnCurso) return;
+  if(bridge.pushStatus()==='not-configured'){pushStatus('Esta versión del APK todavía requiere configurar Firebase para Android.');return;}
+  if(bridge.pushStatus()!=='enabled'){
+    bridge.requestPushPermission();
+    pushStatus('Habilitá las notificaciones del teléfono y volvé a tocar Activar.');
+    return;
+  }
+  androidPushEnCurso=true;
+  try {
+    await llamarPushAndroid({enabled:true,test});
+    localStorage.setItem(pushPreferenceKey(),'1');
+    pushStatus(test?'Notificación de prueba enviada.':'Avisos del teléfono activados.');
+  } catch(error){pushStatus('No se pudieron activar los avisos. Revisá la conexión o la configuración del servicio.');console.warn('Android push:',error.code||error.message);}
+  finally{androidPushEnCurso=false;}
+};
+
+async function desvincularPushAndroid(){
+  if(!window.MisFinanzasAndroid?.pushToken?.()) return;
+  await llamarPushAndroid({enabled:false});
+  localStorage.removeItem(pushPreferenceKey());
+}
+
+window.desactivarPushAndroid=async()=>{
+  try {await desvincularPushAndroid();pushStatus('Avisos de este teléfono desactivados.');}
+  catch(error){pushStatus('No se pudieron desactivar. Probá nuevamente con conexión.');}
+};
+window.addEventListener('misfinanzas-push-ready',()=>{
+  if(currentUser&&localStorage.getItem(pushPreferenceKey())==='1') activarPushAndroid(false);
+});
+
 const VOICE_CAPTURE_URL = 'https://misfinanzas.uk/voz';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/cbb211ef301e4d1d8be84976c8c310ea';
-const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-widget.apk?v=10';
+const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-notificaciones-v11.apk';
 let capturasVozPendientes = [];
 
 async function sincronizarVinculoAndroid() {
@@ -4323,7 +4388,7 @@ window.abrirConfig = () => {
             <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
-              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-widget-v10.apk">🤖 Android</a>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-notificaciones-v11.apk">🤖 Android</a>
             </div>
           </div>
         </div>
