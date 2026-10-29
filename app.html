@@ -3231,6 +3231,7 @@ function iniciarApp() {
 
 // ── CARGA RÁPIDA POR VOZ ───────────────────────────
 let androidPushEnCurso=false;
+let androidPushPendiente=false;
 const pushPreferenceKey=()=>`misfinanzas-push-enabled:${currentUser?.uid||''}`;
 const pushStatus=message=>{const el=document.getElementById('androidPushStatus');if(el)el.textContent=message;};
 
@@ -3244,43 +3245,62 @@ function iniciarPushAndroid(){
   if(!window.MisFinanzasAndroid?.pushStatus) return;
   document.getElementById('androidPushControls').hidden=false;
   if(localStorage.getItem(pushPreferenceKey())==='1') activarPushAndroid(false);
+  else window.MisFinanzasAndroid.offerPushPermission?.();
 }
 
 window.activarPushAndroid=async(test=true)=>{
   const bridge=window.MisFinanzasAndroid;
   if(!currentUser||!bridge?.pushStatus||androidPushEnCurso) return;
   if(bridge.pushStatus()==='not-configured'){pushStatus('Esta versión del APK todavía requiere configurar Firebase para Android.');return;}
+  if(bridge.pushStatus()==='disabled'){
+    androidPushPendiente=false;
+    pushStatus('Las notificaciones están bloqueadas en los ajustes de Android. Habilitalas para Mis Finanzas y volvé a tocar Activar.');
+    return;
+  }
   if(bridge.pushStatus()!=='enabled'){
+    androidPushPendiente=true;
     bridge.requestPushPermission();
-    pushStatus('Habilitá las notificaciones del teléfono y volvé a tocar Activar.');
+    pushStatus('Aceptá el permiso de Android para activar los avisos.');
     return;
   }
   androidPushEnCurso=true;
   try {
     await llamarPushAndroid({enabled:true,test});
     localStorage.setItem(pushPreferenceKey(),'1');
+    androidPushPendiente=false;
     pushStatus(test?'Notificación de prueba enviada.':'Avisos del teléfono activados.');
   } catch(error){pushStatus('No se pudieron activar los avisos. Revisá la conexión o la configuración del servicio.');console.warn('Android push:',error.code||error.message);}
   finally{androidPushEnCurso=false;}
 };
 
 async function desvincularPushAndroid(){
+  androidPushPendiente=false;
   if(!window.MisFinanzasAndroid?.pushToken?.()) return;
   await llamarPushAndroid({enabled:false});
   localStorage.removeItem(pushPreferenceKey());
 }
 
 window.desactivarPushAndroid=async()=>{
+  androidPushPendiente=false;
   try {await desvincularPushAndroid();pushStatus('Avisos de este teléfono desactivados.');}
   catch(error){pushStatus('No se pudieron desactivar. Probá nuevamente con conexión.');}
 };
 window.addEventListener('misfinanzas-push-ready',()=>{
-  if(currentUser&&localStorage.getItem(pushPreferenceKey())==='1') activarPushAndroid(false);
+  if(currentUser&&(androidPushPendiente||localStorage.getItem(pushPreferenceKey())==='1')) activarPushAndroid(false);
+});
+window.addEventListener('misfinanzas-push-consent',()=>{
+  if(!currentUser) return;
+  androidPushPendiente=true;
+  activarPushAndroid(false);
+});
+window.addEventListener('misfinanzas-push-denied',()=>{
+  androidPushPendiente=false;
+  pushStatus('Notificaciones no autorizadas. Podés activarlas más tarde desde la campanita.');
 });
 
 const VOICE_CAPTURE_URL = 'https://misfinanzas.uk/voz';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/cbb211ef301e4d1d8be84976c8c310ea';
-const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-notificaciones-v11.apk';
+const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-notificaciones-v12.apk';
 let capturasVozPendientes = [];
 
 async function sincronizarVinculoAndroid() {
@@ -4388,7 +4408,7 @@ window.abrirConfig = () => {
             <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
-              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-notificaciones-v11.apk">🤖 Android</a>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-notificaciones-v12.apk">🤖 Android</a>
             </div>
           </div>
         </div>

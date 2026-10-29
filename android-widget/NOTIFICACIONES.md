@@ -1,5 +1,9 @@
 # Android v11: notificaciones
 
+## Actualización v12
+
+Después de iniciar sesión, ofrece activar notificaciones la primera vez. Al aceptar pide el permiso de Android y registra el teléfono automáticamente cuando se concede. **Ahora no** evita volver a mostrar la pregunta; se puede activar luego desde la campanita. La v12 usa la misma firma que la v11 y se instala como actualización.
+
 ## Implementación activa
 
 - Interfaz y controles en `app.html`. El APK sigue cargando la web de `https://misfinanzas.uk/app`.

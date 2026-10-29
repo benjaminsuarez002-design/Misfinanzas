@@ -1,6 +1,7 @@
 package com.misfinanzas.app;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Insets;
 import android.os.Build;
@@ -75,6 +76,18 @@ public class MainActivity extends Activity {
     }
 
     private final class AndroidBridge {
+        @JavascriptInterface public void offerPushPermission() {
+            runOnUiThread(() -> {
+                if (isFinishing() || getSharedPreferences("misfinanzas_push", MODE_PRIVATE).getBoolean("permission_offered", false)) return;
+                getSharedPreferences("misfinanzas_push", MODE_PRIVATE).edit().putBoolean("permission_offered", true).apply();
+                new AlertDialog.Builder(MainActivity.this)
+                    .setTitle("¿Activar notificaciones?")
+                    .setMessage("Mis Finanzas puede avisarte cuando se acerque un vencimiento, incluso con la app cerrada. Podés desactivarlo desde la campanita.")
+                    .setPositiveButton("Activar", (dialog, which) -> emitPushEvent("misfinanzas-push-consent"))
+                    .setNegativeButton("Ahora no", null)
+                    .show();
+            });
+        }
         @JavascriptInterface public String pushToken() {
             return getSharedPreferences("misfinanzas_push", MODE_PRIVATE).getString("token", "");
         }
@@ -89,7 +102,7 @@ public class MainActivity extends Activity {
             runOnUiThread(() -> {
                 if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED)
                     requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 110);
-                refreshPushToken();
+                else refreshPushToken();
             });
         }
         @JavascriptInterface public boolean tieneTokenVoz() {
@@ -100,6 +113,18 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void guardarTokenVoz(String token) {
             if (token == null || token.trim().isEmpty()) return;
             getSharedPreferences(VOICE_PREFS, MODE_PRIVATE).edit().putString(VOICE_TOKEN, token.trim()).apply();
+        }
+    }
+
+    private void emitPushEvent(String event) {
+        webView.evaluateJavascript("window.dispatchEvent(new Event('" + event + "'))", null);
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 110) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) refreshPushToken();
+            else emitPushEvent("misfinanzas-push-denied");
         }
     }
 
