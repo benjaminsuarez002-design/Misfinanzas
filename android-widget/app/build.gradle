@@ -3,7 +3,7 @@ plugins { id 'com.android.application' }
 android { namespace 'com.misfinanzas.app'; compileSdk 35
     defaultConfig {
         applicationId 'com.misfinanzas.app'; minSdk 23; targetSdk 35
-        versionCode 12; versionName '12.0-notification-permission'
+        versionCode 13; versionName '13.0-update-downloads'
         buildConfigField 'String', 'FIREBASE_ANDROID_APP_ID', '"' + providers.gradleProperty('firebaseAndroidAppId').getOrElse('1:933125362701:android:11ec37cc38a90fec3ef144') + '"'
         // FirebaseInitProvider also needs these when Android starts the messaging
         // service without opening MainActivity.

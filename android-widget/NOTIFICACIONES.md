@@ -1,5 +1,13 @@
 # Android v11: notificaciones
 
+## Actualización v13: descarga del APK
+
+El botón Android llama al gestor de descargas nativo, previa confirmación de la descarga. Android 6–9 solicita WRITE_EXTERNAL_STORAGE solo al aceptar la descarga; rechazarlo cancela esa descarga. Android 10+ guarda en Descargas mediante DownloadManager sin permiso general de almacenamiento. No se solicita almacenamiento al abrir ni al iniciar sesión.
+
+El archivo se guarda con sufijo de fecha para evitar conflictos con descargas anteriores. Al terminar, abrirlo desde Descargas. Android controla la autorización para instalar APK externos; esta versión no instala automáticamente.
+
+Los APK v11/v12 usan el navegador externo al tocar el botón actualizado de la web para poder obtener la v13. Se conserva la misma firma de v11/v12: instalar como actualización, sin desinstalar.
+
 ## Actualización v12
 
 Después de iniciar sesión, ofrece activar notificaciones la primera vez. Al aceptar pide el permiso de Android y registra el teléfono automáticamente cuando se concede. **Ahora no** evita volver a mostrar la pregunta; se puede activar luego desde la campanita. La v12 usa la misma firma que la v11 y se instala como actualización.

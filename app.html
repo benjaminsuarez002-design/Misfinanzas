@@ -3300,7 +3300,19 @@ window.addEventListener('misfinanzas-push-denied',()=>{
 
 const VOICE_CAPTURE_URL = 'https://misfinanzas.uk/voz';
 const SIRI_SHORTCUT_TEMPLATE_URL = 'https://www.icloud.com/shortcuts/cbb211ef301e4d1d8be84976c8c310ea';
-const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-notificaciones-v12.apk';
+const ANDROID_APK_DOWNLOAD_URL = 'https://misfinanzas.uk/MisFinanzas-notificaciones-v13.apk';
+window.descargarActualizacionAndroid=event=>{
+  const bridge=window.MisFinanzasAndroid;
+  if(!bridge) return;
+  event.preventDefault();
+  if(typeof bridge.downloadApk==='function') bridge.downloadApk(ANDROID_APK_DOWNLOAD_URL);
+  else {
+    // Los APK antiguos abren dominios externos en el navegador del teléfono.
+    const url=new URL(ANDROID_APK_DOWNLOAD_URL);
+    url.hostname='misfinanzas.benjaminsuarez002.workers.dev';
+    window.location.href=url.href;
+  }
+};
 let capturasVozPendientes = [];
 
 async function sincronizarVinculoAndroid() {
@@ -4408,7 +4420,7 @@ window.abrirConfig = () => {
             <p>Elegí tu teléfono. En iPhone instalás la carga rápida con Siri; en Android descargás la última versión con el widget de micrófono.</p>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
               <button type="button" class="cfg-voice-btn" onclick="vincularSiri()"> iPhone</button>
-              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-notificaciones-v12.apk">🤖 Android</a>
+              <a class="cfg-voice-btn" style="display:flex;align-items:center;justify-content:center;text-decoration:none" href="${ANDROID_APK_DOWNLOAD_URL}" download="MisFinanzas-notificaciones-v13.apk" onclick="descargarActualizacionAndroid(event)">🤖 Android</a>
             </div>
           </div>
         </div>

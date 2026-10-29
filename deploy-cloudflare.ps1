@@ -17,6 +17,7 @@ $publicFiles = @(
   'MisFinanzas-widget.apk',
   'MisFinanzas-notificaciones-v11.apk',
   'MisFinanzas-notificaciones-v12.apk',
+  'MisFinanzas-notificaciones-v13.apk',
   'MisFinanzas-widget-v9.apk',
   'MisFinanzas-widget-gemini.apk',
   'MisFinanzas-microfono-v5.apk'

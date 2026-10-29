@@ -30,11 +30,13 @@ public class MainActivity extends Activity {
     private static final String VOICE_TOKEN = "voice_token";
     public static final String EXTRA_MOVEMENT_TYPE = "movement_type";
     private WebView webView;
+    private ApkDownloads apkDownloads;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
         setContentView(R.layout.activity_main);
         webView = findViewById(R.id.webView);
+        apkDownloads = new ApkDownloads(this, state);
         findViewById(android.R.id.content).setOnApplyWindowInsetsListener((view, insets) -> {
             if (Build.VERSION.SDK_INT >= 30) {
                 Insets bars = insets.getInsets(WindowInsets.Type.systemBars());
@@ -57,6 +59,10 @@ public class MainActivity extends Activity {
         webView.setWebViewClient(new WebViewClient() {
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
+                if (ApkDownloads.isUpdate(uri)) {
+                    apkDownloads.ask(uri.toString());
+                    return true;
+                }
                 if ("https".equals(uri.getScheme()) && "misfinanzas.uk".equals(uri.getHost())) return false;
                 if ("https".equals(uri.getScheme()) || "http".equals(uri.getScheme()) || "mailto".equals(uri.getScheme()) || "tel".equals(uri.getScheme())) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) { }
@@ -65,6 +71,7 @@ public class MainActivity extends Activity {
             }
         });
         webView.setWebChromeClient(new WebChromeClient());
+        webView.setDownloadListener((url, userAgent, contentDisposition, mimeType, contentLength) -> apkDownloads.ask(url));
         PushService.createChannel(this);
         if (!BuildConfig.FIREBASE_ANDROID_APP_ID.isEmpty()) {
             if (FirebaseApp.getApps(this).isEmpty()) FirebaseApp.initializeApp(this, new FirebaseOptions.Builder()
@@ -76,6 +83,9 @@ public class MainActivity extends Activity {
     }
 
     private final class AndroidBridge {
+        @JavascriptInterface public void downloadApk(String url) {
+            runOnUiThread(() -> apkDownloads.ask(url));
+        }
         @JavascriptInterface public void offerPushPermission() {
             runOnUiThread(() -> {
                 if (isFinishing() || getSharedPreferences("misfinanzas_push", MODE_PRIVATE).getBoolean("permission_offered", false)) return;
@@ -122,10 +132,16 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == ApkDownloads.STORAGE_REQUEST) apkDownloads.permissionResult(grantResults);
         if (requestCode == 110) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) refreshPushToken();
             else emitPushEvent("misfinanzas-push-denied");
         }
+    }
+
+    @Override protected void onSaveInstanceState(Bundle state) {
+        apkDownloads.saveState(state);
+        super.onSaveInstanceState(state);
     }
 
     private void refreshPushToken() {
