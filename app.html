@@ -367,6 +367,25 @@
 
   /* ── TIPO BTNS ── */
   .tipo-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .tipo-opciones { position:relative; display:flex; min-width:0; }
+  .tipo-opciones .tipo-btn { flex:1; min-width:0; padding-inline:3px 27px; }
+  .tipo-opciones-more { position:absolute; top:6px; right:3px; bottom:6px; width:24px; border:0; border-left:1px solid var(--border); background:transparent; color:var(--muted); font-weight:800; cursor:pointer; }
+  .tipo-opciones-menu { position:absolute; z-index:20; top:calc(100% + 5px); left:0; min-width:max-content; padding:4px; border:1px solid var(--border); border-radius:10px; background:var(--card); box-shadow:0 8px 22px #19143e29; }
+  .tipo-opciones:last-of-type .tipo-opciones-menu { left:auto; right:0; }
+  .tipo-opciones-menu button { display:block; width:100%; border:0; border-radius:6px; padding:9px; background:transparent; color:var(--text); text-align:left; cursor:pointer; }
+  .tipo-opciones-menu button:hover,.tipo-opciones-menu button:focus-visible { background:var(--card2); }
+  .programado-fields[hidden],.tipo-opciones-menu[hidden],.weekly-plan[hidden] { display:none; }
+  .programado-title { background:var(--card2); color:var(--accent); padding:10px; border-radius:10px; font-weight:800; margin-bottom:12px; }
+  .programado-grid,.weekly-plan-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .weekly-plan-body { padding:12px; display:grid; gap:10px; }
+  .weekly-plan-body select { width:100%; max-width:100%; }
+  .weekly-plan-grid>div { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:9px; }
+  .weekly-plan-grid strong { display:block; margin-top:5px; color:var(--green); }
+  .weekly-plan-details { color:var(--muted); font-size:13px; display:grid; gap:4px; }
+  .weekly-plan-action { width:auto; margin:0; justify-self:end; padding:9px 12px; }
+  .creditos-favor-resumen { border-top:1px solid var(--border); }
+  .creditos-favor-resumen h4 { margin:0; padding:10px 12px 4px; font-size:13px; }
+  @media(max-width:410px) { #tab-cargar .tipo-btns { grid-template-columns:repeat(2,minmax(0,1fr)); } }
   .tipo-btn { padding: 12px 6px; border-radius: 12px; border: 1.5px solid var(--border); background: rgba(243,236,255,.4); color: var(--muted); font-family: 'Arial Black', sans-serif; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; transition: all .15s; }
   .tipo-btn.active  { border-color: var(--blue);    color: var(--blue);    background: rgba(108,140,255,.1); }
   .tipo-btn.act-gas { border-color: var(--red);     color: var(--red);     background: rgba(255,77,109,.08); }
@@ -2719,6 +2738,10 @@
           </div>
           <div id="movPorSemana"></div>
         </section>
+        <section class="dashboard-panel weekly-plan" id="weeklyPlanPanel" hidden>
+          <div class="dashboard-panel-header"><span class="dashboard-panel-icon">▦</span><h3>Cuánto conviene apartar</h3></div>
+          <div class="weekly-plan-body" id="weeklyPlanBody"></div>
+        </section>
       </div>
       <aside class="dashboard-right-column">
         <section class="dashboard-panel rubro-dashboard-panel">
@@ -2728,6 +2751,7 @@
         <section class="dashboard-panel upcoming-dashboard-panel">
           <div class="dashboard-panel-header"><span class="dashboard-panel-icon">▣</span><h3>Próximos movimientos</h3></div>
           <div id="upcomingMovements"></div>
+          <div id="creditosFavorResumen" class="creditos-favor-resumen" hidden></div>
         </section>
       </aside>
     </div>
@@ -2740,13 +2764,27 @@
       <div class="form-group">
         <label>Tipo</label>
         <div class="tipo-btns">
-          <div class="tipo-btn active" id="btn-ing" onclick="setTipo('ingreso')">💚 Ingreso</div>
-          <div class="tipo-btn" id="btn-gas" onclick="setTipo('gasto')">🔴 Gasto</div>
-          <div class="tipo-btn" id="btn-cred" onclick="setTipo('credito')">💳 Crédito</div>
+          <div class="tipo-opciones">
+            <button type="button" class="tipo-btn active" id="btn-ing" onclick="setTipo('ingreso')">💚 Ingreso</button>
+            <button type="button" class="tipo-opciones-more" aria-label="Opciones de ingreso" aria-expanded="false" onclick="abrirOpcionesTipo(this)">⋯</button>
+            <div class="tipo-opciones-menu" hidden><button type="button" onclick="setTipo('ingreso')">Ingreso común</button><button type="button" onclick="elegirProgramado('ingreso_recurrente')">Ingreso recurrente</button></div>
+          </div>
+          <div class="tipo-opciones">
+            <button type="button" class="tipo-btn" id="btn-gas" onclick="setTipo('gasto')">🔴 Gasto</button>
+            <button type="button" class="tipo-opciones-more" aria-label="Opciones de gasto" aria-expanded="false" onclick="abrirOpcionesTipo(this)">⋯</button>
+            <div class="tipo-opciones-menu" hidden><button type="button" onclick="setTipo('gasto')">Gasto común</button><button type="button" onclick="elegirProgramado('gasto_recurrente')">Gasto recurrente</button></div>
+          </div>
+          <div class="tipo-opciones">
+            <button type="button" class="tipo-btn" id="btn-cred" onclick="setTipo('credito')">💳 Crédito</button>
+            <button type="button" class="tipo-opciones-more" aria-label="Opciones de crédito" aria-expanded="false" onclick="abrirOpcionesTipo(this)">⋯</button>
+            <div class="tipo-opciones-menu" hidden><button type="button" onclick="setTipo('credito');setSubtipo('personal')">Crédito personal</button><button type="button" onclick="setTipo('credito');setSubtipo('tarjeta')">Tarjeta</button><button type="button" onclick="elegirProgramado('credito_favor')">A mi favor</button></div>
+          </div>
           <div class="tipo-btn" id="btn-fijo" onclick="setTipo('fijo')">📌 Mov. Fijo</div>
         </div>
       </div>
+      <div class="programado-fields" id="programadoTitleWrap" hidden><div class="programado-title" id="programadoTitle"></div></div>
       <div class="form-group"><label>Descripción</label><input type="text" id="fDesc" placeholder="Ej: Sueldo, Comida, Luz..."></div>
+      <div class="form-group programado-fields" id="programadoPersonaWrap" hidden><label for="programadoPersona">Persona</label><input id="programadoPersona" type="text" maxlength="120"></div>
       <div class="form-group">
         <label id="labelMonto">Monto</label>
         <div class="amount-currency-shell">
@@ -2764,6 +2802,14 @@
         </div>
       </div>
 
+      <div class="programado-fields" id="programadoFields" hidden>
+        <div class="programado-grid">
+          <div class="form-group"><label for="programadoFrecuencia">Frecuencia</label><select id="programadoFrecuencia" onchange="actualizarFormularioProgramado()"><option value="mensual">Mensual</option><option value="semanal">Semanal</option></select></div>
+          <div class="form-group" id="programadoCuotasWrap"><label for="programadoCuotas">Cantidad de cuotas</label><input id="programadoCuotas" type="number" min="1" max="120" value="1" oninput="actualizarFormularioProgramado()"></div>
+          <div class="form-group" id="programadoDiaWrap"><label for="programadoDia" id="programadoDiaLabel">Día del mes</label><select id="programadoDia" onchange="actualizarFormularioProgramado()"></select></div>
+        </div>
+        <div class="form-group" id="programadoRegistroWrap"><label for="programadoRegistro">Registro</label><select id="programadoRegistro"><option value="manual">Confirmar cada vez</option><option value="automatico">Registrar al abrir la app, desde la fecha prevista</option></select></div>
+      </div>
       <div class="credit-config-summary" id="creditConfigSummary">
         <span class="credit-config-summary-icon">💳</span>
         <span class="credit-config-summary-copy"><strong id="creditConfigTitle">Crédito personal</strong><small id="creditConfigMeta">1 cuota · Total</small></span>
@@ -2786,7 +2832,7 @@
           <select id="fRubro"></select>
         </div>
         <div class="form-group form-date-group" id="fechaWrap">
-          <label>Fecha</label>
+          <label id="fFechaLabel">Fecha</label>
           <div class="date-picker-wrap" id="dpWrap">
             <div class="date-picker-display" id="dpDisplay" style="padding:0;overflow:hidden;">
               <input id="dpTextInput" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
@@ -2815,6 +2861,7 @@
         </label>
       </div>
       <button class="btn-submit" id="btnGuardar" onclick="guardar()">Guardar movimiento</button>
+      <div class="programado-fields" id="programadoBalanceInfo" hidden></div>
     </div>
 
     <div class="form-sheet-overlay" id="creditConfigOverlay" onclick="if(event.target===this)cerrarConfigCredito()">
@@ -2952,7 +2999,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, getDocsFromServer, updateDoc, setDoc, getDoc, getDocFromServer, where, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, initializeFirestore, persistentLocalCache, collection, addDoc, deleteDoc, doc, onSnapshot, query, orderBy, getDocs, getDocsFromServer, updateDoc, setDoc, getDoc, getDocFromServer, where, writeBatch, runTransaction, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -3002,6 +3049,8 @@ const RUBRO_ICON_OPTIONS = ['🛒','🏠','🚗','🚌','🍽️','🍎','💡',
 
 let currentUser = null;
 let data = [], pagosData = {}, pagosListeners = {}, movListener = null, tarjetas = [];
+let reglasProgramadas = [], modoProgramado = '', registroAutomaticoEnCurso = false;
+let reservaSugeridaDestino = '', reservaSugeridaEnCurso = false;
 let fijoData = [], fijoListener = null, fijoPagosData = {}, fijoPagosListeners = {};
 let appCacheHydrated = false;
 let tipoActual = 'ingreso', subtipoActual = 'personal', subtipoFijoActual = 'me_deben', monedaActual = 'ARS', periodoActual = 'semanal';
@@ -3171,7 +3220,8 @@ function limpiarApp() {
   if(window._notifPollInterval) { clearInterval(window._notifPollInterval); window._notifPollInterval = null; }
   Object.values(pagosListeners).forEach(u => u());
   Object.values(fijoPagosListeners).forEach(u => u());
-  pagosListeners = {}; pagosData = {}; data = []; tarjetas = [];
+  pagosListeners = {}; pagosData = {}; data = []; tarjetas = []; reglasProgramadas = [];
+  reservaSugeridaDestino = '';
   fijoData = []; fijoPagosData = {}; fijoPagosListeners = {};
   userConfig = {
     frecuencia: 'semanal',
@@ -3823,6 +3873,7 @@ function hidratarAppDesdeCache(cache){
   if(!cache||cache.version!==1) return false;
   if(cache.config) userConfig={...userConfig,...cache.config};
   data=Array.isArray(cache.movimientos)?cache.movimientos:[];
+  reglasProgramadas=Array.isArray(cache.reglasProgramadas)?cache.reglasProgramadas:[];
   tarjetas=Array.isArray(cache.tarjetas)?cache.tarjetas:[];
   fijoData=Array.isArray(cache.fijos)?cache.fijos:[];
   pagosData=cache.pagosTarjeta&&typeof cache.pagosTarjeta==='object'?cache.pagosTarjeta:{};
@@ -3864,7 +3915,7 @@ async function persistirAppCacheIndexedDB(){
   if(!key) return;
   const cache={
     version:1,updatedAt:Date.now(),config:userConfig,
-    movimientos:data,tarjetas,fijos:fijoData,
+    movimientos:data,reglasProgramadas,tarjetas,fijos:fijoData,
     pagosTarjeta:pagosData,pagosFijos:fijoPagosData
   };
   await escribirAppCacheIndexedDB(key,cache);
@@ -5913,10 +5964,13 @@ function suscribirMovimientos(){
   const q=query(userCol('movimientos'),orderBy('timestamp','desc'));
   movListener=onSnapshot(q,snap=>{
     if(appCacheHydrated&&snap.metadata.fromCache) return;
-    data=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const movimientos=snap.docs.map(d=>({id:d.id,...d.data()}));
+    reglasProgramadas=movimientos.filter(d=>d.tipo==='regla_programada');
+    data=movimientosVigentes(movimientos,reglasProgramadas);
     if(!snap.metadata.fromCache) guardarAppCacheLocal();
     document.getElementById('loadingOverlay').classList.add('hidden');
     setSyncStatus('ok'); renderResumen(); if(notifListener) renderNotifPanel();
+    if(!snap.metadata.fromCache) registrarRecurrentesVencidos();
     if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
   },err=>{
@@ -6020,7 +6074,7 @@ function renderMovPanel(tipo){
 
 // ── DUPLICAR MES ──────────────────────────────────
 window.duplicarMes = () => {
-  const movs = (window._mesMov||[]);
+  const movs = (window._mesMov||[]).filter(d=>!d.claseProgramada);
   if(!movs.length){ showToast('⚠️ No hay movimientos este mes',true); return; }
   let mesD=mesVista+1, anioD=anioVista;
   if(mesD>11){ mesD=0; anioD++; }
@@ -6050,7 +6104,7 @@ window.confirmarDuplicar = async (mesD, anioD) => {
   const dupTar = document.getElementById('dupTar')?.checked ?? false;
   cerrarModal();
   const movs = (window._mesMov||[]).filter(d=>
-    (d.tipo==='ingreso'&&dupIng)||(d.tipo==='gasto'&&dupGas)||(d.tipo==='tarjeta'&&dupTar)
+    !d.claseProgramada&&((d.tipo==='ingreso'&&dupIng)||(d.tipo==='gasto'&&dupGas)||(d.tipo==='tarjeta'&&dupTar))
   );
   if(!movs.length){ showToast('⚠️ Nada seleccionado',true); return; }
   try{
@@ -6080,8 +6134,9 @@ window.confirmarDuplicar = async (mesD, anioD) => {
 
 // ── EDITAR / COPIAR MOV ──────────────────────────────
 window.editarMov = id => {
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
+  if(mov.claseProgramada&&!mov.confirmado) return abrirRegistroProgramado(mov);
   const fechaVal = mov.fecha || '';
   const recVal = mov.recordatorio ? 'checked' : '';
   const overlay = document.createElement('div');
@@ -6095,7 +6150,7 @@ window.editarMov = id => {
       </div>
       <div class="modal-group">
         <label>Monto</label>
-        <input id="editMonto" type="text" inputmode="text" value="${mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : ''}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
+        <input id="editMonto" type="text" inputmode="text" value="${mov.claseProgramada?formatMontoToolValue(mov.monto):(mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : '')}" ${mov.claseProgramada==='credito'?'readonly data-ignore-amount-tools="1"':''} oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
       </div>
       ${mov.tipo!=='ingreso' ? `<div class="modal-group"><label>Rubro</label><select id="editRubro">${rubroOptionsHTML(mov.rubro||'sin_rubro')}</select>${mov.grupoId&&['tarjeta','credito'].includes(mov.tipo)?`<small style="display:block;margin-top:6px;color:var(--muted);line-height:1.35">El rubro se aplicará a todas las cuotas de ${mov.tipo==='tarjeta'?'esta compra con tarjeta':'este crédito personal'}.</small>`:''}</div>` : ''}
       <div class="modal-group">
@@ -6163,14 +6218,14 @@ async function actualizarMovimientoYRubrosDeCuotas(id,mov,actualizacion,rubro){
 }
 window.guardarEdicion = async id => {
   const desc  = document.getElementById('editDesc').value.trim();
-  const monto = parseMontoInput(document.getElementById('editMonto'));
+  const movActual = buscarMovimientoProgramado(id);
+  const monto = movActual?.claseProgramada==='credito'?movActual.monto:parseMontoInput(document.getElementById('editMonto'));
   const fecha = document.getElementById('editFecha').value || null;
   const recordatorio = !!document.getElementById('editRecordatorio')?.checked;
   const rubro = document.getElementById('editRubro')?.value || null;
   console.log('guardando recordatorio:', recordatorio, 'checkbox:', document.getElementById('editRecordatorio'));
   if(!desc || isNaN(monto)){ showToast('⚠️ Datos inválidos',true); return; }
   // Capturar todo ANTES de cerrar el modal
-  const movActual = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   cerrarModal();
   try{
     let extra = {};
@@ -7241,6 +7296,9 @@ window.goTab=t=>{
   if(t==='compartir'){ splitLoad(); }
 };
 window.setTipo=t=>{
+  const eraProgramado=!!modoProgramado;
+  modoProgramado='';
+  cerrarOpcionesTipo();
   const tipoBaseAnterior = (tipoActual==='credito'||tipoActual==='tarjeta') ? 'credito' : (String(tipoActual).startsWith('fijo_') ? 'fijo' : tipoActual);
   tipoActual = t === 'credito' ? (subtipoActual === 'tarjeta' ? 'tarjeta' : 'credito') : (t === 'fijo' ? (subtipoFijoActual === 'me_deben' ? 'fijo_medeben' : 'fijo_debo') : t);
   const esCredito = t === 'credito';
@@ -7269,7 +7327,7 @@ window.setTipo=t=>{
   document.getElementById('formStatusRow')?.classList.toggle('has-recordatorio', llevaRecordatorio);
   document.getElementById('rubroWrap')?.classList.toggle('visible', llevaRubro);
   document.getElementById('formDetailRow')?.classList.toggle('has-rubro', llevaRubro);
-  if(tipoBaseAnterior!==t){
+  if(tipoBaseAnterior!==t||eraProgramado){
     const activo=document.getElementById('fConfirmado');
     if(activo) activo.checked=!esCredito;
     const recordatorio=document.getElementById('fRecordatorio');
@@ -7285,6 +7343,7 @@ window.setTipo=t=>{
     cerrarConfigCredito();
   }
   actualizarResumenCredito();
+  actualizarFormularioProgramado();
 };
 
 window.setSubtipo = s => {
@@ -7313,6 +7372,7 @@ window.setMoneda=m=>{
   const trigger=document.getElementById('formCurrencyTrigger');
   if(trigger) trigger.textContent=({ARS:'$ ARS ▾',USD:'💵 USD Of. ▾',USD_TAR:'💳 USD Tarj. ▾'})[m]||'$ ARS ▾';
   closeFormCurrencyMenu();
+  if(modoProgramado) actualizarFormularioProgramado();
 };
 
 window.toggleFormCurrencyMenu=event=>{
@@ -7464,7 +7524,307 @@ window.actualizarPreviewCuotas = () => {
   actualizarResumenCredito();
 };
 
+function cerrarOpcionesTipo(){
+  document.querySelectorAll('.tipo-opciones-menu').forEach(menu=>{menu.hidden=true;});
+  document.querySelectorAll('.tipo-opciones-more').forEach(btn=>btn.setAttribute('aria-expanded','false'));
+}
+window.abrirOpcionesTipo=btn=>{
+  const menu=btn.nextElementSibling;
+  const abrir=menu.hidden;
+  cerrarOpcionesTipo();
+  menu.hidden=!abrir;
+  btn.setAttribute('aria-expanded',String(abrir));
+  if(abrir) menu.querySelector('button')?.focus();
+};
+document.addEventListener('click',event=>{if(!event.target.closest('.tipo-opciones')) cerrarOpcionesTipo();});
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape') return;
+  const boton=document.querySelector('.tipo-opciones-more[aria-expanded="true"]');
+  if(boton){ cerrarOpcionesTipo(); boton.focus(); }
+});
+
+window.elegirProgramado=modo=>{
+  const esCredito=modo==='credito_favor';
+  setTipo(modo==='gasto_recurrente'?'gasto':'ingreso');
+  modoProgramado=modo;
+  if(esCredito){
+    document.getElementById('btn-ing').classList.remove('active');
+    document.getElementById('btn-cred').classList.add('act-cred');
+  }
+  document.getElementById('fRecordatorio').checked=false;
+  document.getElementById('programadoRegistro').value='manual';
+  actualizarFormularioProgramado();
+};
+
+window.actualizarFormularioProgramado=()=>{
+  const el=id=>document.getElementById(id);
+  const activo=!!modoProgramado, esCredito=modoProgramado==='credito_favor';
+  const semanal=el('programadoFrecuencia').value==='semanal';
+  const nombre=esCredito?'Crédito a mi favor':modoProgramado==='gasto_recurrente'?'Gasto recurrente':'Ingreso recurrente';
+  ['programadoTitleWrap','programadoFields'].forEach(id=>{el(id).hidden=!activo;});
+  el('programadoPersonaWrap').hidden=!esCredito;
+  el('programadoCuotasWrap').hidden=!esCredito;
+  el('programadoDiaWrap').hidden=esCredito;
+  el('programadoRegistroWrap').hidden=esCredito;
+  el('programadoTitle').textContent=nombre;
+  el('fFechaLabel').textContent=activo?(esCredito?'Primer vencimiento':'Desde'):'Fecha';
+  el('labelMonto').textContent=esCredito?'Monto por cuota':'Monto';
+  el('btnGuardar').textContent=activo?(esCredito?'Guardar crédito':`Guardar ${nombre.toLowerCase()}`):'Guardar movimiento';
+  const check=el('fConfirmado');
+  check.disabled=activo;
+  if(activo) check.checked=false;
+  el('activoWrap').querySelector('.status-chip-text').textContent=activo?'Inactivo en saldo':'Activo en saldo';
+  el('programadoBalanceInfo').hidden=!esCredito;
+  if(!activo) return;
+  el('recordatorioWrap').hidden=true;
+  el('formStatusRow').classList.remove('has-recordatorio');
+  const dia=el('programadoDia');
+  if(dia.dataset.frecuencia!==String(semanal)){
+    const dias=semanal?['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']:Array.from({length:31},(_,i)=>i+1);
+    const orden=semanal?[1,2,3,4,5,6,0]:dias;
+    dia.replaceChildren(...orden.map(n=>new Option(semanal?dias[n]:n,n)));
+    const hoy=new Date((el('fFecha').value||toISODate(new Date()))+'T12:00:00');
+    dia.value=semanal?hoy.getDay():hoy.getDate();
+    dia.dataset.frecuencia=String(semanal);
+  }
+  el('programadoDiaLabel').textContent=semanal?'Día de la semana':'Día del mes';
+  const total=el('programadoBalanceInfo');
+  if(esCredito){
+    const monto=fMontoGetValue()*Number(el('programadoCuotas').value);
+    total.textContent=`Total a cobrar: ${monedaActual} ${Number.isFinite(monto)?monto.toLocaleString('es-AR'):0}`;
+  }
+};
+document.getElementById('fMonto').addEventListener('input',()=>{if(modoProgramado) actualizarFormularioProgramado();});
+
+function sumarDiasISO(fecha,dias){
+  const actual=new Date(fecha+'T12:00:00');
+  actual.setDate(actual.getDate()+dias);
+  return toISODate(actual);
+}
+
+function fechasReglaProgramada(regla,desde,hasta){
+  if(regla.cancelada||!regla.inicio) return [];
+  desde=desde<regla.inicio?regla.inicio:desde;
+  if(regla.corte&&regla.corte<=hasta) hasta=sumarDiasISO(regla.corte,-1);
+  if(desde>hasta) return [];
+  const fechas=[], omitidas=new Set(regla.omitidas||[]);
+  if(regla.frecuencia==='semanal'){
+    const dia=new Date(desde+'T12:00:00').getDay();
+    for(let fecha=sumarDiasISO(desde,(Number(regla.dia)-dia+7)%7);fecha<=hasta;fecha=sumarDiasISO(fecha,7)){
+      if(!omitidas.has(fecha)) fechas.push(fecha);
+    }
+  }else{
+    const [anio,mes]=desde.split('-').map(Number);
+    for(let offset=0;;offset++){
+      const mesActual=new Date(anio,mes-1+offset,1);
+      const fecha=getFechaPeriodoISO(mesActual.getFullYear(),mesActual.getMonth(),regla.dia);
+      if(fecha>hasta) break;
+      if(fecha>=desde&&!omitidas.has(fecha)) fechas.push(fecha);
+    }
+  }
+  return fechas;
+}
+
+function idOcurrencia(reglaId,fecha){ return `prog_${reglaId}_${fecha}`; }
+
+function datosProgramado(regla,fecha,monto=regla.monto,fechaReal=null){
+  const tipo=regla.clase==='credito'?'ingreso':regla.tipoMovimiento;
+  const fechaMov=fechaReal||fecha;
+  const periodo=getPeriodo(new Date(fechaMov+'T12:00:00'),tipo,null);
+  return {tipo,desc:regla.desc,monto,moneda:regla.moneda,rubro:regla.rubro,fecha:fechaMov,...periodo,
+    grupoId:regla.id,claseProgramada:regla.clase,vencimiento:fecha,
+    confirmado:!!fechaReal,recordatorio:false,timestamp:Date.now()};
+}
+
+function ocurrenciasProgramadas(desde,hasta,movimientos=data,reglas=reglasProgramadas){
+  const existentes=new Set(movimientos.filter(d=>d.claseProgramada==='recurrente').map(d=>idOcurrencia(d.grupoId,d.vencimiento)));
+  return reglas.filter(r=>r.clase==='recurrente').flatMap(regla=>fechasReglaProgramada(regla,desde,hasta).flatMap(fecha=>{
+    const id=idOcurrencia(regla.id,fecha);
+    return existentes.has(id)?[]:[{id,...datosProgramado(regla,fecha),programadoVirtual:true}];
+  }));
+}
+
+async function guardarProgramado(){
+  const el=id=>document.getElementById(id);
+  const clase=modoProgramado==='credito_favor'?'credito':'recurrente';
+  const desc=el('fDesc').value.trim(), monto=Math.round(fMontoGetValue()*100)/100, persona=el('programadoPersona').value.trim();
+  const cuotas=Number(el('programadoCuotas').value), frecuencia=el('programadoFrecuencia').value;
+  const inicio=el('fFecha').value||toISODate(new Date());
+  const dia=Number(el('programadoDia').value);
+  if(!desc||!Number.isFinite(monto)||monto<=0||!/^\d{4}-\d{2}-\d{2}$/.test(inicio)) return showToast('Completá descripción, fecha y un monto válido',true);
+  if(clase==='credito'&&(!persona||!Number.isInteger(cuotas)||cuotas<1||cuotas>120)) return showToast('Ingresá la persona y entre 1 y 120 cuotas',true);
+  if(!currentUser||visualTestMode) return showToast('Iniciá sesión para guardar',true);
+  const btn=el('btnGuardar');
+  if(btn.disabled) return;
+  btn.disabled=true; btn.textContent='Guardando…';
+  try{
+    const ref=doc(userCol('movimientos'));
+    const regla={tipo:'regla_programada',clase,tipoMovimiento:modoProgramado==='gasto_recurrente'?'gasto':'ingreso',
+      desc,monto,moneda:monedaActual,rubro:el('fRubro').value||'sin_rubro',persona,inicio,frecuencia,dia,
+      registro:clase==='credito'?'manual':el('programadoRegistro').value,revision:0,timestamp:Date.now()};
+    const batch=writeBatch(db);
+    batch.set(ref,regla);
+    if(clase==='credito'){
+      for(let i=0;i<cuotas;i++){
+        const vence=frecuencia==='semanal'?sumarDiasISO(inicio,7*i):addMonthsToISO(inicio,i);
+        batch.set(doc(userCol('movimientos')),{...datosProgramado({...regla,id:ref.id},vence),persona,cuotas,cuotaNum:i+1,montoTotal:monto*cuotas});
+      }
+    }
+    await batch.commit();
+    el('fDesc').value=''; el('fMonto').value=''; el('programadoPersona').value=''; el('programadoCuotas').value='1';
+    showToast(clase==='credito'?'✅ Crédito a favor guardado':'✅ Recurrente guardado');
+    goTab('resumen');
+  }catch(e){console.error(e);showToast('No se pudo guardar el movimiento programado',true);}
+  finally{btn.disabled=false;actualizarFormularioProgramado();}
+}
+
+function buscarMovimientoProgramado(id){
+  return (window._mesMov||[]).find(d=>d.id===id)||data.find(d=>d.id===id);
+}
+
+async function acreditarProgramado(mov,monto,fechaReal,usuario=currentUser?.uid){
+  const ref=doc(db,`usuarios/${usuario}/movimientos`,mov.id);
+  const grupoRef=doc(db,`usuarios/${usuario}/movimientos`,mov.grupoId);
+  const parcialRef=doc(collection(db,`usuarios/${usuario}/movimientos`));
+  return runTransaction(db,async transaction=>{
+    const [grupoSnap,movSnap]=await Promise.all([transaction.get(grupoRef),transaction.get(ref)]);
+    if(!grupoSnap.exists()) throw Error('El grupo ya no existe.');
+    const regla={id:mov.grupoId,...grupoSnap.data()};
+    if(regla.cancelada) throw Error('El grupo fue eliminado.');
+    const enCentavos=Math.round(monto*100);
+    if(mov.claseProgramada==='recurrente'){
+      const fecha=mov.vencimiento;
+      if(movSnap.exists()) return false;
+      if(!fechasReglaProgramada(regla,fecha,fecha).length) throw Error('Este movimiento fue eliminado.');
+      transaction.set(ref,datosProgramado(regla,fecha,monto,fechaReal));
+    }else{
+      if(!movSnap.exists()||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('Esta cuota fue eliminada.');
+      const actual=movSnap.data();
+      if(actual.confirmado) throw Error('Esta cuota ya fue cobrada.');
+      const pendiente=Math.round(actual.monto*100);
+      if(enCentavos>pendiente) throw Error('El importe supera lo que queda por cobrar.');
+      const periodo=getPeriodo(new Date(fechaReal+'T12:00:00'),'ingreso',null);
+      const cobro={...actual,...periodo,monto:enCentavos/100,fecha:fechaReal,confirmado:true,timestamp:Date.now()};
+      if(enCentavos===pendiente) transaction.set(ref,cobro);
+      else{
+        transaction.update(ref,{monto:(pendiente-enCentavos)/100});
+        transaction.set(parcialRef,{...cobro,pagoParcialProgramado:true});
+      }
+    }
+    transaction.update(grupoRef,{revision:Number(regla.revision||0)+1});
+    return true;
+  });
+}
+
+function abrirRegistroProgramado(mov){
+  if(!mov||mov.confirmado||document.getElementById('modalRegistroProgramado')) return;
+  const cobro=mov.tipo==='ingreso', hoy=toISODate(new Date());
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay'; overlay.id='modalRegistroProgramado';
+  overlay.innerHTML=`<form class="modal-box" role="dialog" aria-modal="true" aria-labelledby="registroProgramadoTitulo">
+    <div class="modal-title" id="registroProgramadoTitulo">${cobro?'Registrar cobro':'Registrar pago'}</div>
+    <p>${escapeMovSelectorHtml(mov.desc)} · Previsto para ${fmtFechaISOcorta(mov.vencimiento)}</p>
+    <div class="modal-group"><label for="registroProgramadoMonto">Monto (${escapeMovSelectorHtml(mov.moneda)})</label><input id="registroProgramadoMonto" type="text" inputmode="decimal" value="${formatMontoToolValue(mov.monto)}" oninput="formatMontoInput(this)"></div>
+    <div class="modal-group"><label for="registroProgramadoFecha">Fecha real</label><input id="registroProgramadoFecha" type="date" value="${hoy}" max="${hoy}" required></div>
+    <div class="modal-btns"><button type="button" class="modal-btn-cancel">Cancelar</button><button type="submit" class="modal-btn-ok">${cobro?'Cobrar':'Pagar'}</button></div>
+  </form>`;
+  document.body.appendChild(overlay);
+  overlay.querySelector('.modal-btn-cancel').onclick=()=>overlay.remove();
+  overlay.querySelector('form').onsubmit=async event=>{
+    event.preventDefault();
+    const monto=Math.round(parseMontoInput(overlay.querySelector('#registroProgramadoMonto'))*100)/100;
+    const fecha=overlay.querySelector('#registroProgramadoFecha').value;
+    const btn=overlay.querySelector('button[type="submit"]');
+    if(!Number.isFinite(monto)||monto<=0||!fecha||fecha>hoy) return showToast('Revisá el importe y la fecha real',true);
+    if(mov.claseProgramada==='credito'&&Math.round(monto*100)>Math.round(mov.monto*100)) return showToast('El importe supera el saldo de la cuota',true);
+    if(btn.disabled||!currentUser||visualTestMode) return;
+    btn.disabled=true;
+    try{
+      const creado=await acreditarProgramado(mov,monto,fecha);
+      overlay.remove();
+      showToast(creado?(cobro?'✅ Cobro registrado':'✅ Pago registrado'):'Este movimiento ya estaba confirmado');
+    }catch(e){showToast(e.message||'No se pudo guardar',true);btn.disabled=false;}
+  };
+  overlay.querySelector('#registroProgramadoMonto').select();
+}
+
+async function registrarRecurrentesVencidos(){
+  if(registroAutomaticoEnCurso||!currentUser||visualTestMode) return;
+  const usuario=currentUser.uid, hoy=toISODate(new Date());
+  const automaticas=reglasProgramadas.filter(r=>r.clase==='recurrente'&&r.registro==='automatico'&&!r.cancelada);
+  if(!automaticas.length) return;
+  const inicio=automaticas.map(r=>r.inicio).sort()[0];
+  const vencidos=ocurrenciasProgramadas(inicio,hoy,data,automaticas);
+  if(!vencidos.length) return;
+  registroAutomaticoEnCurso=true;
+  let completado=false;
+  try{
+    for(const mov of vencidos.slice(0,25)){
+      if(currentUser?.uid!==usuario) return;
+      await acreditarProgramado(mov,mov.monto,mov.vencimiento,usuario);
+    }
+    completado=true;
+  }catch(e){console.warn('Recurrentes pendientes de registrar:',e);}
+  finally{
+    registroAutomaticoEnCurso=false;
+    if(completado&&vencidos.length>25&&currentUser?.uid===usuario) setTimeout(registrarRecurrentesVencidos,1000);
+  }
+}
+window.addEventListener('focus',registrarRecurrentesVencidos);
+
+function perteneceABorradoProgramado(doc,seleccion,modo){
+  if(modo==='todas') return true;
+  const clave=seleccion.claseProgramada==='credito'?'cuotaNum':'vencimiento';
+  return modo==='adelante'?doc[clave]>=seleccion[clave]:doc[clave]===seleccion[clave];
+}
+
+function movimientosVigentes(movimientos,reglas){
+  const porId=new Map(reglas.map(r=>[r.id,r]));
+  return movimientos.filter(mov=>{
+    if(mov.tipo==='regla_programada') return false;
+    if(!mov.claseProgramada) return true;
+    const grupo=porId.get(mov.grupoId);
+    if(!grupo) return true;
+    if(grupo.cancelada) return false;
+    if(grupo.clase==='recurrente') return (!grupo.corte||mov.vencimiento<grupo.corte)&&!(grupo.omitidas||[]).includes(mov.vencimiento);
+    return (!grupo.corteCuota||mov.cuotaNum<grupo.corteCuota)&&!(grupo.cuotasOmitidas||[]).includes(mov.cuotaNum);
+  });
+}
+
+async function borrarGrupoProgramado(mov,modo){
+  const grupoRef=userDoc('movimientos',mov.grupoId);
+  const grupoSnap=await getDocFromServer(grupoRef);
+  if(!grupoSnap.exists()) throw Error('El grupo ya no existe.');
+  const regla=grupoSnap.data();
+  const snap=await getDocsFromServer(query(userCol('movimientos'),where('grupoId','==',mov.grupoId)));
+  const seleccion=snap.docs.filter(d=>perteneceABorradoProgramado(d.data(),mov,modo));
+  const confirmados=movimientosVigentes(seleccion.map(d=>d.data()),[{id:mov.grupoId,...regla}]).filter(d=>d.confirmado).length;
+  if(confirmados&&!confirm(`Se eliminarán ${confirmados} movimientos ya confirmados y cambiará el saldo. ¿Continuar?`)) return false;
+  const requiereVariosLotes=seleccion.length>499;
+  await runTransaction(db,async tx=>{
+    const actual=await tx.get(grupoRef);
+    if(!actual.exists()||actual.data().revision!==regla.revision) throw Error('El grupo cambió. Volvé a abrir el borrado.');
+    const cambios={revision:Number(regla.revision||0)+1};
+    if(modo==='todas') cambios.cancelada=true;
+    if(regla.clase==='recurrente'&&modo==='adelante') cambios.corte=regla.corte&&regla.corte<mov.vencimiento?regla.corte:mov.vencimiento;
+    if(regla.clase==='recurrente'&&modo==='sola') cambios.omitidas=[...new Set([...(regla.omitidas||[]),mov.vencimiento])];
+    if(regla.clase==='credito'&&modo==='adelante') cambios.corteCuota=Math.min(regla.corteCuota||Infinity,mov.cuotaNum);
+    if(regla.clase==='credito'&&modo==='sola') cambios.cuotasOmitidas=[...new Set([...(regla.cuotasOmitidas||[]),mov.cuotaNum])];
+    tx.update(grupoRef,cambios);
+    if(!requiereVariosLotes) seleccion.forEach(d=>tx.delete(d.ref));
+  });
+  if(requiereVariosLotes){
+    for(let i=0;i<seleccion.length;i+=450){
+      const batch=writeBatch(db);
+      seleccion.slice(i,i+450).forEach(d=>batch.delete(d.ref));
+      await batch.commit();
+    }
+  }
+  return true;
+}
+
 window.guardar=async()=>{
+  if(modoProgramado) return guardarProgramado();
   const desc=document.getElementById('fDesc').value.trim();
   const montoRaw = fMontoGetValue();
   const rubro = document.getElementById('fRubro')?.value || 'otros';
@@ -7570,6 +7930,8 @@ window.guardar=async()=>{
   btn.disabled=false;btn.textContent='Guardar movimiento';
 };
 window.toggleConfirmar= id => {
+  const programado=buscarMovimientoProgramado(id);
+  if(programado?.claseProgramada) return abrirRegistroProgramado(programado);
   // 1. Actualizar UI al instante
   const btn = document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
   if(btn){
@@ -7633,6 +7995,12 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
     if(eliminar){ eliminar.label='Eliminar reserva'; eliminar.accion=()=>borrarReserva(reserva?.reservaId); }
   }
   if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
+  const programado=buscarMovimientoProgramado(id);
+  if(programado?.claseProgramada){
+    acciones=acciones.filter(({clase})=>clase==='select'||clase==='edit'||clase==='del2');
+    const editar=acciones.find(({clase})=>clase==='edit');
+    if(editar&&!programado.confirmado) editar.label=programado.tipo==='ingreso'?'Registrar cobro':'Registrar pago';
+  }
   acciones.forEach(({clase,icono,label,accion})=>{
     const btn=document.createElement('button');
     btn.type='button';
@@ -7688,18 +8056,19 @@ window.borrar = id => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
   const tieneGrupo = !!mov.grupoId;
+  const esRecurrente = mov.claseProgramada==='recurrente';
   const ov = document.createElement('div');
   ov.className = 'modal-overlay';
   if(tieneGrupo){
     ov.innerHTML = `
       <div class="modal-box" style="text-align:center">
         <div style="font-size:28px;margin-bottom:8px">🗑</div>
-        <div class="modal-title" style="margin-bottom:6px">Borrar cuota</div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:20px">${mov.desc}</div>
+        <div class="modal-title" style="margin-bottom:6px">${esRecurrente?'Borrar movimiento recurrente':'Borrar cuota'}</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:20px">${escapeMovSelectorHtml(mov.desc)}</div>
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px">
-          <button onclick="borrarConfirmar('${id}','sola')" style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Solo esta cuota</button>
-          <button onclick="borrarConfirmar('${id}','adelante')" style="padding:13px;border-radius:12px;border:1.5px solid #ff8c00;background:rgba(255,140,0,.07);color:#ff8c00;font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Esta y las siguientes</button>
-          <button onclick="borrarConfirmar('${id}','todas')" style="padding:13px;border-radius:12px;border:1.5px solid var(--red);background:rgba(255,77,109,.07);color:var(--red);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">Todas las cuotas</button>
+          <button onclick="borrarConfirmar('${id}','sola')" style="padding:13px;border-radius:12px;border:1.5px solid var(--border);background:rgba(243,236,255,.5);color:var(--text);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${esRecurrente?'Solo este movimiento':'Solo esta cuota'}</button>
+          <button onclick="borrarConfirmar('${id}','adelante')" style="padding:13px;border-radius:12px;border:1.5px solid #ff8c00;background:rgba(255,140,0,.07);color:#ff8c00;font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${esRecurrente?'Este y los siguientes':'Esta y las siguientes'}</button>
+          <button onclick="borrarConfirmar('${id}','todas')" style="padding:13px;border-radius:12px;border:1.5px solid var(--red);background:rgba(255,77,109,.07);color:var(--red);font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">${esRecurrente?'Toda la serie':'Todas las cuotas'}</button>
         </div>
         <button class="modal-btn-cancel" onclick="this.closest('.modal-overlay').remove()" style="width:100%">Cancelar</button>
       </div>`;
@@ -7723,7 +8092,9 @@ window.borrarConfirmar = async (id, modo) => {
   const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
   if(!mov) return;
   try{
-    if(modo === 'sola' || !mov.grupoId){
+    if(mov.claseProgramada){
+      if(!await borrarGrupoProgramado(mov,modo)) return;
+    }else if(modo === 'sola' || !mov.grupoId){
       if(mov.esPagoTarjeta) await borrarPagoRelacionadoDeMovimiento(mov);
       await deleteDoc(userDoc('movimientos', id));
     } else {
@@ -7741,7 +8112,7 @@ window.borrarConfirmar = async (id, modo) => {
     }
     showToast('✅ Borrado!');
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
-  }catch(e){ console.error(e); showToast('❌ Error al borrar',true); }
+  }catch(e){ console.error(e); showToast(mov.claseProgramada?e.message:'❌ Error al borrar',true); }
 };
 window.toggleMes=key=>document.getElementById('mescard-'+key).classList.toggle('open');
 window.toggleSemana=id=>{ const el=document.getElementById('semgroup-'+id); if(el) el.classList.toggle('open'); };
@@ -8030,13 +8401,187 @@ function renderProximosMovimientos(mesMov){
   let items=pendientes.filter(d=>new Date(d.fecha+'T12:00:00')>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
   if(!items.length) items=pendientes.sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
   if(!items.length){ el.innerHTML='<div class="dashboard-empty">Sin próximos movimientos.</div>'; return; }
-  el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${d.desc}</strong><small>${d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
+  el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(d.desc)}</strong><small>${d.claseProgramada==='credito'?'Crédito a mi favor':d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
+}
+
+function renderCreditosFavor(){
+  const el=document.getElementById('creditosFavorResumen');
+  const grupos=new Map();
+  for(const mov of data.filter(d=>d.claseProgramada==='credito'&&!d.pagoParcialProgramado)){
+    if(!grupos.has(mov.grupoId)) grupos.set(mov.grupoId,[]);
+    grupos.get(mov.grupoId).push(mov);
+  }
+  const filas=[...grupos.values()].flatMap(cuotas=>{
+    const pendientes=cuotas.filter(c=>!c.confirmado).sort((a,b)=>a.cuotaNum-b.cuotaNum);
+    const proxima=pendientes[0];
+    if(!proxima) return [];
+    const saldo=pendientes.reduce((s,c)=>s+toARS(c.monto,c.moneda),0);
+    const pagas=cuotas.length-pendientes.length;
+    return [`<button type="button" class="upcoming-row" title="Registrar próximo cobro" onclick="editarMov('${proxima.id}')"><span class="upcoming-icon">↓</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(proxima.desc)}</strong><small>${escapeMovSelectorHtml(proxima.persona)} · ${pagas} de ${cuotas.length} cuotas cobradas</small></span><span class="upcoming-date">${fmtFechaISOcorta(proxima.vencimiento)}</span><strong class="upcoming-amount pos">${fmtARS(saldo)}</strong></button>`];
+  });
+  el.hidden=!filas.length;
+  el.innerHTML=filas.length?`<h4>Créditos a favor · Saldo pendiente</h4>${filas.join('')}`:'';
 }
 
 function fechaISOReserva(d){
   const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
   return `${y}-${m}-${day}`;
 }
+
+function estimarSemanasParaReserva(movimientos=data,reglas=reglasProgramadas,hoy=toISODate(new Date())){
+  const grupos=[];
+  for(let offset=0;offset<3;offset++){
+    const {mes,anio}=shiftPeriodoMes(mesVista,anioVista,offset);
+    for(const s of getSemanas(mes,anio)){
+      grupos.push({mes,anio,num:s.num,desde:toISODate(s.desde),hasta:toISODate(s.hasta),
+        label:s.label,proyectado:0,confirmado:0,egresosPendientes:0,entradasReservadas:0,tarjetasPendientes:0});
+    }
+  }
+  if(!grupos.length) return [];
+  const periodos=new Map(grupos.map(g=>[`${g.anio}-${g.mes}-${g.num}`,g]));
+  const proyectados=ocurrenciasProgramadas(grupos[0].desde,grupos.at(-1).hasta,movimientos,reglas);
+  const comprasTarjeta=new Map(),pagosVinculados=new Map();
+  for(const d of [...movimientos,...proyectados]){
+    const periodo=d.fecha?getPeriodo(new Date(d.fecha+'T12:00:00'),d.tipo,d.tarjetaId||null):d;
+    const monto=toARS(Number(d.monto)||0,d.moneda);
+    if(d.tipo==='tarjeta'){
+      const key=getPagosKey(d.tarjetaId,periodo.mes,periodo.anio);
+      comprasTarjeta.set(key,(comprasTarjeta.get(key)||0)+monto);
+      continue;
+    }
+    if(d.esPagoTarjeta&&d.tarjetaId&&Number.isInteger(d.pagoPeriodoMes)&&Number.isInteger(d.pagoPeriodoAnio)){
+      const key=getPagosKey(d.tarjetaId,d.pagoPeriodoMes,d.pagoPeriodoAnio);
+      pagosVinculados.set(key,(pagosVinculados.get(key)||0)+monto);
+    }
+    const g=periodos.get(`${periodo.anio}-${periodo.mes}-${periodo.semana}`);
+    if(!g) continue;
+    if(d.tipo==='reserva_entrada'){g.entradasReservadas+=monto;g.proyectado+=monto;continue;}
+    if(d.tipo==='reserva_salida'){g.confirmado-=monto;g.proyectado-=monto;continue;}
+    if(!['ingreso','gasto','credito'].includes(d.tipo)) continue;
+    const ingreso=d.tipo==='ingreso';
+    const importe=ingreso?monto:-monto;
+    g.proyectado+=importe;
+    if(d.confirmado&&(!d.fecha||d.fecha<=hoy)) g.confirmado+=importe;
+    else if(!ingreso) g.egresosPendientes+=monto;
+  }
+  for(let offset=0;offset<3;offset++){
+    const {mes,anio}=shiftPeriodoMes(mesVista,anioVista,offset);
+    const semanas=grupos.filter(g=>g.mes===mes&&g.anio===anio);
+    if(!semanas.length) continue;
+    for(const tarjeta of tarjetas){
+      const key=getPagosKey(tarjeta.id,mes,anio);
+      const pagos=pagosData[key]?.reduce((s,p)=>s+Number(p.monto||0),0)||0;
+      const deuda=Math.max(0,(comprasTarjeta.get(key)||0)-Math.max(pagos,pagosVinculados.get(key)||0));
+      const fecha=getDiaDelMesDentroDelPeriodo(tarjeta.diaPago||tarjeta.diaCorte||27,new Date(semanas[0].desde+'T12:00:00'),new Date(semanas.at(-1).hasta+'T12:00:00'));
+      const g=fecha&&semanas.find(s=>s.desde<=fecha&&fecha<=s.hasta);
+      if(g){g.tarjetasPendientes+=deuda;g.proyectado-=deuda;}
+    }
+  }
+  const hasta=grupos.filter(g=>g.mes===mesVista&&g.anio===anioVista).at(-1)?.hasta;
+  const limite=hasta?sumarDiasISO(hasta,28):grupos.at(-1).hasta;
+  return grupos.filter(g=>g.desde<=limite).map(g=>({...g,
+    disponible:Math.max(0,Math.floor(g.confirmado-g.egresosPendientes-g.tarjetasPendientes)),
+    faltante:Math.max(0,-Math.floor(g.proyectado))}));
+}
+
+function planificarReservasSemanales(grupos){
+  const saldos=[], planes=[];
+  for(const destino of grupos){
+    let faltante=destino.faltante;
+    const aportes=[];
+    for(const origen of saldos){
+      if(faltante<=0) break;
+      const monto=Math.min(origen.disponible,faltante);
+      if(monto<=0) continue;
+      aportes.push({origen:origen.grupo,monto});
+      origen.disponible-=monto;
+      faltante-=monto;
+    }
+    if(destino.faltante>0) planes.push({destino,aportes,faltante,total:destino.faltante-faltante});
+    if(destino.disponible>0) saldos.push({grupo:destino,disponible:destino.disponible});
+  }
+  const fondosLibres=saldos.reduce((s,f)=>s+f.disponible,0);
+  const faltantesSinCubrir=planes.reduce((s,p)=>s+p.faltante,0);
+  return {planes,ahorro:Math.max(0,fondosLibres-faltantesSinCubrir)};
+}
+
+function etiquetaSemanaPlan(g){ return `${g.label} · ${fmtFechaISOcorta(g.desde)}–${fmtFechaISOcorta(g.hasta)}`; }
+
+function renderReservaSugerida(){
+  const panel=document.getElementById('weeklyPlanPanel');
+  const body=document.getElementById('weeklyPlanBody');
+  const {planes,ahorro}=planificarReservasSemanales(estimarSemanasParaReserva());
+  panel.hidden=false;
+  const plan=planes.find(p=>p.destino.desde===reservaSugeridaDestino)||planes.find(p=>p.total>0)||planes[0];
+  if(plan) reservaSugeridaDestino=plan.destino.desde;
+  const selector=planes.length?`<div class="form-group"><label for="weeklyPlanDestination">Semana a cubrir</label><select id="weeklyPlanDestination" onchange="elegirSemanaReserva(this.value)">${planes.map(p=>`<option value="${p.destino.desde}" ${p===plan?'selected':''}>${etiquetaSemanaPlan(p.destino)}</option>`).join('')}</select></div>`:'';
+  body.innerHTML=`${selector}<div class="weekly-plan-grid">
+    <div>Reservar<strong>${fmtARS(plan?.total||0)}</strong></div><div>Ahorro sugerido hoy<strong>${fmtARS(ahorro)}</strong></div>
+    </div><div class="weekly-plan-details">${plan?`${plan.aportes.map(a=>`<div>${etiquetaSemanaPlan(a.origen)} → ${plan.destino.label} · ${fmtARS(a.monto)}</div>`).join('')}<div>Faltante después de la reserva: <b>${fmtARS(plan.faltante)}</b></div>`:'Sin faltantes proyectados en las semanas analizadas.'}</div>
+    ${plan?.total?`<button type="button" class="btn-submit weekly-plan-action" onclick="aplicarReservaSugerida()" ${reservaSugeridaEnCurso?'disabled':''}>${reservaSugeridaEnCurso?'Aplicando…':'Aplicar reserva'}</button>`:''}`;
+}
+
+window.elegirSemanaReserva=desde=>{reservaSugeridaDestino=desde;renderReservaSugerida();};
+
+function documentosReserva(origen,destino,monto,desc){
+  const salida=doc(userCol('movimientos')),entrada=doc(userCol('movimientos'));
+  const base={reservaId:`reserva_${salida.id}`,desc,monto,moneda:'ARS',confirmado:true,timestamp:Date.now(),esReserva:true};
+  return [
+    {ref:salida,dato:{...base,tipo:'reserva_salida',fecha:origen.desde,mes:origen.mes,anio:origen.anio,semana:origen.num}},
+    {ref:entrada,dato:{...base,tipo:'reserva_entrada',fecha:destino.desde,mes:destino.mes,anio:destino.anio,semana:destino.num}}
+  ];
+}
+
+function revisionReservas(ref){ return ref.exists()?Number(ref.data().revision||0):0; }
+
+async function modificarReservas(escribir,revisionEsperada){
+  const control=userDoc('config','reservas_revision');
+  return runTransaction(db,async tx=>{
+    const version=revisionReservas(await tx.get(control));
+    if(revisionEsperada!==undefined&&version!==revisionEsperada) throw Error('El saldo reservado cambió. Revisá la sugerencia actualizada.');
+    escribir(tx);
+    tx.set(control,{revision:version+1});
+  });
+}
+
+function registrarCambioReserva(batch){
+  batch.set(userDoc('config','reservas_revision'),{revision:increment(1)},{merge:true});
+}
+
+function firmaPlanReserva(plan){
+  return JSON.stringify(plan?.aportes.map(a=>[a.origen.desde,a.monto])||[]);
+}
+
+window.aplicarReservaSugerida=async()=>{
+  if(reservaSugeridaEnCurso||!currentUser||visualTestMode) return;
+  const mostrado=planificarReservasSemanales(estimarSemanasParaReserva()).planes.find(p=>p.destino.desde===reservaSugeridaDestino);
+  if(!mostrado?.total) return;
+  const usuario=currentUser.uid;
+  reservaSugeridaEnCurso=true;
+  renderReservaSugerida();
+  try{
+    const revision=revisionReservas(await getDocFromServer(userDoc('config','reservas_revision')));
+    const snap=await getDocsFromServer(userCol('movimientos'));
+    if(currentUser?.uid!==usuario) return;
+    const filas=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const reglas=filas.filter(d=>d.tipo==='regla_programada');
+    const movimientos=movimientosVigentes(filas,reglas);
+    const nuevo=planificarReservasSemanales(estimarSemanasParaReserva(movimientos,reglas)).planes.find(p=>p.destino.desde===mostrado.destino.desde);
+    if(!nuevo?.total||firmaPlanReserva(nuevo)!==firmaPlanReserva(mostrado)){
+      data=movimientos; reglasProgramadas=reglas; renderResumen();
+      throw Error('El saldo cambió. Revisá la sugerencia actualizada.');
+    }
+    const documentos=nuevo.aportes.flatMap(a=>documentosReserva(a.origen,nuevo.destino,a.monto,`Reserva para ${nuevo.destino.label}`));
+    await modificarReservas(tx=>documentos.forEach(d=>tx.set(d.ref,d.dato)),revision);
+    if(currentUser?.uid===usuario){
+      const presentes=new Set(data.map(d=>d.id));
+      data.push(...documentos.filter(d=>!presentes.has(d.ref.id)).map(d=>({id:d.ref.id,...d.dato})));
+      renderResumen();
+      showToast(`✅ ${fmtARS(nuevo.total)} reservados para ${nuevo.destino.label}`);
+    }
+  }catch(e){showToast(e.message||'No se pudo aplicar la reserva',true);}
+  finally{reservaSugeridaEnCurso=false;renderReservaSugerida();}
+};
 
 window.cerrarBalanceMore=()=>{
   const menu=document.getElementById('balanceMoreMenu'), btn=document.getElementById('balanceMoreBtn');
@@ -8186,6 +8731,7 @@ window.guardarEdicionReserva=async()=>{
   const btn=ov.querySelector('.modal-btn-ok'); btn.disabled=true; btn.textContent='Guardando...';
   try{
     const batch=writeBatch(db), editadoEn=Date.now();
+    registrarCambioReserva(batch);
     ov._reservaDocs.forEach(d=>{
       const cambios={desc,monto,editadoEn};
       if(d.tipo==='reserva_entrada') Object.assign(cambios,{fecha:fechaDestino,mes:periodoDestino.mes,anio:periodoDestino.anio,semana:periodoDestino.semana});
@@ -8202,17 +8748,18 @@ window.guardarReserva=async()=>{
   const fechaDestino=document.getElementById('reservaFecha').value;
   if(!monto||monto<=0||!fechaDestino) return showToast('Ingresá un monto y una fecha válidos',true);
   if(monto>ov._saldoOrigen) return showToast('La reserva supera el saldo disponible de esa semana',true);
-  const origen=ov._reservaOrigen, reservaId=`reserva_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+  const origen=ov._reservaOrigen;
   const destinoDate=new Date(fechaDestino+'T12:00:00');
   const destino=getPeriodo(destinoDate,'ingreso',null);
   if(destino.mes===mesVista&&destino.anio===anioVista&&Number(destino.semana)===Number(origen.id)) return showToast('Elegí una fecha de una semana posterior',true);
   if(destinoDate<=new Date(origen.desde)) return showToast('La fecha de destino debe ser posterior a la semana de origen',true);
   const btn=ov.querySelector('.modal-btn-ok'); btn.disabled=true; btn.textContent='Guardando...';
   try{
-    const batch=writeBatch(db), salidaRef=doc(userCol('movimientos')), entradaRef=doc(userCol('movimientos'));
-    const base={reservaId,desc,monto,moneda:'ARS',confirmado:true,timestamp:Date.now(),esReserva:true};
-    batch.set(salidaRef,{...base,tipo:'reserva_salida',fecha:fechaISOReserva(origen.desde),mes:mesVista,anio:anioVista,semana:Number(origen.id)});
-    batch.set(entradaRef,{...base,tipo:'reserva_entrada',fecha:fechaDestino,mes:destino.mes,anio:destino.anio,semana:destino.semana});
+    const batch=writeBatch(db);
+    const documentos=documentosReserva({desde:fechaISOReserva(origen.desde),mes:mesVista,anio:anioVista,num:Number(origen.id)},
+      {desde:fechaDestino,mes:destino.mes,anio:destino.anio,num:destino.semana},monto,desc);
+    documentos.forEach(d=>batch.set(d.ref,d.dato));
+    registrarCambioReserva(batch);
     await batch.commit(); cerrarModal(); showToast(`✅ ${fmtARS(monto)} disponibles el ${destinoDate.toLocaleDateString('es-AR')}`);
   }catch(e){ console.error(e); btn.disabled=false; btn.textContent='Crear reserva'; showToast('❌ No se pudo crear la reserva',true); }
 };
@@ -8221,7 +8768,10 @@ window.borrarReserva=async reservaId=>{
   if(!confirm('¿Eliminar esta reserva? Se quitará tanto del origen como del destino.')) return;
   try{
     const snap=await getDocs(query(userCol('movimientos'),where('reservaId','==',reservaId)));
-    const batch=writeBatch(db); snap.docs.forEach(d=>batch.delete(d.ref)); await batch.commit();
+    const batch=writeBatch(db);
+    snap.docs.forEach(d=>batch.delete(d.ref));
+    registrarCambioReserva(batch);
+    await batch.commit();
     showToast('✅ Reserva eliminada');
   }catch(e){ console.error(e); showToast('❌ No se pudo eliminar la reserva',true); }
 };
@@ -8232,7 +8782,9 @@ function renderResumen(){
   document.getElementById('mesActualLabel').textContent=MESES[mesVista]+' '+anioVista;
   // Filtrar movimientos: si tienen fecha, recalcular período desde la fecha y diaCorte actual
   // Así si cambia diaCorte, los movimientos se reasignan automáticamente
-  const mesMov = data.filter(d => {
+  const semanasResumen=getSemanas(mesVista,anioVista);
+  const programados=semanasResumen.length?ocurrenciasProgramadas(toISODate(semanasResumen[0].desde),toISODate(semanasResumen.at(-1).hasta)):[];
+  const mesMov = [...data,...programados].filter(d => {
     if(d.fecha){
       const f = new Date(d.fecha+'T12:00:00');
       const p = getPeriodo(f, d.tipo, d.tarjetaId||null);
@@ -8282,6 +8834,7 @@ function renderResumen(){
   renderDistribucionRubros(mesMov);
   renderMovimientosSemana(mesMov);
   renderProximosMovimientos(mesMov);
+  renderCreditosFavor();
   // re-render paneles si están abiertos
   if(panelIngOpen) renderMovPanel('ing');
   if(panelGasOpen) renderMovPanel('gas');
@@ -8387,14 +8940,15 @@ function renderResumen(){
     const balanceSelectId=escapeMovSelectorHtml(String(d.id));
     const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const usdTag=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
-    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')"></button>`:'';
+    const etiquetaConfirmacion=d.claseProgramada?(d.confirmado?'Confirmado':d.tipo==='ingreso'?'Registrar cobro':'Registrar pago'):'Activo en saldo';
+    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button type="button" aria-label="${etiquetaConfirmacion}" title="${etiquetaConfirmacion}" class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')" ${d.claseProgramada&&d.confirmado?'disabled':''}></button>`:'';
     const cuotaTag=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif;font-weight:700">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const _fmtFecha = f => { if(!f) return ''; const p=f.split('-'); return p[2]+'/'+p[1]; };
     const _fechaLabel = d.fecha ? ' · '+_fmtFecha(d.fecha) : '';
     const _rubroLabel = d.tipo==='ingreso'||d.esPagoTarjeta ? '' : ` · ${getRubro(d.rubro||'sin_rubro').label}`;
     return `<div class="mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}" ${movContextMenuAttrs(d.id)}>
       <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
-      <div class="balance-mov-copy"><div class="mov-nombre">${d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
+      <div class="balance-mov-copy"><div class="mov-nombre">${d.claseProgramada?escapeMovSelectorHtml(d.desc):d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.claseProgramada==='credito'?`💳 Crédito a mi favor${d.persona?' · '+escapeMovSelectorHtml(d.persona):''}${d.pagoParcialProgramado?' · Cobro parcial':''}`:d.claseProgramada==='recurrente'?(d.tipo==='ingreso'?'↻ Ingreso recurrente':'↻ Gasto recurrente'):d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
       <div class="mov-actions-trigger">
         ${confirmBtn}
         <div class="mov-monto ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'-'}${fmtARS(toARS(d.monto,d.moneda))}</div>
@@ -8420,6 +8974,7 @@ function renderResumen(){
   }
 
   window._balanceGrupos=grupos;
+  renderReservaSugerida();
   const panel=container.closest('.weekly-dashboard-panel');
   const picker=document.getElementById('balanceWeekPicker');
   document.querySelectorAll('.balance-view-btn').forEach(btn=>{
@@ -10912,7 +11467,9 @@ window.cfCerrarPopup = () => {
 // ── NAVEGACIÓN CON TECLADO EN EL FORMULARIO ──────────────────────────────
 function formGetCampos(){
   // Orden de campos navegables (solo los visibles)
-  const candidatos = ['fDesc','fMonto','fCuotas','dpTextInput'];
+  const candidatos = modoProgramado==='credito_favor'
+    ? ['fDesc','programadoPersona','fMonto','programadoCuotas','dpTextInput']
+    : ['fDesc','fMonto','fCuotas','dpTextInput'];
   return candidatos.filter(id => {
     const el = document.getElementById(id);
     if(!el) return false;
@@ -10942,6 +11499,8 @@ function formNavegar(desde, dir){
 function formBindNav(){
   const reglas = {
     'fDesc':      { enter: 1, left: -1, right: 1, up: -1, down: 1 },
+    'programadoPersona': { enter: 1, left: -1, right: 1, up: -1, down: 1 },
+    'programadoCuotas': { enter: 1, left: null, right: null, up: null, down: null },
     'fMonto':     { enter: 1, left: -1, right: 1, up: -1, down: 1 },
     'fCuotas':    { enter: 1, left: -1, right: 1, up: null, down: null }, // up/down libres en cuotas
     'dpTextInput':{ enter: null, left: -1, right: 1, up: -1, down: 1 },  // enter ya parsea fecha
