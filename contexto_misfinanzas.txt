@@ -1,0 +1,117 @@
+MISFINANZAS — CONTEXTO PARA RETOMAR EN OTRA PC
+Actualizado el 23/11/2026 (Argentina)
+
+REPOSITORIO Y WEB
+
+- GitHub: https://github.com/benjaminsuarez002-design/Misfinanzas
+- Rama de trabajo y publicación: main.
+- Web: https://misfinanzas.uk/app
+- Último cambio de esta tarea: 82c09339e5563c46029dface80f056f4f61886e7
+  «Agregar créditos a favor, recurrentes y reservas semanales».
+- Se subió a GitHub y se publicó en Cloudflare Workers, proyecto misfinanzas.
+  La versión verificada de Cloudflare es 8044e0ae-472e-4aaf-a69f-663a6ebd7a39.
+  Se comprobó que /app servía el HTML del commit y que /, /theme-config.js,
+  /admin, /autorizar y /reset seguían respondiendo correctamente.
+- Esta carpeta, Misfinanzas-main, es una copia local previa sin Git. Contiene
+  este TXT y puede tener diferencias con lo publicado. Para continuar, clonar
+  GitHub o actualizar un clon existente. En esta PC el clon usado para editar
+  y publicar está en Documents\Misfinanzas-repo.
+- En la otra PC, desde la carpeta donde se quiera crear el clon:
+    git clone https://github.com/benjaminsuarez002-design/Misfinanzas.git
+    cd Misfinanzas
+  Si ya existe el clon, revisar primero git status y después actualizar main
+  con git pull --ff-only. No copiar el app.html de la carpeta vieja por encima
+  del clon: revisar diferencias antes de portar cualquier cambio local.
+
+QUÉ QUEDÓ FUNCIONANDO
+
+1. Créditos a favor
+   En Cargar, los tres puntitos de Crédito ofrecen Crédito personal, Tarjeta y
+   A mi favor. Para una venta en cuotas se cargan descripción, persona, importe
+   por cuota, cantidad, primer vencimiento y frecuencia mensual o semanal.
+   Ejemplo: moto 110, 10 cuotas de $160.000, total de $1.600.000.
+   Las cuotas arrancan inactivas. Desde el Resumen se abre Registrar cobro con
+   importe y fecha real. Se puede registrar un cobro parcial: lo cobrado entra
+   al saldo en su fecha real y queda visible el resto pendiente de la cuota.
+   Vencimiento y fecha real se conservan por separado. En Próximos movimientos
+   también se muestran los créditos con cuotas pendientes y su saldo.
+
+2. Ingresos y gastos recurrentes
+   Abrir los tres puntitos de Ingreso o Gasto. Mensual usa el día del mes;
+   semanal muestra de lunes a domingo. En meses cortos, un día como el 31 se
+   ajusta al último día de ese mes y conserva el 31 como día de la regla.
+   Confirmar cada vez es la opción inicial. Hasta confirmar, se muestra como
+   previsto sin computarse en Saldo; figura en la proyección mensual.
+   También se puede elegir registro al abrir la app. En ese modo, al entrar o
+   retomar una sesión con conexión, se registran los vencidos. Es un flujo
+   del navegador, no un proceso programado que corra con la app cerrada.
+
+3. Borrado por grupo
+   Créditos a favor y recurrentes tienen un grupoId, como las cuotas de Tarjeta
+   y Crédito personal. El menú permite borrar solo esa ocurrencia o cuota,
+   esa y las siguientes, o todo el grupo. Para una cuota 3 de 6, «Esta y las
+   siguientes» conserva las dos primeras. En recurrentes, borrar una fecha
+   la omite permanentemente y borrar desde una fecha corta la regla, para que
+   las ocurrencias futuras no reaparezcan. Se avisa antes de borrar registros
+   ya confirmados, porque también cambia el saldo. En créditos, el alcance se
+   calcula por número de cuota; un alcance que alcanza una cuota incluye sus
+   cobros parciales asociados. En recurrentes se usa la fecha prevista.
+
+4. Sugerencia de reserva y ahorro
+   Debajo de Balance por semana está «Cuánto conviene apartar». Proyecta los
+   faltantes, incluye las semanas siguientes aunque crucen de mes, y sugiere
+   cuánto apartar de semanas anteriores. Para aportar usa fondos confirmados,
+   después de descontar compromisos y reservas existentes. Una cuota pendiente
+   puede influir en la proyección, pero no aporta fondos confirmados.
+   Con $35.000 libres en semana 1, $30.000 en semana 2 y un faltante de $50.000
+   en semana 3, propone $35.000 + $15.000 para la semana 3 y $15.000 de ahorro
+   sugerido. Si hay $400 frente a un faltante de $99.000, propone $400 y muestra
+   que quedan $98.600 por cubrir. Aplicar reserva guarda todos los aportes en
+   una sola operación. Cada aporte usa la misma lógica de Mover saldo: salida
+   negativa del origen y entrada positiva al destino, sin sumarlas a ingresos
+   ni gastos. El ahorro mostrado es una sugerencia; el ahorro acumulado y su
+   apartado quedan para una etapa posterior.
+
+5. Ajuste anterior de pagos de tarjeta
+   Registrar pago, en Tarjetas del mes, resuelve operaciones al presionar
+   Enter o salir del campo. 45.04*1555 y 45,04*1555 dan $70.037,20.
+   Este ajuste está publicado desde el commit 9ce5238. Otras modificaciones
+   locales anteriores de Tarjetas (orden manual, popup de nuevo movimiento y
+   tratamiento específico del punto del teclado numérico) no deben darse por
+   publicadas: esos manejadores no aparecen en app.html en 82c0933.
+
+MAPA TÉCNICO
+
+- app.html contiene el formulario Cargar, Resumen, cálculos, estilos y acceso
+  a Firebase. No hace falta cambiar el APK para publicar estos ajustes web.
+- Forma de almacenamiento: usuarios/{uid}/movimientos. Las reglas se marcan
+  con tipo regla_programada y se excluyen de las filas que suman dinero. Las
+  ocurrencias pendientes de recurrentes se proyectan a partir de la regla;
+  al confirmarse se materializan con un ID estable de grupo y vencimiento.
+- Puntos de entrada: elegirProgramado, guardarProgramado,
+  fechasReglaProgramada, acreditarProgramado, borrarGrupoProgramado,
+  renderResumen, renderCreditosFavor y suscribirMovimientos.
+- Para reservas: estimarSemanasParaReserva, planificarReservasSemanales,
+  aplicarReservaSugerida, documentosReserva y guardarReserva. Los pares
+  reserva_salida / reserva_entrada se vinculan con reservaId. El control
+  config/reservas_revision protege contra una sugerencia que quedó desactualizada
+  por otro movimiento de reserva en medio de la aplicación.
+- Validación realizada con datos simulados: 10 cuotas, fin de mes, cambio de
+  frecuencia, cobro parcial, fecha real, borrado por alcance, omisión de fechas,
+  reserva desde dos semanas, aplicación duplicada y totales sin cambios.
+  También pasaron el análisis de sintaxis y git diff --check. Se verificó el
+  HTML de producción; no se registraron cobros ni reservas en cuentas reales
+  durante las pruebas.
+
+PUBLICACIÓN DESDE OTRA PC
+
+- Desde el clon de GitHub, con Node.js instalado:
+    npm ci --prefix voice-capture-worker
+  Wrangler se instala desde el lockfile del repositorio.
+- Una vez autorizado el despliegue, autenticar Wrangler con la cuenta que
+  administra el Worker de Misfinanzas y ejecutar desde la raíz del clon:
+    .\deploy-cloudflare.ps1
+- Ese script prepara .deploy-static con la lista de archivos públicos y usa
+  wrangler.direct.jsonc para publicar el Worker misfinanzas. Verificar después
+  el commit de GitHub y el HTML que devuelve https://misfinanzas.uk/app.
+  No copiar credenciales ni configuraciones personales a este documento.
