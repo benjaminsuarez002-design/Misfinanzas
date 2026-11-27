@@ -377,6 +377,7 @@
   .programado-fields[hidden],.tipo-opciones-menu[hidden],.weekly-plan[hidden] { display:none; }
   .programado-title { background:var(--card2); color:var(--accent); padding:10px; border-radius:10px; font-weight:800; margin-bottom:12px; }
   .programado-grid,.weekly-plan-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+  .programado-grid:has(#programadoCuotasWrap[hidden]) { grid-template-columns:minmax(0,1fr); }
   .weekly-plan-body { padding:12px; display:grid; gap:10px; }
   .weekly-plan-body select { width:100%; max-width:100%; }
   .weekly-plan-grid>div { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:9px; }
@@ -2804,11 +2805,9 @@
 
       <div class="programado-fields" id="programadoFields" hidden>
         <div class="programado-grid">
-          <div class="form-group"><label for="programadoFrecuencia">Frecuencia</label><select id="programadoFrecuencia" onchange="actualizarFormularioProgramado()"><option value="mensual">Mensual</option><option value="semanal">Semanal</option></select></div>
+          <div class="form-group"><label for="programadoFrecuencia">Frecuencia</label><select id="programadoFrecuencia"><option value="mensual">Mensual</option><option value="semanal">Semanal</option></select></div>
           <div class="form-group" id="programadoCuotasWrap"><label for="programadoCuotas">Cantidad de cuotas</label><input id="programadoCuotas" type="number" min="1" max="120" value="1" oninput="actualizarFormularioProgramado()"></div>
-          <div class="form-group" id="programadoDiaWrap"><label for="programadoDia" id="programadoDiaLabel">Día del mes</label><select id="programadoDia" onchange="actualizarFormularioProgramado()"></select></div>
         </div>
-        <div class="form-group" id="programadoRegistroWrap"><label for="programadoRegistro">Registro</label><select id="programadoRegistro"><option value="manual">Confirmar cada vez</option><option value="automatico">Registrar al abrir la app, desde la fecha prevista</option></select></div>
       </div>
       <div class="credit-config-summary" id="creditConfigSummary">
         <span class="credit-config-summary-icon">💳</span>
@@ -2832,7 +2831,7 @@
           <select id="fRubro"></select>
         </div>
         <div class="form-group form-date-group" id="fechaWrap">
-          <label id="fFechaLabel">Fecha</label>
+          <label id="fFechaLabel" for="dpTextInput">Fecha</label>
           <div class="date-picker-wrap" id="dpWrap">
             <div class="date-picker-display" id="dpDisplay" style="padding:0;overflow:hidden;">
               <input id="dpTextInput" type="text" placeholder="Ej: 5/6 o 5-6-25" autocomplete="off"
@@ -3049,7 +3048,7 @@ const RUBRO_ICON_OPTIONS = ['🛒','🏠','🚗','🚌','🍽️','🍎','💡',
 
 let currentUser = null;
 let data = [], pagosData = {}, pagosListeners = {}, movListener = null, tarjetas = [];
-let reglasProgramadas = [], modoProgramado = '', registroAutomaticoEnCurso = false;
+let reglasProgramadas = [], modoProgramado = '';
 let reservaSugeridaDestino = '', reservaSugeridaEnCurso = false;
 let fijoData = [], fijoListener = null, fijoPagosData = {}, fijoPagosListeners = {};
 let appCacheHydrated = false;
@@ -5970,7 +5969,6 @@ function suscribirMovimientos(){
     if(!snap.metadata.fromCache) guardarAppCacheLocal();
     document.getElementById('loadingOverlay').classList.add('hidden');
     setSyncStatus('ok'); renderResumen(); if(notifListener) renderNotifPanel();
-    if(!snap.metadata.fromCache) registrarRecurrentesVencidos();
     if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
   },err=>{
@@ -6136,7 +6134,7 @@ window.confirmarDuplicar = async (mesD, anioD) => {
 window.editarMov = id => {
   const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
-  if(mov.claseProgramada&&!mov.confirmado) return abrirRegistroProgramado(mov);
+  if(mov.claseProgramada==='credito'&&!mov.confirmado) return abrirRegistroProgramado(mov);
   const fechaVal = mov.fecha || '';
   const recVal = mov.recordatorio ? 'checked' : '';
   const overlay = document.createElement('div');
@@ -6146,7 +6144,7 @@ window.editarMov = id => {
       <div class="modal-title">✏️ Editar movimiento</div>
       <div class="modal-group">
         <label>Descripción</label>
-        <input id="editDesc" type="text" value="${mov.desc}">
+        <input id="editDesc" type="text" value="${escapeMovSelectorHtml(mov.desc)}">
       </div>
       <div class="modal-group">
         <label>Monto</label>
@@ -6181,11 +6179,13 @@ window.editarMov = id => {
       </div>
       <div class="modal-btns" style="margin-bottom:10px">
         <button class="modal-btn-cancel" onclick="cerrarModal()">Cancelar</button>
-        <button class="modal-btn-ok" onclick="guardarEdicion('${id}')">Guardar</button>
+        <button class="modal-btn-ok">Guardar</button>
       </div>
       <button onclick="cerrarModal();compartirGasto('${id}')" style="width:100%;padding:12px;border-radius:12px;border:1.5px solid #ff8c00;background:rgba(255,140,0,.07);color:#ff8c00;font-family:'Arial Black',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🤝 Compartir gasto</button>
     </div>`;
   document.body.appendChild(overlay);
+  const original={...mov};
+  overlay.querySelector('.modal-btn-ok').onclick=()=>guardarEdicion(id,original,overlay);
   dpModInit('edit', fechaVal);
 };
 window.cerrarModal = () => {
@@ -6216,15 +6216,22 @@ async function actualizarMovimientoYRubrosDeCuotas(id,mov,actualizacion,rubro){
   await batch.commit();
   return Math.max(cuotasSnap.size,1);
 }
-window.guardarEdicion = async id => {
+window.guardarEdicion = async (id,movActual,overlay) => {
   const desc  = document.getElementById('editDesc').value.trim();
-  const movActual = buscarMovimientoProgramado(id);
   const monto = movActual?.claseProgramada==='credito'?movActual.monto:parseMontoInput(document.getElementById('editMonto'));
   const fecha = document.getElementById('editFecha').value || null;
   const recordatorio = !!document.getElementById('editRecordatorio')?.checked;
   const rubro = document.getElementById('editRubro')?.value || null;
   console.log('guardando recordatorio:', recordatorio, 'checkbox:', document.getElementById('editRecordatorio'));
-  if(!desc || isNaN(monto)){ showToast('⚠️ Datos inválidos',true); return; }
+  const esRecurrente=movActual.claseProgramada==='recurrente'&&!!movActual.grupoId;
+  if(!desc || isNaN(monto) || (esRecurrente&&(!Number.isFinite(monto)||monto<=0||!fecha))){ showToast('⚠️ Datos inválidos',true); return; }
+  if(esRecurrente){
+    const campos={desc,monto,recordatorio,...(rubro?{rubro}:{})};
+    const cambios=Object.fromEntries(Object.entries(campos).filter(([campo,valor])=>valor!==movActual[campo]&&!(campo==='recordatorio'&&!valor&&!movActual[campo])));
+    const nuevaFecha=fecha===movActual.fecha?null:fecha;
+    if(!Object.keys(cambios).length&&!nuevaFecha) return overlay.remove();
+    return elegirAlcanceEdicionRecurrente(movActual,cambios,nuevaFecha,overlay);
+  }
   // Capturar todo ANTES de cerrar el modal
   cerrarModal();
   try{
@@ -6239,6 +6246,41 @@ window.guardarEdicion = async id => {
     showToast(cuotasActualizadas>1?`✅ Editado y rubro aplicado a ${cuotasActualizadas} cuotas!`:'✅ Editado!');
   }catch(e){ showToast('❌ Error al editar',true); }
 };
+
+function elegirAlcanceEdicionRecurrente(mov,cambios,fecha,editor){
+  const overlay=document.createElement('div');
+  overlay.className='modal-overlay';
+  overlay.innerHTML=`<div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="alcanceEdicionTitulo">
+    <div class="modal-title" id="alcanceEdicionTitulo">¿Qué movimientos querés editar?</div>
+    ${fecha?'<p>El cambio de fecha se aplica solo al movimiento elegido.</p>':''}
+    <div style="display:grid;gap:10px;margin-bottom:16px">
+      <button type="button" class="modal-btn-ok" data-alcance="sola">Solo este movimiento</button>
+      <button type="button" class="modal-btn-ok" data-alcance="adelante">Este y los siguientes</button>
+      <button type="button" class="modal-btn-ok" data-alcance="todas">Toda la serie</button>
+    </div>
+    <button type="button" class="modal-btn-cancel" style="width:100%">Volver</button>
+  </div>`;
+  document.body.appendChild(overlay);
+  const botones=[...overlay.querySelectorAll('button')];
+  overlay.querySelector('.modal-btn-cancel').onclick=()=>overlay.remove();
+  overlay.querySelectorAll('[data-alcance]').forEach(btn=>{
+    btn.disabled=btn.dataset.alcance!=='sola'&&!Object.keys(cambios).length;
+    btn.onclick=async()=>{
+      const deshabilitados=botones.map(b=>b.disabled);
+      botones.forEach(b=>{b.disabled=true;});
+      try{
+        await guardarEdicionRecurrente(mov,cambios,fecha,btn.dataset.alcance);
+        overlay.remove();
+        editor.remove();
+        showToast('✅ Cambios guardados');
+      }catch(e){
+        showToast(e.message||'No se pudo guardar la edición',true);
+        botones.forEach((b,i)=>{b.disabled=deshabilitados[i];});
+      }
+    };
+  });
+  overlay.querySelector('[data-alcance="sola"]').focus();
+}
 
 // ══════════════════════════════════════════════════════════════════════════
 // MÓDULOS GENERALES — Fecha · Monto · Calendario
@@ -7552,20 +7594,16 @@ window.elegirProgramado=modo=>{
     document.getElementById('btn-cred').classList.add('act-cred');
   }
   document.getElementById('fRecordatorio').checked=false;
-  document.getElementById('programadoRegistro').value='manual';
   actualizarFormularioProgramado();
 };
 
 window.actualizarFormularioProgramado=()=>{
   const el=id=>document.getElementById(id);
   const activo=!!modoProgramado, esCredito=modoProgramado==='credito_favor';
-  const semanal=el('programadoFrecuencia').value==='semanal';
   const nombre=esCredito?'Crédito a mi favor':modoProgramado==='gasto_recurrente'?'Gasto recurrente':'Ingreso recurrente';
   ['programadoTitleWrap','programadoFields'].forEach(id=>{el(id).hidden=!activo;});
   el('programadoPersonaWrap').hidden=!esCredito;
   el('programadoCuotasWrap').hidden=!esCredito;
-  el('programadoDiaWrap').hidden=esCredito;
-  el('programadoRegistroWrap').hidden=esCredito;
   el('programadoTitle').textContent=nombre;
   el('fFechaLabel').textContent=activo?(esCredito?'Primer vencimiento':'Desde'):'Fecha';
   el('labelMonto').textContent=esCredito?'Monto por cuota':'Monto';
@@ -7578,16 +7616,6 @@ window.actualizarFormularioProgramado=()=>{
   if(!activo) return;
   el('recordatorioWrap').hidden=true;
   el('formStatusRow').classList.remove('has-recordatorio');
-  const dia=el('programadoDia');
-  if(dia.dataset.frecuencia!==String(semanal)){
-    const dias=semanal?['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']:Array.from({length:31},(_,i)=>i+1);
-    const orden=semanal?[1,2,3,4,5,6,0]:dias;
-    dia.replaceChildren(...orden.map(n=>new Option(semanal?dias[n]:n,n)));
-    const hoy=new Date((el('fFecha').value||toISODate(new Date()))+'T12:00:00');
-    dia.value=semanal?hoy.getDay():hoy.getDate();
-    dia.dataset.frecuencia=String(semanal);
-  }
-  el('programadoDiaLabel').textContent=semanal?'Día de la semana':'Día del mes';
   const total=el('programadoBalanceInfo');
   if(esCredito){
     const monto=fMontoGetValue()*Number(el('programadoCuotas').value);
@@ -7627,20 +7655,24 @@ function fechasReglaProgramada(regla,desde,hasta){
 
 function idOcurrencia(reglaId,fecha){ return `prog_${reglaId}_${fecha}`; }
 
-function datosProgramado(regla,fecha,monto=regla.monto,fechaReal=null){
+function datosProgramado(regla,fecha,monto,fechaReal=null){
+  const vigentes={...regla};
+  for(const edicion of regla.edicionesDesde||[]){
+    if(fecha>=edicion.desde) Object.assign(vigentes,edicion.cambios);
+  }
   const tipo=regla.clase==='credito'?'ingreso':regla.tipoMovimiento;
   const fechaMov=fechaReal||fecha;
   const periodo=getPeriodo(new Date(fechaMov+'T12:00:00'),tipo,null);
-  return {tipo,desc:regla.desc,monto,moneda:regla.moneda,rubro:regla.rubro,fecha:fechaMov,...periodo,
+  return {tipo,desc:vigentes.desc,monto:monto??vigentes.monto,moneda:regla.moneda,rubro:vigentes.rubro,fecha:fechaMov,...periodo,
     grupoId:regla.id,claseProgramada:regla.clase,vencimiento:fecha,
-    confirmado:!!fechaReal,recordatorio:false,timestamp:Date.now()};
+    confirmado:!!fechaReal,recordatorio:!!vigentes.recordatorio,timestamp:Date.now()};
 }
 
 function ocurrenciasProgramadas(desde,hasta,movimientos=data,reglas=reglasProgramadas){
   const existentes=new Set(movimientos.filter(d=>d.claseProgramada==='recurrente').map(d=>idOcurrencia(d.grupoId,d.vencimiento)));
   return reglas.filter(r=>r.clase==='recurrente').flatMap(regla=>fechasReglaProgramada(regla,desde,hasta).flatMap(fecha=>{
     const id=idOcurrencia(regla.id,fecha);
-    return existentes.has(id)?[]:[{id,...datosProgramado(regla,fecha),programadoVirtual:true}];
+    return existentes.has(id)?[]:[{id,...datosProgramado(regla,fecha)}];
   }));
 }
 
@@ -7649,9 +7681,10 @@ async function guardarProgramado(){
   const clase=modoProgramado==='credito_favor'?'credito':'recurrente';
   const desc=el('fDesc').value.trim(), monto=Math.round(fMontoGetValue()*100)/100, persona=el('programadoPersona').value.trim();
   const cuotas=Number(el('programadoCuotas').value), frecuencia=el('programadoFrecuencia').value;
-  const inicio=el('fFecha').value||toISODate(new Date());
-  const dia=Number(el('programadoDia').value);
-  if(!desc||!Number.isFinite(monto)||monto<=0||!/^\d{4}-\d{2}-\d{2}$/.test(inicio)) return showToast('Completá descripción, fecha y un monto válido',true);
+  const inicio=el('fFecha').value||(clase==='credito'?toISODate(new Date()):'');
+  const fechaInicio=new Date(inicio+'T12:00:00');
+  if(!desc||!Number.isFinite(monto)||monto<=0||!/^\d{4}-\d{2}-\d{2}$/.test(inicio)||Number.isNaN(fechaInicio.getTime())||toISODate(fechaInicio)!==inicio) return showToast('Completá descripción, fecha y un monto válido',true);
+  const dia=frecuencia==='semanal'?fechaInicio.getDay():fechaInicio.getDate();
   if(clase==='credito'&&(!persona||!Number.isInteger(cuotas)||cuotas<1||cuotas>120)) return showToast('Ingresá la persona y entre 1 y 120 cuotas',true);
   if(!currentUser||visualTestMode) return showToast('Iniciá sesión para guardar',true);
   const btn=el('btnGuardar');
@@ -7661,7 +7694,7 @@ async function guardarProgramado(){
     const ref=doc(userCol('movimientos'));
     const regla={tipo:'regla_programada',clase,tipoMovimiento:modoProgramado==='gasto_recurrente'?'gasto':'ingreso',
       desc,monto,moneda:monedaActual,rubro:el('fRubro').value||'sin_rubro',persona,inicio,frecuencia,dia,
-      registro:clase==='credito'?'manual':el('programadoRegistro').value,revision:0,timestamp:Date.now()};
+      revision:0,timestamp:Date.now()};
     const batch=writeBatch(db);
     batch.set(ref,regla);
     if(clase==='credito'){
@@ -7669,10 +7702,19 @@ async function guardarProgramado(){
         const vence=frecuencia==='semanal'?sumarDiasISO(inicio,7*i):addMonthsToISO(inicio,i);
         batch.set(doc(userCol('movimientos')),{...datosProgramado({...regla,id:ref.id},vence),persona,cuotas,cuotaNum:i+1,montoTotal:monto*cuotas});
       }
+    }else{
+      batch.set(userDoc('movimientos',idOcurrencia(ref.id,inicio)),datosProgramado({...regla,id:ref.id},inicio));
     }
     await batch.commit();
     el('fDesc').value=''; el('fMonto').value=''; el('programadoPersona').value=''; el('programadoCuotas').value='1';
     showToast(clase==='credito'?'✅ Crédito a favor guardado':'✅ Recurrente guardado');
+    const {mes,anio,semana}=getPeriodo(fechaInicio,regla.tipoMovimiento,null);
+    if(mesVista!==mes||anioVista!==anio){
+      mesVista=mes; anioVista=anio;
+      suscribirPagosMesActual();
+    }
+    semanaDashboardVista=null;
+    balanceSemanaVista=String(semana);
     goTab('resumen');
   }catch(e){console.error(e);showToast('No se pudo guardar el movimiento programado',true);}
   finally{btn.disabled=false;actualizarFormularioProgramado();}
@@ -7680,6 +7722,63 @@ async function guardarProgramado(){
 
 function buscarMovimientoProgramado(id){
   return (window._mesMov||[]).find(d=>d.id===id)||data.find(d=>d.id===id);
+}
+
+async function guardarOcurrenciaProgramada(mov,cambios){
+  if(!currentUser||visualTestMode) throw Error('Iniciá sesión para guardar');
+  const ref=userDoc('movimientos',mov.id);
+  const grupoRef=userDoc('movimientos',mov.grupoId);
+  await runTransaction(db,async tx=>{
+    const [grupoSnap,movSnap]=await Promise.all([tx.get(grupoRef),tx.get(ref)]);
+    if(!grupoSnap.exists()) throw Error('El grupo ya no existe.');
+    const regla={...grupoSnap.data(),id:mov.grupoId};
+    if(regla.cancelada) throw Error('El grupo fue eliminado.');
+    if(mov.claseProgramada==='credito'){
+      if(!movSnap.exists()||movSnap.data().pagoParcialProgramado||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('La cuota no está disponible.');
+    }else if(!fechasReglaProgramada(regla,mov.vencimiento,mov.vencimiento).length){
+      throw Error('Este movimiento fue eliminado.');
+    }
+    if(movSnap.exists()) tx.update(ref,cambios);
+    else tx.set(ref,{...datosProgramado(regla,mov.vencimiento),...cambios});
+    tx.update(grupoRef,{revision:Number(regla.revision||0)+1});
+  });
+}
+
+async function guardarEdicionRecurrente(mov,cambios,fecha,alcance){
+  const fechaEditada=fecha?{fecha,...getPeriodo(new Date(fecha+'T12:00:00'),mov.tipo,null)}:{};
+  if(alcance==='sola') return guardarOcurrenciaProgramada(mov,{...cambios,...fechaEditada});
+  if(!currentUser||visualTestMode) throw Error('Iniciá sesión para guardar');
+  const grupoRef=userDoc('movimientos',mov.grupoId);
+  const movRef=userDoc('movimientos',mov.id);
+  const grupoSnap=await getDocFromServer(grupoRef);
+  if(!grupoSnap.exists()) throw Error('El grupo ya no existe.');
+  const regla={...grupoSnap.data(),id:mov.grupoId};
+  if(!fechasReglaProgramada(regla,mov.vencimiento,mov.vencimiento).length) throw Error('Este movimiento fue eliminado.');
+
+  const snap=await getDocsFromServer(query(userCol('movimientos'),where('grupoId','==',mov.grupoId)));
+  const afectados=snap.docs.filter(docSnap=>{
+    const d=docSnap.data();
+    return d.claseProgramada==='recurrente'&&perteneceAlAlcanceProgramado(d,mov,alcance)&&
+      fechasReglaProgramada(regla,d.vencimiento,d.vencimiento).length;
+  });
+  const crearConFecha=fecha&&!afectados.some(d=>d.id===mov.id);
+  if(afectados.length+(crearConFecha?1:0)>499) throw Error('El grupo es demasiado grande para guardar todos los cambios juntos.');
+
+  const edicionesDesde=(regla.edicionesDesde||[]).flatMap(edicion=>{
+    if(alcance==='adelante'&&edicion.desde<mov.vencimiento) return [edicion];
+    const restantes=Object.fromEntries(Object.entries(edicion.cambios).filter(([campo])=>!Object.hasOwn(cambios,campo)));
+    return Object.keys(restantes).length?[{...edicion,cambios:restantes}]:[];
+  });
+  if(alcance==='adelante') edicionesDesde.push({desde:mov.vencimiento,cambios});
+  const cambiosRegla={...(alcance==='todas'?cambios:{}),edicionesDesde,revision:Number(regla.revision||0)+1};
+
+  await runTransaction(db,async tx=>{
+    const actual=await tx.get(grupoRef);
+    if(!actual.exists()||actual.data().revision!==regla.revision) throw Error('La serie cambió. Volvé a abrir la edición.');
+    tx.update(grupoRef,cambiosRegla);
+    afectados.forEach(d=>tx.update(d.ref,d.id===mov.id?{...cambios,...fechaEditada}:cambios));
+    if(crearConFecha) tx.set(movRef,{...datosProgramado({...regla,...cambiosRegla},mov.vencimiento),...fechaEditada});
+  });
 }
 
 async function acreditarProgramado(mov,monto,fechaReal,usuario=currentUser?.uid){
@@ -7692,24 +7791,18 @@ async function acreditarProgramado(mov,monto,fechaReal,usuario=currentUser?.uid)
     const regla={id:mov.grupoId,...grupoSnap.data()};
     if(regla.cancelada) throw Error('El grupo fue eliminado.');
     const enCentavos=Math.round(monto*100);
-    if(mov.claseProgramada==='recurrente'){
-      const fecha=mov.vencimiento;
-      if(movSnap.exists()) return false;
-      if(!fechasReglaProgramada(regla,fecha,fecha).length) throw Error('Este movimiento fue eliminado.');
-      transaction.set(ref,datosProgramado(regla,fecha,monto,fechaReal));
+    if(!movSnap.exists()||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('Esta cuota fue eliminada.');
+    const actual=movSnap.data();
+    if(actual.confirmado) throw Error('Esta cuota ya fue cobrada.');
+    const pendiente=Math.round(actual.monto*100);
+    if(enCentavos>pendiente) throw Error('El importe supera lo que queda por cobrar.');
+    const periodo=getPeriodo(new Date(fechaReal+'T12:00:00'),'ingreso',null);
+    const cobro={...actual,...periodo,monto:enCentavos/100,fecha:fechaReal,confirmado:true,timestamp:Date.now()};
+    if(enCentavos===pendiente){
+      transaction.set(ref,cobro);
     }else{
-      if(!movSnap.exists()||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('Esta cuota fue eliminada.');
-      const actual=movSnap.data();
-      if(actual.confirmado) throw Error('Esta cuota ya fue cobrada.');
-      const pendiente=Math.round(actual.monto*100);
-      if(enCentavos>pendiente) throw Error('El importe supera lo que queda por cobrar.');
-      const periodo=getPeriodo(new Date(fechaReal+'T12:00:00'),'ingreso',null);
-      const cobro={...actual,...periodo,monto:enCentavos/100,fecha:fechaReal,confirmado:true,timestamp:Date.now()};
-      if(enCentavos===pendiente) transaction.set(ref,cobro);
-      else{
-        transaction.update(ref,{monto:(pendiente-enCentavos)/100});
-        transaction.set(parcialRef,{...cobro,pagoParcialProgramado:true});
-      }
+      transaction.update(ref,{monto:(pendiente-enCentavos)/100});
+      transaction.set(parcialRef,{...cobro,pagoParcialProgramado:true});
     }
     transaction.update(grupoRef,{revision:Number(regla.revision||0)+1});
     return true;
@@ -7748,31 +7841,7 @@ function abrirRegistroProgramado(mov){
   overlay.querySelector('#registroProgramadoMonto').select();
 }
 
-async function registrarRecurrentesVencidos(){
-  if(registroAutomaticoEnCurso||!currentUser||visualTestMode) return;
-  const usuario=currentUser.uid, hoy=toISODate(new Date());
-  const automaticas=reglasProgramadas.filter(r=>r.clase==='recurrente'&&r.registro==='automatico'&&!r.cancelada);
-  if(!automaticas.length) return;
-  const inicio=automaticas.map(r=>r.inicio).sort()[0];
-  const vencidos=ocurrenciasProgramadas(inicio,hoy,data,automaticas);
-  if(!vencidos.length) return;
-  registroAutomaticoEnCurso=true;
-  let completado=false;
-  try{
-    for(const mov of vencidos.slice(0,25)){
-      if(currentUser?.uid!==usuario) return;
-      await acreditarProgramado(mov,mov.monto,mov.vencimiento,usuario);
-    }
-    completado=true;
-  }catch(e){console.warn('Recurrentes pendientes de registrar:',e);}
-  finally{
-    registroAutomaticoEnCurso=false;
-    if(completado&&vencidos.length>25&&currentUser?.uid===usuario) setTimeout(registrarRecurrentesVencidos,1000);
-  }
-}
-window.addEventListener('focus',registrarRecurrentesVencidos);
-
-function perteneceABorradoProgramado(doc,seleccion,modo){
+function perteneceAlAlcanceProgramado(doc,seleccion,modo){
   if(modo==='todas') return true;
   const clave=seleccion.claseProgramada==='credito'?'cuotaNum':'vencimiento';
   return modo==='adelante'?doc[clave]>=seleccion[clave]:doc[clave]===seleccion[clave];
@@ -7797,7 +7866,7 @@ async function borrarGrupoProgramado(mov,modo){
   if(!grupoSnap.exists()) throw Error('El grupo ya no existe.');
   const regla=grupoSnap.data();
   const snap=await getDocsFromServer(query(userCol('movimientos'),where('grupoId','==',mov.grupoId)));
-  const seleccion=snap.docs.filter(d=>perteneceABorradoProgramado(d.data(),mov,modo));
+  const seleccion=snap.docs.filter(d=>perteneceAlAlcanceProgramado(d.data(),mov,modo));
   const confirmados=movimientosVigentes(seleccion.map(d=>d.data()),[{id:mov.grupoId,...regla}]).filter(d=>d.confirmado).length;
   if(confirmados&&!confirm(`Se eliminarán ${confirmados} movimientos ya confirmados y cambiará el saldo. ¿Continuar?`)) return false;
   const requiereVariosLotes=seleccion.length>499;
@@ -7929,9 +7998,19 @@ window.guardar=async()=>{
   }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
   btn.disabled=false;btn.textContent='Guardar movimiento';
 };
-window.toggleConfirmar= id => {
+window.toggleConfirmar= async id => {
   const programado=buscarMovimientoProgramado(id);
-  if(programado?.claseProgramada) return abrirRegistroProgramado(programado);
+  if(programado?.claseProgramada){
+    if(programado.pagoParcialProgramado) return;
+    const btn=document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
+    if(btn?.disabled) return;
+    if(btn) btn.disabled=true;
+    try{
+      await guardarOcurrenciaProgramada(programado,{confirmado:!programado.confirmado});
+    }catch(e){showToast(e.message||'No se pudo actualizar el saldo',true);}
+    finally{if(btn) btn.disabled=false;}
+    return;
+  }
   // 1. Actualizar UI al instante
   const btn = document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
   if(btn){
@@ -7996,10 +8075,10 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
   }
   if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
   const programado=buscarMovimientoProgramado(id);
-  if(programado?.claseProgramada){
+  if(programado?.claseProgramada==='credito'){
     acciones=acciones.filter(({clase})=>clase==='select'||clase==='edit'||clase==='del2');
     const editar=acciones.find(({clase})=>clase==='edit');
-    if(editar&&!programado.confirmado) editar.label=programado.tipo==='ingreso'?'Registrar cobro':'Registrar pago';
+    if(editar&&!programado.confirmado) editar.label='Registrar cobro';
   }
   acciones.forEach(({clase,icono,label,accion})=>{
     const btn=document.createElement('button');
@@ -8940,15 +9019,14 @@ function renderResumen(){
     const balanceSelectId=escapeMovSelectorHtml(String(d.id));
     const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const usdTag=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
-    const etiquetaConfirmacion=d.claseProgramada?(d.confirmado?'Confirmado':d.tipo==='ingreso'?'Registrar cobro':'Registrar pago'):'Activo en saldo';
-    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button type="button" aria-label="${etiquetaConfirmacion}" title="${etiquetaConfirmacion}" class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')" ${d.claseProgramada&&d.confirmado?'disabled':''}></button>`:'';
+    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button type="button" aria-label="Activo en saldo" title="Activo en saldo" class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')" ${d.pagoParcialProgramado?'disabled':''}></button>`:'';
     const cuotaTag=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif;font-weight:700">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const _fmtFecha = f => { if(!f) return ''; const p=f.split('-'); return p[2]+'/'+p[1]; };
     const _fechaLabel = d.fecha ? ' · '+_fmtFecha(d.fecha) : '';
     const _rubroLabel = d.tipo==='ingreso'||d.esPagoTarjeta ? '' : ` · ${getRubro(d.rubro||'sin_rubro').label}`;
     return `<div class="mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}" ${movContextMenuAttrs(d.id)}>
       <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
-      <div class="balance-mov-copy"><div class="mov-nombre">${d.claseProgramada?escapeMovSelectorHtml(d.desc):d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.claseProgramada==='credito'?`💳 Crédito a mi favor${d.persona?' · '+escapeMovSelectorHtml(d.persona):''}${d.pagoParcialProgramado?' · Cobro parcial':''}`:d.claseProgramada==='recurrente'?(d.tipo==='ingreso'?'↻ Ingreso recurrente':'↻ Gasto recurrente'):d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
+      <div class="balance-mov-copy"><div class="mov-nombre">${d.claseProgramada?escapeMovSelectorHtml(d.desc):d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.claseProgramada==='credito'?`💳 Crédito a mi favor${d.persona?' · '+escapeMovSelectorHtml(d.persona):''}${d.pagoParcialProgramado?' · Cobro parcial':''}`:d.claseProgramada==='recurrente'?(d.tipo==='ingreso'?'↻ Ingreso recurrente':'🔴 Gasto recurrente'):d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
       <div class="mov-actions-trigger">
         ${confirmBtn}
         <div class="mov-monto ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'-'}${fmtARS(toARS(d.monto,d.moneda))}</div>
@@ -10359,7 +10437,7 @@ window.compartirGasto = async id => {
   ov.innerHTML = `
     <div class="modal-box">
       <div class="modal-title" style="margin-bottom:16px">🤝 Compartir gasto</div>
-      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${mov.desc}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${escapeMovSelectorHtml(mov.desc)}</div>
       <div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:10px">-${fmtARS(montoUnitARS)}</div>
 
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap">
