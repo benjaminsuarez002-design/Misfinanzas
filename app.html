@@ -976,6 +976,17 @@
   .modal-group label { display: block; font-size: 11px; color: var(--muted); font-family: Arial Black,sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
   .modal-group input { width: 100%; background: rgba(243,236,255,.5); border: 1.5px solid var(--border); border-radius: 12px; padding: 14px 16px; color: var(--text); font-size: 16px; font-family: Arial,sans-serif; outline: none; transition: border-color .2s, box-shadow .2s; }
   .modal-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(108,140,255,.15); }
+  .modal-box.division-modal { max-width: 480px; }
+  .division-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); align-items: end; gap: 12px; }
+  .division-fields input[type=text] { height: 46px; padding: 0 12px; }
+  .division-fields .date-picker-display input { width: 0; height: 43px; }
+  @media (max-width: 420px) {
+    .modal-box.division-modal { padding-inline: 14px; }
+    .division-fields { gap: 8px; }
+    .division-fields input[type=text] { padding-inline: 8px; }
+    .division-fields .date-picker-display input { padding-inline: 6px; font-size: 14px; }
+    .division-fields .date-picker-display .dp-icon { min-width: 30px; }
+  }
   .modal-btns { display: flex; gap: 10px; margin-top: 22px; }
   .modal-btn-cancel { flex: 1; padding: 13px; border-radius: 12px; border: 1.5px solid var(--border); background: none; color: var(--muted); font-family: Arial Black,sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: border-color .2s; }
   .modal-btn-cancel:hover { border-color: var(--red); color: var(--red); }
@@ -2010,9 +2021,9 @@
   .balance-selection-summary { display:inline-flex; align-items:center; gap:6px; min-height:30px; margin-right:auto; padding:5px 9px; border:1px solid color-mix(in srgb,var(--blue) 38%,var(--border)); border-radius:9px; background:color-mix(in srgb,var(--blue) 11%,var(--card)); color:var(--blue); white-space:nowrap; }
   .balance-selection-summary[hidden] { display:none; }
   .balance-selection-summary span { font-size:11px; font-weight:800; }
-  .balance-selection-summary strong { font-family:'Arial Black',sans-serif; font-size:12px; }
-  .balance-selection-summary.positive strong { color:var(--green); }
-  .balance-selection-summary.negative strong { color:var(--red); }
+  .balance-selection-total { font-family:'Arial Black',sans-serif; font-size:12px; font-weight:700; background:none; border:0; color:inherit; cursor:pointer; }
+  .balance-selection-summary.positive .balance-selection-total { color:var(--green); }
+  .balance-selection-summary.negative .balance-selection-total { color:var(--red); }
   .weekly-dashboard-panel.balance-week-mode #movPorSemana { padding-top:0; }
   .balance-week-detail { margin-top:8px; border:1px solid var(--border); border-radius:11px; overflow:hidden; background:var(--card2); }
   .balance-selectable { -webkit-touch-callout:none; user-select:none; }
@@ -2052,6 +2063,11 @@
   .rubro-detail-total { display:flex; justify-content:space-between; gap:12px; padding:14px 18px; border-top:1px solid var(--border); background:var(--card2); color:var(--text); font-family:Arial Black,sans-serif; font-size:13px; }
   .upcoming-row { width:100%; display:grid; grid-template-columns:38px minmax(0,1fr) 42px auto; gap:8px; align-items:center; padding:9px 12px; border:0; border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent); background:transparent; color:var(--text); text-align:left; cursor:pointer; }
   .upcoming-row:last-child { border-bottom:0; }
+  .upcoming-movimiento,.recent-movimiento { display:flex; align-items:center; padding-right:8px; border-bottom:1px solid color-mix(in srgb,var(--border) 60%,transparent); }
+  .recent-movimiento { min-width:720px; }
+  .upcoming-movimiento:last-child,.recent-movimiento:last-child { border-bottom:0; }
+  .upcoming-movimiento>.upcoming-row,.recent-movimiento>.recent-row { flex:1; border-bottom:0; }
+  .upcoming-movimiento>.upcoming-row { min-width:0; }
   .upcoming-row:hover,.recent-row:hover { background:color-mix(in srgb,var(--blue) 6%,transparent); }
   .upcoming-icon { width:34px; height:34px; border-radius:10px; display:grid; place-items:center; background:color-mix(in srgb,var(--blue) 12%,transparent); color:var(--blue); font-weight:900; }
   .upcoming-copy { min-width:0; display:flex; flex-direction:column; }
@@ -2188,7 +2204,7 @@
     .balance-week-saldo { min-width:68px; padding:6px 5px; font-size:10px; }
     .balance-selection-summary { order:1; min-height:27px; margin-right:0; padding:4px 7px; gap:4px; }
     .balance-selection-summary span { font-size:9px; }
-    .balance-selection-summary strong { font-size:10px; }
+    .balance-selection-total { font-size:10px; }
     .balance-view-toggle { order:4; margin-left:auto; padding:2px; }
     .balance-view-btn { min-width:62px; height:32px; padding:0 7px; font-size:10px; }
     .summary-panel-backdrop { display:none; }
@@ -2721,7 +2737,7 @@
         <section class="dashboard-panel weekly-dashboard-panel">
           <div class="dashboard-panel-header balance-panel-header">
             <span class="dashboard-panel-icon">▦</span><h3>Balance por semana</h3>
-            <div class="balance-selection-summary" id="balanceSelectionSummary" aria-live="polite" hidden><span id="balanceSelectionCount">☑ 0</span><strong id="balanceSelectionTotal">$0</strong></div>
+            <div class="balance-selection-summary" id="balanceSelectionSummary" aria-live="polite" hidden><span id="balanceSelectionCount">☑ 0</span><button type="button" class="balance-selection-total" id="balanceSelectionTotal" title="Abrir en la calculadora con clic derecho o doble clic">$0</button></div>
             <div class="balance-week-picker" id="balanceWeekPicker" hidden>
               <button type="button" id="balanceWeekPrev" onclick="cambiarSemanaBalance(-1)" aria-label="Semana anterior">‹</button>
               <span class="balance-week-copy"><strong id="balanceWeekLabel">Semana —</strong><small id="balanceWeekDates">—</small></span>
@@ -3048,6 +3064,7 @@ const RUBRO_ICON_OPTIONS = ['🛒','🏠','🚗','🚌','🍽️','🍎','💡',
 
 let currentUser = null;
 let data = [], pagosData = {}, pagosListeners = {}, movListener = null, tarjetas = [];
+const divisionesLocales=new Set();
 let reglasProgramadas = [], modoProgramado = '';
 let reservaSugeridaDestino = '', reservaSugeridaEnCurso = false;
 let fijoData = [], fijoListener = null, fijoPagosData = {}, fijoPagosListeners = {};
@@ -3220,6 +3237,7 @@ function limpiarApp() {
   Object.values(pagosListeners).forEach(u => u());
   Object.values(fijoPagosListeners).forEach(u => u());
   pagosListeners = {}; pagosData = {}; data = []; tarjetas = []; reglasProgramadas = [];
+  divisionesLocales.clear();
   reservaSugeridaDestino = '';
   fijoData = []; fijoPagosData = {}; fijoPagosListeners = {};
   userConfig = {
@@ -3909,6 +3927,7 @@ async function cargarAppCacheLocal(uid){
 }
 
 async function persistirAppCacheIndexedDB(){
+  if(divisionesLocales.size) return;
   if(!currentUser||visualTestMode) return;
   const key=appDataCacheKey();
   if(!key) return;
@@ -3922,11 +3941,11 @@ async function persistirAppCacheIndexedDB(){
 }
 
 function guardarAppCacheLocal(){
-  if(!currentUser||visualTestMode) return;
+  if(!currentUser||visualTestMode||divisionesLocales.size) return;
   appCacheSaveQueued=true;
   clearTimeout(appCacheSaveTimer);
   appCacheSaveTimer=setTimeout(()=>{
-    if(!appCacheSaveQueued) return;
+    if(!appCacheSaveQueued||divisionesLocales.size) return;
     appCacheSaveQueued=false;
     appCacheSavePromise=appCacheSavePromise
       .then(()=>persistirAppCacheIndexedDB())
@@ -4061,9 +4080,10 @@ window.dpInit = function(dateStr) {
 }
 
 function dpPositionPopup(popup){
-  // Mover el popup al body para que esté por encima de todo
-  if(popup.parentElement !== document.body){
-    document.body.appendChild(popup);
+  // En la división, el calendario queda por encima del formulario y se elimina con él.
+  const contenedor=popup.closest('#modalDividirMovimiento')||document.body;
+  if(popup.parentElement !== contenedor){
+    contenedor.appendChild(popup);
   }
   popup.style.display = 'block';
 }
@@ -5592,10 +5612,12 @@ function setSyncStatus(s){
   else if(s==='loading'){dot.className='sync-dot loading';lbl.textContent='Guardando...';}
   else{dot.className='sync-dot';lbl.textContent='Sin conexión';}
 }
+let toastTimer;
 function showToast(msg,err=false){
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show'+(err?' error':'');
-  setTimeout(()=>t.className='toast',2500);
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.className='toast',2500);
 }
 
 function userCol(col){return collection(db,`usuarios/${currentUser.uid}/${col}`);}
@@ -5762,7 +5784,7 @@ function getTarjetaEstadoPeriodo(tid, mes, anio){
   });
   const pagos = pagosData[getPagosKey(tid,mes,anio)] || [];
   const totalG = gt.reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
-  const totalP = pagos.reduce((s,p)=>s+p.monto,0);
+  const totalP = totalPagosActivos(pagos);
   return { gt, pagos, totalG, totalP, deuda: totalG-totalP };
 }
 async function getPagoTarjetaData(key, pid){
@@ -5773,6 +5795,9 @@ async function getPagoTarjetaData(key, pid){
     if(snap.exists()) return { id: pid, ...snap.data() };
   }catch(_){}
   return null;
+}
+function totalPagosActivos(pagos=[]){
+  return pagos.reduce((total,pago)=>total+(pago.confirmado===false?0:Number(pago.monto||0)),0);
 }
 function getPagosTarjetaCargados(tid){
   const prefix = `${tid}_`;
@@ -5790,8 +5815,7 @@ function findLinkedMovimientoForPago(tid, mes, anio, pago, pid){
   const candidatos = data.filter(d => d.esPagoTarjeta && d.tarjetaId === tid);
   if(!candidatos.length) return null;
   if(pago?.movimientoId){
-    const exacto = candidatos.find(d => d.id === pago.movimientoId);
-    if(exacto) return exacto;
+    return candidatos.find(d => d.id === pago.movimientoId) || null;
   }
   const porPagoId = candidatos.find(d =>
     d.pagoItemId === pid &&
@@ -5877,7 +5901,7 @@ function suscribirPagos(tid,mes,anio){
   if(pagosListeners[key]) return;
   const unsub=onSnapshot(pagoCol(key),snap=>{
     if(appCacheHydrated&&snap.metadata.fromCache) return;
-    pagosData[key]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    pagosData[key]=combinarDivisionesLocales('tarjeta:'+key,snap.docs.map(d=>({id:d.id,...d.data()})));
     if(!snap.metadata.fromCache) guardarAppCacheLocal();
     const prevVista = getMesAnterior(mesVista, anioVista);
     const nextVista = shiftPeriodoMes(mesVista, anioVista, 1);
@@ -5944,8 +5968,9 @@ window.guardarPago=async(tid,mes,anio)=>{
   catch(e){console.error('guardarPago error:',e);showToast('❌ Error al guardar pago',true);}
 };
 window.borrarPago=async(tid,mes,anio,pid)=>{
-  if(!confirm('¿Borrar este pago?')) return;
   const key=getPagosKey(tid,mes,anio);
+  if(filaDividiendose('tarjeta:'+key,pid)) return showToast('La división todavía se está sincronizando.');
+  if(!confirm('¿Borrar este pago?')) return;
   try{
     const pago = await getPagoTarjetaData(key,pid);
     const mov = findLinkedMovimientoForPago(tid, mes, anio, pago, pid);
@@ -5965,10 +5990,10 @@ function suscribirMovimientos(){
     if(appCacheHydrated&&snap.metadata.fromCache) return;
     const movimientos=snap.docs.map(d=>({id:d.id,...d.data()}));
     reglasProgramadas=movimientos.filter(d=>d.tipo==='regla_programada');
-    data=movimientosVigentes(movimientos,reglasProgramadas);
+    data=combinarDivisionesLocales('movimientos',movimientosVigentes(movimientos,reglasProgramadas));
     if(!snap.metadata.fromCache) guardarAppCacheLocal();
     document.getElementById('loadingOverlay').classList.add('hidden');
-    setSyncStatus('ok'); renderResumen(); if(notifListener) renderNotifPanel();
+    setSyncStatus(divisionesLocales.size?'loading':'ok'); renderResumen(); if(notifListener) renderNotifPanel();
     if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
   },err=>{
@@ -6132,9 +6157,9 @@ window.confirmarDuplicar = async (mesD, anioD) => {
 
 // ── EDITAR / COPIAR MOV ──────────────────────────────
 window.editarMov = id => {
+  if(movimientoDividiendose(id)) return showToast('La división todavía se está sincronizando.');
   const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
-  if(mov.claseProgramada==='credito'&&!mov.confirmado) return abrirRegistroProgramado(mov);
   const fechaVal = mov.fecha || '';
   const recVal = mov.recordatorio ? 'checked' : '';
   const overlay = document.createElement('div');
@@ -6148,7 +6173,7 @@ window.editarMov = id => {
       </div>
       <div class="modal-group">
         <label>Monto</label>
-        <input id="editMonto" type="text" inputmode="text" value="${mov.claseProgramada?formatMontoToolValue(mov.monto):(mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : '')}" ${mov.claseProgramada==='credito'?'readonly data-ignore-amount-tools="1"':''} oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
+        <input id="editMonto" type="text" inputmode="text" value="${mov.claseProgramada||mov.divisionMovimiento?formatMontoToolValue(mov.monto):(mov.monto ? Math.round(mov.monto).toLocaleString('es-AR') : '')}" oninput="formatMontoInput(this)" onblur="resolveMontoExpressionInput(this)" onkeydown="handleMontoExpressionEnter(event,this)">
       </div>
       ${mov.tipo!=='ingreso' ? `<div class="modal-group"><label>Rubro</label><select id="editRubro">${rubroOptionsHTML(mov.rubro||'sin_rubro')}</select>${mov.grupoId&&['tarjeta','credito'].includes(mov.tipo)?`<small style="display:block;margin-top:6px;color:var(--muted);line-height:1.35">El rubro se aplicará a todas las cuotas de ${mov.tipo==='tarjeta'?'esta compra con tarjeta':'este crédito personal'}.</small>`:''}</div>` : ''}
       <div class="modal-group">
@@ -6197,7 +6222,14 @@ function debePropagarRubroACuotas(mov,rubro){
 }
 async function actualizarMovimientoYRubrosDeCuotas(id,mov,actualizacion,rubro){
   if(!debePropagarRubroACuotas(mov,rubro)){
-    await updateDoc(userDoc('movimientos',id),actualizacion);
+    const pago=mov.divisionMovimiento?referenciaPagoDivisible(mov):null;
+    if(pago){
+      const batch=writeBatch(db);
+      batch.update(userDoc('movimientos',id),actualizacion);
+      batch.update(pago,{monto:actualizacion.monto});
+      if(mov.fijoPagoItemId) batch.update(doc(fijoCol(),mov.fijoId),{revisionPagos:increment(1)});
+      await batch.commit();
+    }else await updateDoc(userDoc('movimientos',id),actualizacion);
     return 1;
   }
 
@@ -6218,13 +6250,13 @@ async function actualizarMovimientoYRubrosDeCuotas(id,mov,actualizacion,rubro){
 }
 window.guardarEdicion = async (id,movActual,overlay) => {
   const desc  = document.getElementById('editDesc').value.trim();
-  const monto = movActual?.claseProgramada==='credito'?movActual.monto:parseMontoInput(document.getElementById('editMonto'));
+  const monto = parseMontoInput(document.getElementById('editMonto'));
   const fecha = document.getElementById('editFecha').value || null;
   const recordatorio = !!document.getElementById('editRecordatorio')?.checked;
   const rubro = document.getElementById('editRubro')?.value || null;
   console.log('guardando recordatorio:', recordatorio, 'checkbox:', document.getElementById('editRecordatorio'));
   const esRecurrente=movActual.claseProgramada==='recurrente'&&!!movActual.grupoId;
-  if(!desc || isNaN(monto) || (esRecurrente&&(!Number.isFinite(monto)||monto<=0||!fecha))){ showToast('⚠️ Datos inválidos',true); return; }
+  if(!desc || !Number.isFinite(monto) || (movActual.claseProgramada&&(monto<=0||!fechaValidaDivision(fecha)))){ showToast('⚠️ Datos inválidos',true); return; }
   if(esRecurrente){
     const campos={desc,monto,recordatorio,...(rubro?{rubro}:{})};
     const cambios=Object.fromEntries(Object.entries(campos).filter(([campo,valor])=>valor!==movActual[campo]&&!(campo==='recordatorio'&&!valor&&!movActual[campo])));
@@ -6242,6 +6274,11 @@ window.guardarEdicion = async (id,movActual,overlay) => {
       extra = { mes: p.mes, anio: p.anio, semana: p.semana };
     }
     const actualizacion={ desc, monto, fecha, recordatorio, ...(rubro?{rubro}:{}), ...extra };
+    if(movActual.claseProgramada==='credito'){
+      await guardarOcurrenciaProgramada(movActual,actualizacion);
+      showToast('✅ Editado!');
+      return;
+    }
     const cuotasActualizadas=await actualizarMovimientoYRubrosDeCuotas(id,movActual,actualizacion,rubro);
     showToast(cuotasActualizadas>1?`✅ Editado y rubro aplicado a ${cuotasActualizadas} cuotas!`:'✅ Editado!');
   }catch(e){ showToast('❌ Error al editar',true); }
@@ -6324,15 +6361,15 @@ function _dpRender(ns, popupId, hiddenId, textId){
   for(let d=1;d<=tot-sd-dim;d++) days+=`<div class="dp-day other-month">${d}</div>`;
   popup.innerHTML=`
     <div class="dp-nav">
-      <button class="dp-nav-btn" onclick="dpModNav('${ns}',-1,event,'${popupId}','${hiddenId}','${textId}')">‹</button>
+      <button type="button" class="dp-nav-btn" onclick="dpModNav('${ns}',-1,event,'${popupId}','${hiddenId}','${textId}')">‹</button>
       <span class="dp-nav-title">${MESES[s.month]} ${s.year}</span>
-      <button class="dp-nav-btn" onclick="dpModNav('${ns}',1,event,'${popupId}','${hiddenId}','${textId}')">›</button>
+      <button type="button" class="dp-nav-btn" onclick="dpModNav('${ns}',1,event,'${popupId}','${hiddenId}','${textId}')">›</button>
     </div>
     <div class="dp-weekdays">${DIAS.map(d=>`<div class="dp-weekday">${d}</div>`).join('')}</div>
     <div class="dp-days">${days}</div>
     <div class="dp-footer">
-      <button class="dp-footer-btn clear" onclick="dpModClear('${ns}','${hiddenId}','${textId}','${popupId}')">Borrar</button>
-      <button class="dp-footer-btn today-btn" onclick="dpModHoy('${ns}','${hiddenId}','${textId}','${popupId}')">Hoy</button>
+      <button type="button" class="dp-footer-btn clear" onclick="dpModClear('${ns}','${hiddenId}','${textId}','${popupId}')">Borrar</button>
+      <button type="button" class="dp-footer-btn today-btn" onclick="dpModHoy('${ns}','${hiddenId}','${textId}','${popupId}')">Hoy</button>
     </div>`;
 }
 
@@ -7101,7 +7138,7 @@ window.calcUseResult = () => {
 document.addEventListener('keydown', handleCalcKeyboardInput);
 
 window.copiarMov = id => {
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
   mostrarFormularioDuplicado(mov);
   return;
@@ -7207,7 +7244,7 @@ window.copiarMovConfirmar = async id => {
   const tipoDuplicado = document.getElementById('dupTipo')?.value || null;
   const montoDuplicado = parseMontoInput(document.getElementById('dupMonto'));
   const selectedDays = dupGetSelectedDays();
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
   if(isNaN(montoDuplicado)){
     showToast('⚠️ Ingresá un monto válido', true);
@@ -7286,7 +7323,7 @@ function renderTarjetaDetail(tid){
         let _meta; if(g.fecha){const[_y,_m,_d]=g.fecha.split('-').map(Number);_meta=`📅 ${_d} ${_MC[_m-1]}`;}else{_meta=`📅 ${_MC[g.mes]}`;}
         const _rubro=getRubro(g.rubro||'sin_rubro');
         _meta+=` · ${_rubro.icon} ${_rubro.label}`;
-        html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id,'basic')}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${movMoreButtonHTML(g.id,'basic')}</div></div>`;
+        html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id)}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${g.divisionMovimiento?botonSaldoMovimiento(g,'Confirmar compra'):''}${movMoreButtonHTML(g.id)}</div></div>`;
       }
       html+=`</div>`;
     } else { html+=`<div style="color:var(--muted);font-size:13px;padding:8px 0">Sin gastos este mes</div>`; }
@@ -7310,7 +7347,7 @@ function renderTarjetaDetail(tid){
       else { _meta=`📅 ${_MC[g.mes]} ${g.anio}`; }
       const _rubro=getRubro(g.rubro||'sin_rubro');
       _meta+=` · ${_rubro.icon} ${_rubro.label}`;
-      html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id)}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${movMoreButtonHTML(g.id)}</div></div>`;
+      html+=`<div class="tar-gasto-item" ${movContextMenuAttrs(g.id)}><div><div class="tar-gasto-desc">${g.desc}${usdTag}</div><div class="tar-gasto-meta">${_meta}</div></div><div class="mov-actions-trigger"><div class="tar-gasto-monto">${fmtARS(toARS(g.monto,g.moneda))}</div>${g.divisionMovimiento?botonSaldoMovimiento(g,'Confirmar compra'):''}${movMoreButtonHTML(g.id)}</div></div>`;
     }
     html+=`</div>`;
   } else { html+=`<div style="color:var(--muted);font-size:13px;padding:8px 0;margin-bottom:8px">Sin gastos este mes</div>`; }
@@ -7318,7 +7355,7 @@ function renderTarjetaDetail(tid){
     html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">Pagos realizados</div>`;
     for(const p of [...pagos].sort((a,b)=>a.timestamp-b.timestamp)){
       const f=new Date(p.timestamp);
-      html+=`<div class="pago-item"><span>${f.getDate()}/${f.getMonth()+1} — ${p.desc||'Pago'}</span><span style="display:flex;align-items:center;gap:8px"><span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPago('${tid}',${mesVista},${anioVista},'${p.id}')">✕</button></span></div>`;
+      html+=`<div class="pago-item"><span>${f.getDate()}/${f.getMonth()+1} — ${p.desc||'Pago'}${p.confirmado===false?' · Pendiente':''}</span><span style="display:flex;align-items:center;gap:8px">${accionesPagoVinculado(p)}<span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPago('${tid}',${mesVista},${anioVista},'${p.id}')">✕</button></span></div>`;
     }
   }
   html+=`<div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px">Registrar pago</div>
@@ -7734,7 +7771,7 @@ async function guardarOcurrenciaProgramada(mov,cambios){
     const regla={...grupoSnap.data(),id:mov.grupoId};
     if(regla.cancelada) throw Error('El grupo fue eliminado.');
     if(mov.claseProgramada==='credito'){
-      if(!movSnap.exists()||movSnap.data().pagoParcialProgramado||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('La cuota no está disponible.');
+      if(!movSnap.exists()||(regla.corteCuota&&mov.cuotaNum>=regla.corteCuota)||(regla.cuotasOmitidas||[]).includes(mov.cuotaNum)) throw Error('La cuota no está disponible.');
     }else if(!fechasReglaProgramada(regla,mov.vencimiento,mov.vencimiento).length){
       throw Error('Este movimiento fue eliminado.');
     }
@@ -7762,6 +7799,7 @@ async function guardarEdicionRecurrente(mov,cambios,fecha,alcance){
       fechasReglaProgramada(regla,d.vencimiento,d.vencimiento).length;
   });
   const crearConFecha=fecha&&!afectados.some(d=>d.id===mov.id);
+  if(Object.hasOwn(cambios,'monto')&&afectados.some(d=>d.data().divisionMovimiento)) throw Error('La serie contiene movimientos divididos. Editá el importe de cada parte por separado.');
   if(afectados.length+(crearConFecha?1:0)>499) throw Error('El grupo es demasiado grande para guardar todos los cambios juntos.');
 
   const edicionesDesde=(regla.edicionesDesde||[]).flatMap(edicion=>{
@@ -7811,6 +7849,7 @@ async function acreditarProgramado(mov,monto,fechaReal,usuario=currentUser?.uid)
 
 function abrirRegistroProgramado(mov){
   if(!mov||mov.confirmado||document.getElementById('modalRegistroProgramado')) return;
+  if(movimientoDividiendose(mov.id)) return showToast('La división todavía se está sincronizando.');
   const cobro=mov.tipo==='ingreso', hoy=toISODate(new Date());
   const overlay=document.createElement('div');
   overlay.className='modal-overlay'; overlay.id='modalRegistroProgramado';
@@ -7840,6 +7879,7 @@ function abrirRegistroProgramado(mov){
   };
   overlay.querySelector('#registroProgramadoMonto').select();
 }
+window.registrarCobroMovimiento=id=>abrirRegistroProgramado(buscarMovimientoProgramado(id));
 
 function perteneceAlAlcanceProgramado(doc,seleccion,modo){
   if(modo==='todas') return true;
@@ -7999,9 +8039,15 @@ window.guardar=async()=>{
   btn.disabled=false;btn.textContent='Guardar movimiento';
 };
 window.toggleConfirmar= async id => {
+  if(movimientoDividiendose(id)) return showToast('La división todavía se está sincronizando.');
   const programado=buscarMovimientoProgramado(id);
+  if(programado?.divisionMovimiento&&(programado.esPagoTarjeta||programado.fijoPagoItemId||programado.tipo==='tarjeta')){
+    try{await actualizarSaldoParteVinculada(programado,programado.confirmado===false);}
+    catch(e){showToast(e.message||'No se pudo actualizar el saldo',true);}
+    return;
+  }
   if(programado?.claseProgramada){
-    if(programado.pagoParcialProgramado) return;
+    if(programado.pagoParcialProgramado&&!programado.divisionMovimiento) return;
     const btn=document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
     if(btn?.disabled) return;
     if(btn) btn.disabled=true;
@@ -8022,7 +8068,7 @@ window.toggleConfirmar= async id => {
     const ingC = (window._mesMov||[]).filter(d=>d.tipo==='ingreso'&&d.confirmado).reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
     const gasC = (window._mesMov||[]).filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&d.confirmado).reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
     let totalPag=0;
-    tarjetas.forEach(t=>{totalPag+=(pagosData[getPagosKey(t.id,mesVista,anioVista)]||[]).reduce((s,p)=>s+p.monto,0);});
+    tarjetas.forEach(t=>{totalPag+=totalPagosActivos(pagosData[getPagosKey(t.id,mesVista,anioVista)]);});
     document.getElementById('sumSal').textContent = fmtARS(ingC - gasC);
     renderProximosMovimientos(window._mesMov||[]);
   }
@@ -8030,9 +8076,305 @@ window.toggleConfirmar= async id => {
   updateDoc(userDoc('movimientos',id),{confirmado: btn?.classList.contains('checked')??true})
     .catch(()=>showToast('❌ Error al sincronizar',true));
 };
+
+function referenciaPagoDivisible(mov){
+  if(mov.esPagoTarjeta){
+    if(mov.pagoItemId&&mov.pagoPeriodoMes!=null&&mov.pagoPeriodoAnio!=null){
+      return pagoDoc(getPagosKey(mov.tarjetaId,mov.pagoPeriodoMes,mov.pagoPeriodoAnio),mov.pagoItemId);
+    }
+    const linked=findLinkedPagoForMovimiento(mov);
+    return linked?.pago?.movimientoId===mov.id?pagoDoc(linked.key,linked.pago.id):null;
+  }
+  return mov.fijoPagoItemId?fijoPagoDocRef(mov.fijoId,mov.fijoPagoItemId):null;
+}
+
+async function actualizarSaldoParteVinculada(mov,confirmado){
+  const ref=userDoc('movimientos',mov.id), pago=referenciaPagoDivisible(mov);
+  await runTransaction(db,async tx=>{
+    const [actual,pagoSnap]=await Promise.all([tx.get(ref),pago?tx.get(pago):null]);
+    if(!actual.exists()||(pago&&!pagoSnap.exists())) throw Error('Esta parte ya no existe.');
+    tx.update(ref,{confirmado});
+    if(pago) tx.update(pago,{confirmado});
+  });
+}
+
+function dividirMovimiento(id){
+  const mov=buscarMovimientoProgramado(id);
+  if(!mov) return;
+  abrirDivisionMovimiento(mov,(primera,segunda)=>guardarDivisionMovimiento(mov,primera,segunda));
+}
+
+function fechaValidaDivision(fecha){
+  const dia=new Date(fecha+'T12:00:00');
+  return /^\d{4}-\d{2}-\d{2}$/.test(fecha)&&!Number.isNaN(dia.getTime())&&toISODate(dia)===fecha;
+}
+
+function selectorFechaDivision(id,fecha){
+  const [anio,mes,dia]=fecha.split('-').map(Number);
+  return `<label for="${id}Texto">Fecha</label>
+    <div class="date-picker-wrap">
+      <div class="date-picker-display" style="padding:0;overflow:hidden">
+        <input id="${id}Texto" type="text" required autocomplete="off" data-ignore-amount-tools="1" value="${dia}/${mes}/${anio}" style="flex:1;min-width:0;border:none;background:transparent">
+        <button type="button" class="dp-icon" aria-label="Abrir calendario" aria-controls="${id}Popup" style="background:none;border:0;cursor:pointer" onclick="dpModToggle('${id}','${id}Popup','${id}','${id}Texto')">📅</button>
+      </div>
+      <div id="${id}Popup" class="dp-popup" style="display:none"></div>
+      <input id="${id}" type="hidden" value="${fecha}">
+    </div>`;
+}
+
+document.addEventListener('keydown',event=>{
+  if(event.key!=='Escape') return;
+  const division=document.getElementById('modalDividirMovimiento');
+  const abiertos=division?.querySelectorAll('.dp-popup');
+  if(!abiertos) return;
+  const visibles=[...abiertos].filter(popup=>popup.style.display!=='none');
+  if(!visibles.length) return;
+  event.preventDefault();
+  event.stopImmediatePropagation();
+  visibles.forEach(popup=>{popup.style.display='none';});
+  division.querySelector(`[aria-controls="${visibles.at(-1).id}"]`)?.focus();
+},true);
+
+function abrirDivisionMovimiento(mov,guardar){
+  if(document.getElementById('modalDividirMovimiento')) return;
+  const total=Math.round(Number(mov.monto)*100);
+  if(!Number.isSafeInteger(total)||total<2) return showToast('El importe debe permitir dos partes de al menos un centavo.',true);
+  const overlay=document.createElement('div');
+  overlay.id='modalDividirMovimiento'; overlay.className='modal-overlay';
+  const moneda=escapeMovSelectorHtml(mov.moneda||'ARS');
+  const etiqueta=mov.tipo==='tarjeta'?'Confirmar compra':'Activa en saldo';
+  const fechaInicial=fechaValidaDivision(mov.fecha)?mov.fecha:toISODate(new Date(Number(mov.timestamp)||Date.now()));
+  overlay.innerHTML=`<form class="modal-box division-modal" role="dialog" aria-modal="true" aria-labelledby="tituloDivision">
+    <div class="modal-title" id="tituloDivision">Dividir movimiento</div>
+    <p>${escapeMovSelectorHtml(mov.desc)} · ${moneda} ${formatMontoToolValue(total/100)}</p>
+    <div class="modal-group">
+      <div class="division-fields">
+        <div><label for="divisionPrimera">Importe de la primera parte</label>
+          <input id="divisionPrimera" type="text" inputmode="decimal" autocomplete="off" value="${formatMontoToolValue(Math.floor(total/2)/100)}">
+        </div>
+        <div>${selectorFechaDivision('divisionFecha1',fechaInicial)}</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="divisionActiva1" type="checkbox" style="width:auto">${etiqueta}</label>
+    </div>
+    <div class="modal-group">
+      <div class="division-fields">
+        <div><label for="divisionSegunda">Importe de la segunda parte</label>
+          <input id="divisionSegunda" type="text" readonly data-ignore-amount-tools="1">
+        </div>
+        <div>${selectorFechaDivision('divisionFecha2',fechaInicial)}</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input id="divisionActiva2" type="checkbox" style="width:auto">${etiqueta}</label>
+    </div>
+    <div class="modal-btns"><button type="button" class="modal-btn-cancel">Cancelar</button><button type="submit" class="modal-btn-ok">Guardar división</button></div>
+  </form>`;
+  const primera=overlay.querySelector('#divisionPrimera'), segunda=overlay.querySelector('#divisionSegunda');
+  const cancelar=overlay.querySelector('.modal-btn-cancel'), btn=overlay.querySelector('.modal-btn-ok');
+  const actualizar=()=>{
+    const importe=Math.round(parseMontoInput(primera)*100);
+    const valido=Number.isSafeInteger(importe)&&importe>0&&importe<total;
+    segunda.value=valido?formatMontoToolValue((total-importe)/100):'';
+    btn.disabled=!valido;
+    return valido?importe:null;
+  };
+  primera.oninput=()=>{formatMontoInput(primera);actualizar();};
+  cancelar.onclick=()=>overlay.remove();
+  overlay.querySelector('form').onsubmit=async e=>{
+    e.preventDefault();
+    if(btn.disabled) return;
+    const importe=actualizar();
+    if(importe===null) return;
+    const fecha1=overlay.querySelector('#divisionFecha1').value, fecha2=overlay.querySelector('#divisionFecha2').value;
+    if(!fechaValidaDivision(fecha1)||!fechaValidaDivision(fecha2)) return showToast('Ingresá una fecha válida para cada parte.',true);
+    btn.disabled=cancelar.disabled=true;
+    const usuario=currentUser?.uid;
+    overlay.querySelectorAll('.dp-popup').forEach(popup=>{popup.style.display='none';});
+    overlay.remove();
+    try{
+      await guardar({monto:importe/100,fecha:fecha1,confirmado:overlay.querySelector('#divisionActiva1').checked},
+        {monto:(total-importe)/100,fecha:fecha2,confirmado:overlay.querySelector('#divisionActiva2').checked});
+      if(currentUser?.uid===usuario) showToast('✅ División sincronizada');
+    }catch(error){
+      if(currentUser?.uid!==usuario) return;
+      showToast(error.message||'No se pudo sincronizar la división',true);
+      if(!document.getElementById(overlay.id)) document.body.appendChild(overlay);
+      cancelar.disabled=false; actualizar();
+    }
+  };
+  document.body.appendChild(overlay);
+  for(const id of ['divisionFecha1','divisionFecha2']){
+    const texto=overlay.querySelector('#'+id+'Texto'), valor=overlay.querySelector('#'+id);
+    const actualizarFecha=(confirmar=false)=>{
+      valor.value='';
+      if(/^\d{1,2}(?:[\/\s-]\d{1,2})?(?:[\/\s-](?:\d{2}|\d{4}))?$/.test(texto.value.trim())){
+        dpModParseText(id,texto.value,id,texto.id,id+'Popup',confirmar);
+      }
+    };
+    dpModInit(id,fechaInicial);
+    texto.oninput=()=>actualizarFecha();
+    texto.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();actualizarFecha(true);}};
+  }
+  actualizar();
+  primera.select();
+}
+
+function listaDivisionLocal(clave,filas){
+  if(clave==='movimientos'){
+    if(filas) data=filas;
+    return data;
+  }
+  const corte=clave.indexOf(':'), id=clave.slice(corte+1);
+  const listas=clave.startsWith('tarjeta:')?pagosData:fijoPagosData;
+  if(filas) listas[id]=filas;
+  return listas[id]||[];
+}
+
+function sustituirFilasDivision(lista,entrada,filas){
+  return [...lista.filter(fila=>!entrada.ids.has(fila.id)),...filas];
+}
+
+function combinarDivisionesLocales(clave,lista){
+  for(const division of divisionesLocales){
+    const entrada=division.get(clave);
+    if(!entrada) continue;
+    entrada.observada=entrada.nuevos.every(id=>lista.some(fila=>fila.id===id));
+    if(!entrada.observada){
+      entrada.originales=lista.filter(fila=>entrada.ids.has(fila.id));
+      lista=sustituirFilasDivision(lista,entrada,entrada.filas);
+    }
+  }
+  return lista;
+}
+
+function filaDividiendose(clave,id){
+  return [...divisionesLocales].some(division=>division.get(clave)?.ids.has(id));
+}
+
+function movimientoDividiendose(id){
+  return filaDividiendose('movimientos',id);
+}
+
+function renderDivisionLocal(){
+  renderResumen();
+  if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
+  if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
+  if(document.getElementById('fijoPanel').style.display!=='none') renderFijoDetail();
+}
+
+async function sincronizarDivisionLocal(listas,sincronizar,mostrar){
+  const division=new Map(listas.map(([clave,filas,nuevos])=>{
+    const ids=new Set(filas.map(fila=>fila.id));
+    return [clave,{filas,nuevos,ids,originales:listaDivisionLocal(clave).filter(fila=>ids.has(fila.id)),observada:false}];
+  }));
+  divisionesLocales.add(division);
+  for(const [clave,entrada] of division){
+    listaDivisionLocal(clave,sustituirFilasDivision(listaDivisionLocal(clave),entrada,entrada.filas));
+  }
+  let guardadas;
+  try{
+    setSyncStatus('loading');
+    mostrar?.();
+    renderDivisionLocal();
+    showToast('División aplicada · Sincronizando…');
+    guardadas=await sincronizar();
+  }finally{
+    // Al cerrar sesión se descartan estas proyecciones junto con los datos de la cuenta.
+    if(divisionesLocales.delete(division)){
+      for(const [clave,entrada] of division){
+        if(entrada.observada) continue;
+        const filas=guardadas?.get(clave)||entrada.originales;
+        listaDivisionLocal(clave,sustituirFilasDivision(listaDivisionLocal(clave),entrada,filas));
+      }
+      setSyncStatus(divisionesLocales.size?'loading':!guardadas&&!navigator.onLine?'offline':'ok');
+      if(guardadas) guardarAppCacheLocal();
+      renderDivisionLocal();
+    }
+  }
+}
+
+function partesMovimientoDividido(actual,primera,segunda){
+  const periodo=fecha=>getPeriodo(new Date(fecha+'T12:00:00'),actual.tipo,actual.tarjetaId||null);
+  const cambios={...primera,...periodo(primera.fecha),divisionMovimiento:true};
+  const otra={...actual,...segunda,...periodo(segunda.fecha),divisionMovimiento:true,recordatorio:false};
+  delete otra.id; delete otra._semana;
+  return [cambios,otra];
+}
+
+function partesPagoDividido(pago,primera,segunda,ref,otraRef){
+  const timestamp=fecha=>pago.timestamp&&toISODate(new Date(pago.timestamp))===fecha?pago.timestamp:new Date(fecha+'T12:00:00').getTime();
+  const cambios={...primera,timestamp:timestamp(primera.fecha),movimientoId:ref.id};
+  const otra={...pago,...segunda,timestamp:timestamp(segunda.fecha),movimientoId:otraRef.id};
+  delete otra.id;
+  return [cambios,otra];
+}
+
+async function guardarDivisionMovimiento(mov,primera,segunda){
+  if(!currentUser||visualTestMode) throw Error('Iniciá sesión para guardar');
+  if(movimientoDividiendose(mov.id)) throw Error('Este movimiento se está sincronizando.');
+  const ref=userDoc('movimientos',mov.id), otraRef=doc(userCol('movimientos'));
+  const grupoRef=mov.claseProgramada?userDoc('movimientos',mov.grupoId):null;
+  const pagoRef=referenciaPagoDivisible(mov);
+  if(mov.esPagoTarjeta&&!pagoRef) throw Error('No se encontró el pago de tarjeta vinculado.');
+  const otroPagoRef=pagoRef?doc(pagoRef.parent):null;
+  const periodoPago=mov.esPagoTarjeta?(mov.pagoPeriodoMes!=null&&mov.pagoPeriodoAnio!=null
+    ?{mes:mov.pagoPeriodoMes,anio:mov.pagoPeriodoAnio}:findLinkedPagoForMovimiento(mov)):null;
+  const clavePago=pagoRef?(mov.esPagoTarjeta?'tarjeta:'+getPagosKey(mov.tarjetaId,periodoPago.mes,periodoPago.anio):'fijo:'+mov.fijoId):null;
+  const armarPartes=(actual,pago)=>{
+    const [cambios,otra]=partesMovimientoDividido(actual,primera,segunda);
+    const listas=new Map();
+    if(pagoRef){
+      const campo=actual.esPagoTarjeta?'pagoItemId':'fijoPagoItemId';
+      cambios[campo]=pagoRef.id;
+      otra[campo]=otroPagoRef.id;
+      const [pago1,pago2]=partesPagoDividido(pago,primera,segunda,ref,otraRef);
+      if(actual.esPagoTarjeta){
+        const periodo={pagoPeriodoMes:periodoPago.mes,pagoPeriodoAnio:periodoPago.anio};
+        Object.assign(cambios,periodo);
+        Object.assign(otra,periodo,{pagoSyncId:otroPagoRef.id});
+        pago2.pagoSyncId=otroPagoRef.id;
+      }
+      listas.set(clavePago,[{...pago,...pago1,id:pagoRef.id},{...pago2,id:otroPagoRef.id}]);
+    }
+    listas.set('movimientos',[{...actual,...cambios,id:ref.id},{...otra,id:otraRef.id}]);
+    return listas;
+  };
+  const pagoLocal=clavePago?listaDivisionLocal(clavePago).find(p=>p.id===pagoRef.id):null;
+  const locales=armarPartes(mov,pagoLocal||{desc:'Pago'});
+  const proyecciones=[...locales].map(([clave,filas])=>[clave,filas,[filas[1].id]]);
+  await sincronizarDivisionLocal(proyecciones,()=>runTransaction(db,async tx=>{
+    const [snapshot,grupoSnap,pagoSnap]=await Promise.all([tx.get(ref),grupoRef?tx.get(grupoRef):null,pagoRef?tx.get(pagoRef):null]);
+    const regla=grupoSnap?.exists()?{...grupoSnap.data(),id:mov.grupoId}:null;
+    if(grupoRef&&(!regla||!movimientosVigentes([mov],[regla]).length)) throw Error('Este movimiento fue eliminado.');
+    const actual=snapshot.exists()?snapshot.data():regla?.clase==='recurrente'&&fechasReglaProgramada(regla,mov.vencimiento,mov.vencimiento).length?datosProgramado(regla,mov.vencimiento):null;
+    if(!actual) throw Error('Este movimiento ya no existe.');
+    if(Math.round(actual.monto*100)!==Math.round(primera.monto*100)+Math.round(segunda.monto*100)) throw Error('El importe cambió. Volvé a abrir la división.');
+    const pago=pagoSnap?.data();
+    if(pagoRef&&(!pago||(pago.movimientoId&&pago.movimientoId!==ref.id))) throw Error('El pago vinculado cambió.');
+    const guardadas=armarPartes(actual,pago);
+    const escribir=(clave,refs)=>{
+      guardadas.get(clave).forEach(({id,...fila},i)=>tx.set(refs[i],fila));
+    };
+    if(pagoRef){
+      escribir(clavePago,[pagoRef,otroPagoRef]);
+    }
+    escribir('movimientos',[ref,otraRef]);
+    if(grupoRef) tx.update(grupoRef,{revision:Number(regla.revision||0)+1});
+    return guardadas;
+  }));
+}
+
 function movMoreButtonHTML(id,modo='full'){
   const safeId=String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   return `<button type="button" class="mov-more-btn" onclick="toggleMovActions(event,'${safeId}',this,'${modo}')" aria-label="Opciones del movimiento" aria-haspopup="menu" aria-expanded="false">…</button>`;
+}
+function botonSaldoMovimiento(mov,etiqueta='Activo en saldo'){
+  return `<button type="button" aria-label="${etiqueta}" title="${etiqueta}" class="confirm-toggle ${mov.esPagoFijo?'fijo-toggle':''} ${mov.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${mov.id}')" ${mov.pagoParcialProgramado&&!mov.divisionMovimiento?'disabled':''}></button>`;
+}
+function accionesPagoVinculado(pago){
+  const mov=pago.movimientoId&&buscarMovimientoProgramado(pago.movimientoId);
+  return mov?`${mov.divisionMovimiento?botonSaldoMovimiento(mov):''}${movMoreButtonHTML(mov.id)}`:'';
+}
+function filaConOpcionesMovimiento(mov,clase,contenido){
+  return `<div class="${clase}" ${movContextMenuAttrs(mov.id)}>${contenido}${movMoreButtonHTML(mov.id)}</div>`;
 }
 function movContextMenuAttrs(id,modo='full'){
   const safeId=String(id).replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -8046,6 +8388,7 @@ window.cerrarMovActions = () => {
 };
 window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => {
   event?.stopPropagation();
+  if(movimientoDividiendose(id)) return showToast('La división todavía se está sincronizando.');
   const abierto=document.querySelector('.mov-actions-popover');
   if(abierto&&window._movActionsTrigger===trigger){ cerrarMovActions(); return; }
   cerrarMovActions();
@@ -8062,7 +8405,7 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
     {clase:'del2',icono:'✕',label:'Eliminar',accion:()=>borrar(id)}
   ];
   const balanceRow=trigger.closest?.('#movPorSemana .balance-selectable');
-  if(balanceRow&&balanceViewMode==='semanal'){
+  if(balanceRow){
     acciones.unshift({clase:'select',icono:'✓',label:'Seleccionar',accion:()=>activarSeleccionBalance(id,balanceRow)});
   }
   if(modo==='reserva'){
@@ -8073,12 +8416,10 @@ window.toggleMovActions = (event,id,trigger,modo='full',posicionCursor=null) => 
     const eliminar=acciones.find(({clase})=>clase==='del2');
     if(eliminar){ eliminar.label='Eliminar reserva'; eliminar.accion=()=>borrarReserva(reserva?.reservaId); }
   }
-  if(modo==='basic') acciones=acciones.filter(({clase})=>clase==='edit'||clase==='del2');
   const programado=buscarMovimientoProgramado(id);
-  if(programado?.claseProgramada==='credito'){
-    acciones=acciones.filter(({clase})=>clase==='select'||clase==='edit'||clase==='del2');
-    const editar=acciones.find(({clase})=>clase==='edit');
-    if(editar&&!programado.confirmado) editar.label='Registrar cobro';
+  if(programado&&['ingreso','gasto','credito','tarjeta'].includes(programado.tipo)){
+    const eliminar=acciones.findIndex(({clase})=>clase==='del2');
+    acciones.splice(eliminar,0,{clase:'split',icono:'✂️',label:'Dividir',accion:()=>dividirMovimiento(id)});
   }
   acciones.forEach(({clase,icono,label,accion})=>{
     const btn=document.createElement('button');
@@ -8132,7 +8473,7 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') cerrarMovActions()
 window.addEventListener('resize',cerrarMovActions);
 window.addEventListener('scroll',cerrarMovActions,true);
 window.borrar = id => {
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
   const tieneGrupo = !!mov.grupoId;
   const esRecurrente = mov.claseProgramada==='recurrente';
@@ -8168,14 +8509,23 @@ window.borrar = id => {
 
 window.borrarConfirmar = async (id, modo) => {
   cerrarModal();
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
   try{
     if(mov.claseProgramada){
       if(!await borrarGrupoProgramado(mov,modo)) return;
     }else if(modo === 'sola' || !mov.grupoId){
-      if(mov.esPagoTarjeta) await borrarPagoRelacionadoDeMovimiento(mov);
-      await deleteDoc(userDoc('movimientos', id));
+      const pago=referenciaPagoDivisible(mov);
+      if(pago){
+        const batch=writeBatch(db);
+        batch.delete(pago);
+        batch.delete(userDoc('movimientos',id));
+        if(mov.fijoPagoItemId) batch.update(doc(fijoCol(),mov.fijoId),{revisionPagos:increment(1)});
+        await batch.commit();
+      }else{
+        if(mov.esPagoTarjeta) await borrarPagoRelacionadoDeMovimiento(mov);
+        await deleteDoc(userDoc('movimientos',id));
+      }
     } else {
       let docs;
       if(modo === 'adelante'){
@@ -8208,7 +8558,7 @@ function abrirDetalleDistribucionRubro(item){
     else if(d.timestamp) fecha=new Date(d.timestamp).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'});
     return `<div class="rubro-detail-row" ${movContextMenuAttrs(d.id)}>
       <div class="rubro-detail-row-copy"><strong>${d.desc}</strong><small>${fecha} · ${origen}</small></div>
-      <span class="rubro-detail-amount">−${fmtARS(toARS(d.monto,d.moneda))}</span>
+      <div class="mov-actions-trigger"><span class="rubro-detail-amount">−${fmtARS(toARS(d.monto,d.moneda))}</span>${movMoreButtonHTML(d.id)}</div>
     </div>`;
   }).join('');
   overlay.innerHTML=`<div class="modal-box rubro-detail-modal" role="dialog" aria-modal="true" aria-labelledby="rubroDetailTitle">
@@ -8291,7 +8641,7 @@ function renderMovimientosSemana(mesMov){
   el.innerHTML=`<div class="recent-table"><div class="recent-head"><span>Fecha</span><span>Descripción</span><span>Rubro</span><span>Tipo</span><span>Monto</span></div>${items.map(d=>{
     const rubro=d.tipo==='ingreso'?{label:'Ingresos',icon:'↓'}:getRubro(d.rubro||'sin_rubro');
     const positivo=d.tipo==='ingreso';
-    return `<button class="recent-row" onclick="editarMov('${d.id}')"><span>${d.fecha?fmtFechaISOcorta(d.fecha):'—'}</span><span class="recent-desc">${d.desc}</span><span>${rubro.icon} ${rubro.label}</span><span><i class="recent-type ${positivo?'pos':'neg'}">${positivo?'Ingreso':'Gasto'}</i></span><strong class="${positivo?'pos':'neg'}">${positivo?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`;
+    return filaConOpcionesMovimiento(d,'recent-movimiento',`<button class="recent-row" onclick="editarMov('${d.id}')"><span>${d.fecha?fmtFechaISOcorta(d.fecha):'—'}</span><span class="recent-desc">${d.desc}</span><span>${rubro.icon} ${rubro.label}</span><span><i class="recent-type ${positivo?'pos':'neg'}">${positivo?'Ingreso':'Gasto'}</i></span><strong class="${positivo?'pos':'neg'}">${positivo?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`);
   }).join('')}</div>`;
 }
 
@@ -8333,7 +8683,10 @@ function actualizarSeleccionBalance(){
   const seleccionados=[...balanceSelectionState.selected].map(id=>movimientos.get(id)).filter(Boolean);
   const total=seleccionados.reduce((s,mov)=>s+movSelectorSignedAmount(mov),0);
   if(count) count.textContent=`☑ ${seleccionados.length}`;
-  if(totalEl) totalEl.textContent=`${total>0?'+':total<0?'−':''}${fmtARS(Math.abs(total))}`;
+  if(totalEl){
+    totalEl.textContent=`${total>0?'+':total<0?'−':''}${fmtARS(Math.abs(total))}`;
+    totalEl.dataset.total=total.toFixed(2);
+  }
   summary?.classList.toggle('positive',total>0);
   summary?.classList.toggle('negative',total<0);
 
@@ -8345,6 +8698,27 @@ function actualizarSeleccionBalance(){
     if(check) check.textContent=selected?'✓':'';
   });
 }
+
+function abrirCalculadoraSeleccionBalance(event){
+  if(!balanceSelectionState.active) return;
+  const total=event.currentTarget.dataset.total;
+  const panel=document.getElementById('calcPanel');
+  if(!panel||total===undefined) return;
+  event.preventDefault();
+  window._calcFocusedAmountField=null;
+  calcState.expr=total;
+  calcState.justEvaluated=false;
+  panel.classList.add('open');
+  panel.classList.remove('minimized');
+  renderCalcPanel();
+}
+
+const totalSeleccionBalance=document.getElementById('balanceSelectionTotal');
+totalSeleccionBalance?.addEventListener('contextmenu',abrirCalculadoraSeleccionBalance);
+totalSeleccionBalance?.addEventListener('dblclick',abrirCalculadoraSeleccionBalance);
+totalSeleccionBalance?.addEventListener('click',event=>{
+  if(event.detail===0) abrirCalculadoraSeleccionBalance(event);
+});
 
 function alternarMovimientoBalance(id,row,forzarSeleccion=null){
   const key=String(id);
@@ -8361,7 +8735,7 @@ function alternarMovimientoBalance(id,row,forzarSeleccion=null){
 }
 
 function activarSeleccionBalance(id,row){
-  if(balanceSelectionState.active||balanceViewMode!=='semanal') return;
+  if(balanceSelectionState.active) return;
   cerrarMovActions();
   balanceSelectionState.active=true;
   if(!balanceSelectionState.historyArmed){
@@ -8390,7 +8764,7 @@ window.salirSeleccionBalance=salirSeleccionBalance;
 
 const balanceMovContainer=document.getElementById('movPorSemana');
 balanceMovContainer?.addEventListener('pointerdown',event=>{
-  if(balanceSelectionState.active||balanceViewMode!=='semanal'||event.button!==0) return;
+  if(balanceSelectionState.active||event.button!==0||event.target.closest('button')) return;
   const row=event.target.closest('.balance-selectable');
   if(!row||!balanceMovContainer.contains(row)) return;
   if(event.pointerType==='touch') balanceSelectionState.lastTouchPressAt=Date.now();
@@ -8435,7 +8809,7 @@ balanceMovContainer?.addEventListener('click',event=>{
   alternarMovimientoBalance(id,row);
 },true);
 balanceMovContainer?.addEventListener('keydown',event=>{
-  if(!['Enter',' '].includes(event.key)||balanceViewMode!=='semanal') return;
+  if(!['Enter',' '].includes(event.key)||event.target.closest('button')) return;
   const row=event.target.closest('.balance-selectable');
   if(!row||!balanceMovContainer.contains(row)) return;
   event.preventDefault();
@@ -8480,13 +8854,13 @@ function renderProximosMovimientos(mesMov){
   let items=pendientes.filter(d=>new Date(d.fecha+'T12:00:00')>=hoy).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
   if(!items.length) items=pendientes.sort((a,b)=>b.fecha.localeCompare(a.fecha)).slice(0,5);
   if(!items.length){ el.innerHTML='<div class="dashboard-empty">Sin próximos movimientos.</div>'; return; }
-  el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return `<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(d.desc)}</strong><small>${d.claseProgramada==='credito'?'Crédito a mi favor':d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`; }).join('');
+  el.innerHTML=items.map(d=>{ const r=getRubro(d.rubro||'sin_rubro'); const f=new Date(d.fecha+'T12:00:00'); return filaConOpcionesMovimiento(d,'upcoming-movimiento',`<button class="upcoming-row" onclick="editarMov('${d.id}')"><span class="upcoming-icon">${d.tipo==='ingreso'?'↓':r.icon}</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(d.desc)}</strong><small>${d.claseProgramada==='credito'?'Crédito a mi favor':d.tipo==='ingreso'?'Ingreso':r.label}</small></span><span class="upcoming-date">${f.toLocaleDateString('es-AR',{day:'numeric',month:'short'})}</span><strong class="upcoming-amount ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'−'}${fmtARS(toARS(d.monto,d.moneda))}</strong></button>`); }).join('');
 }
 
 function renderCreditosFavor(){
   const el=document.getElementById('creditosFavorResumen');
   const grupos=new Map();
-  for(const mov of data.filter(d=>d.claseProgramada==='credito'&&!d.pagoParcialProgramado)){
+  for(const mov of data.filter(d=>d.claseProgramada==='credito'&&(!d.pagoParcialProgramado||d.divisionMovimiento))){
     if(!grupos.has(mov.grupoId)) grupos.set(mov.grupoId,[]);
     grupos.get(mov.grupoId).push(mov);
   }
@@ -8495,8 +8869,9 @@ function renderCreditosFavor(){
     const proxima=pendientes[0];
     if(!proxima) return [];
     const saldo=pendientes.reduce((s,c)=>s+toARS(c.monto,c.moneda),0);
-    const pagas=cuotas.length-pendientes.length;
-    return [`<button type="button" class="upcoming-row" title="Registrar próximo cobro" onclick="editarMov('${proxima.id}')"><span class="upcoming-icon">↓</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(proxima.desc)}</strong><small>${escapeMovSelectorHtml(proxima.persona)} · ${pagas} de ${cuotas.length} cuotas cobradas</small></span><span class="upcoming-date">${fmtFechaISOcorta(proxima.vencimiento)}</span><strong class="upcoming-amount pos">${fmtARS(saldo)}</strong></button>`];
+    const cantidad=new Set(cuotas.map(c=>c.cuotaNum)).size;
+    const pagas=cantidad-new Set(pendientes.map(c=>c.cuotaNum)).size;
+    return [filaConOpcionesMovimiento(proxima,'upcoming-movimiento',`<button type="button" class="upcoming-row" title="Registrar próximo cobro" onclick="registrarCobroMovimiento('${proxima.id}')"><span class="upcoming-icon">↓</span><span class="upcoming-copy"><strong>${escapeMovSelectorHtml(proxima.desc)}</strong><small>${escapeMovSelectorHtml(proxima.persona)} · ${pagas} de ${cantidad} cuotas cobradas</small></span><span class="upcoming-date">${fmtFechaISOcorta(proxima.fecha||proxima.vencimiento)}</span><strong class="upcoming-amount pos">${fmtARS(saldo)}</strong></button>`)];
   });
   el.hidden=!filas.length;
   el.innerHTML=filas.length?`<h4>Créditos a favor · Saldo pendiente</h4>${filas.join('')}`:'';
@@ -8549,7 +8924,7 @@ function estimarSemanasParaReserva(movimientos=data,reglas=reglasProgramadas,hoy
     if(!semanas.length) continue;
     for(const tarjeta of tarjetas){
       const key=getPagosKey(tarjeta.id,mes,anio);
-      const pagos=pagosData[key]?.reduce((s,p)=>s+Number(p.monto||0),0)||0;
+      const pagos=totalPagosActivos(pagosData[key]);
       const deuda=Math.max(0,(comprasTarjeta.get(key)||0)-Math.max(pagos,pagosVinculados.get(key)||0));
       const fecha=getDiaDelMesDentroDelPeriodo(tarjeta.diaPago||tarjeta.diaCorte||27,new Date(semanas[0].desde+'T12:00:00'),new Date(semanas.at(-1).hasta+'T12:00:00'));
       const g=fecha&&semanas.find(s=>s.desde<=fecha&&fecha<=s.hasta);
@@ -8647,7 +9022,7 @@ window.aplicarReservaSugerida=async()=>{
     const movimientos=movimientosVigentes(filas,reglas);
     const nuevo=planificarReservasSemanales(estimarSemanasParaReserva(movimientos,reglas)).planes.find(p=>p.destino.desde===mostrado.destino.desde);
     if(!nuevo?.total||firmaPlanReserva(nuevo)!==firmaPlanReserva(mostrado)){
-      data=movimientos; reglasProgramadas=reglas; renderResumen();
+      data=combinarDivisionesLocales('movimientos',movimientos); reglasProgramadas=reglas; renderResumen();
       throw Error('El saldo cambió. Revisá la sugerencia actualizada.');
     }
     const documentos=nuevo.aportes.flatMap(a=>documentosReserva(a.origen,nuevo.destino,a.monto,`Reserva para ${nuevo.destino.label}`));
@@ -8714,12 +9089,14 @@ window.abrirReserva=(origenForzado=null)=>{
   const fechaInicialIso=fechaISOReserva(fechaInicial);
   const fechaInicialTexto=`${fechaInicial.getDate()}/${fechaInicial.getMonth()+1}/${fechaInicial.getFullYear()}`;
   const saldoOrigen=Number(origen.sI||0)-Number(origen.sG||0)-Number(origen.sPag||0)-Number(origen.sTar||0)+Number(origen.sReservaEntrada||0)-Number(origen.sReservaSalida||0);
+  const disponibleCentavos=Math.max(0,Math.round(saldoOrigen*100));
+  const disponibleTexto=formatMontoToolValue(disponibleCentavos/100);
   const ov=document.createElement('div'); ov.className='modal-overlay'; ov.id='modalReserva';
   ov.innerHTML=`<div class="modal-box">
     <div class="modal-title">💰 Reservar para otra semana</div>
     <p style="font-size:13px;color:var(--muted);line-height:1.45;margin:4px 0 18px">Se aparta de <strong>${origen.label}</strong>. No cuenta como gasto ni como ingreso.</p>
     <div class="modal-group"><label>Concepto</label><input id="reservaDesc" value="Alquiler" placeholder="Ej: Alquiler"></div>
-    <div class="modal-group"><label>Monto disponible: ${fmtARS(saldoOrigen)}</label><input id="reservaMonto" type="text" inputmode="numeric" value="${saldoOrigen>0?Math.round(saldoOrigen).toLocaleString('es-AR'):''}" oninput="formatMontoInput(this)"></div>
+    <div class="modal-group"><label for="reservaMonto">Monto disponible: $${disponibleTexto}</label><input id="reservaMonto" type="text" inputmode="decimal" value="${disponibleCentavos>0?disponibleTexto:''}" oninput="formatMontoInput(this)"></div>
     <div class="modal-group">
       <label>Disponible en</label>
       <div class="date-picker-wrap" id="reservaDpWrap">
@@ -8742,7 +9119,7 @@ window.abrirReserva=(origenForzado=null)=>{
     </div>
     <div class="modal-btns"><button class="modal-btn-cancel" onclick="cerrarModal()">Cancelar</button><button class="modal-btn-ok" onclick="guardarReserva()">Crear reserva</button></div>
   </div>`;
-  ov._reservaOrigen=origen; ov._saldoOrigen=saldoOrigen;
+  ov._reservaOrigen=origen; ov._disponibleCentavos=disponibleCentavos;
   document.body.appendChild(ov);
   dpModInit('reserva',fechaInicialIso);
 };
@@ -8774,7 +9151,7 @@ window.editarReserva=async id=>{
       <div class="modal-title">✏️ Editar reserva</div>
       <p style="font-size:13px;color:var(--muted);line-height:1.45;margin:4px 0 18px">Los cambios se aplican a la salida y a la entrada de la reserva.</p>
       <div class="modal-group"><label>Concepto</label><input id="reservaEditDesc" value="${escapeMovSelectorHtml(salida.desc||'Reserva')}"></div>
-      <div class="modal-group"><label>Monto</label><input id="reservaEditMonto" type="text" inputmode="numeric" value="${Math.round(Number(salida.monto)||0).toLocaleString('es-AR')}" oninput="formatMontoInput(this)"></div>
+      <div class="modal-group"><label for="reservaEditMonto">Monto</label><input id="reservaEditMonto" type="text" inputmode="decimal" value="${formatMontoToolValue(salida.monto)}" oninput="formatMontoInput(this)"></div>
       <div class="modal-group">
         <label>Disponible en</label>
         <div class="date-picker-wrap"><div class="date-picker-display" style="padding:0;overflow:hidden">
@@ -8799,11 +9176,12 @@ window.editarReserva=async id=>{
 window.guardarEdicionReserva=async()=>{
   const ov=document.getElementById('modalEditarReserva'); if(!ov) return;
   const desc=document.getElementById('reservaEditDesc').value.trim()||'Reserva';
-  const monto=parseMontoInput(document.getElementById('reservaEditMonto'));
+  const montoCentavos=Math.round(parseMontoInput(document.getElementById('reservaEditMonto'))*100);
+  const monto=montoCentavos/100;
   const fechaDestino=document.getElementById('reservaEditFecha').value;
   const salida=ov._reservaDocs.find(d=>d.tipo==='reserva_salida');
   const entrada=ov._reservaDocs.find(d=>d.tipo==='reserva_entrada');
-  if(!monto||monto<=0||!fechaDestino||!salida||!entrada) return showToast('Completá un monto y una fecha válidos',true);
+  if(!Number.isSafeInteger(montoCentavos)||montoCentavos<=0||!fechaDestino||!salida||!entrada) return showToast('Completá un monto y una fecha válidos',true);
   const destinoDate=new Date(fechaDestino+'T12:00:00'), origenDate=new Date(salida.fecha+'T12:00:00');
   const periodoOrigen=getPeriodo(origenDate,'ingreso',null), periodoDestino=getPeriodo(destinoDate,'ingreso',null);
   if(destinoDate<=origenDate||(periodoOrigen.mes===periodoDestino.mes&&periodoOrigen.anio===periodoDestino.anio&&Number(periodoOrigen.semana)===Number(periodoDestino.semana))) return showToast('Elegí una fecha de una semana posterior',true);
@@ -8823,10 +9201,11 @@ window.guardarEdicionReserva=async()=>{
 window.guardarReserva=async()=>{
   const ov=document.getElementById('modalReserva'); if(!ov) return;
   const desc=document.getElementById('reservaDesc').value.trim()||'Reserva';
-  const monto=parseMontoInput(document.getElementById('reservaMonto'));
+  const montoCentavos=Math.round(parseMontoInput(document.getElementById('reservaMonto'))*100);
+  const monto=montoCentavos/100;
   const fechaDestino=document.getElementById('reservaFecha').value;
-  if(!monto||monto<=0||!fechaDestino) return showToast('Ingresá un monto y una fecha válidos',true);
-  if(monto>ov._saldoOrigen) return showToast('La reserva supera el saldo disponible de esa semana',true);
+  if(!Number.isSafeInteger(montoCentavos)||montoCentavos<=0||!fechaDestino) return showToast('Ingresá un monto y una fecha válidos',true);
+  if(montoCentavos>ov._disponibleCentavos) return showToast(`La reserva supera el saldo disponible de esa semana ($${formatMontoToolValue(ov._disponibleCentavos/100)})`,true);
   const origen=ov._reservaOrigen;
   const destinoDate=new Date(fechaDestino+'T12:00:00');
   const destino=getPeriodo(destinoDate,'ingreso',null);
@@ -8839,7 +9218,7 @@ window.guardarReserva=async()=>{
       {desde:fechaDestino,mes:destino.mes,anio:destino.anio,num:destino.semana},monto,desc);
     documentos.forEach(d=>batch.set(d.ref,d.dato));
     registrarCambioReserva(batch);
-    await batch.commit(); cerrarModal(); showToast(`✅ ${fmtARS(monto)} disponibles el ${destinoDate.toLocaleDateString('es-AR')}`);
+    await batch.commit(); cerrarModal(); showToast(`✅ $${formatMontoToolValue(monto)} disponibles el ${destinoDate.toLocaleDateString('es-AR')}`);
   }catch(e){ console.error(e); btn.disabled=false; btn.textContent='Crear reserva'; showToast('❌ No se pudo crear la reserva',true); }
 };
 
@@ -8888,7 +9267,7 @@ function renderResumen(){
   const tar=mesMov.filter(d=>d.tipo==='tarjeta').reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
   const cred=mesMov.filter(d=>d.tipo==='credito').reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
   let totalPagadoMes=0;
-  tarjetas.forEach(t=>{totalPagadoMes+=(pagosData[getPagosKey(t.id,mesVista,anioVista)]||[]).reduce((s,p)=>s+p.monto,0);});
+  tarjetas.forEach(t=>{totalPagadoMes+=totalPagosActivos(pagosData[getPagosKey(t.id,mesVista,anioVista)]);});
   document.getElementById('sumIng').textContent=fmtARS(ing);
   document.getElementById('sumGas').textContent=fmtARS(gas);
   document.getElementById('sumTar').textContent=fmtARS(tar);
@@ -8899,7 +9278,7 @@ function renderResumen(){
   let totalMeDeben=0, totalDebo=0;
   fijoData.forEach(f=>{
     const pagos=fijoPagosData[f.id]||[];
-    const totalPag=pagos.reduce((s,p)=>s+p.monto,0);
+    const totalPag=totalPagosActivos(pagos);
     const restante=f.monto-totalPag;
     if(restante>0){
       if(f.subtipo==='me_deben') totalMeDeben+=restante;
@@ -9019,14 +9398,14 @@ function renderResumen(){
     const balanceSelectId=escapeMovSelectorHtml(String(d.id));
     const balanceSelected=balanceSelectionState.selected.has(String(d.id));
     const usdTag=(d.moneda==='USD'||d.moneda==='USD_TAR')?`<span class="usd-tag">${d.moneda==='USD_TAR'?'USD 💳':'USD'}</span>`:'';
-    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?`<button type="button" aria-label="Activo en saldo" title="Activo en saldo" class="confirm-toggle ${d.esPagoFijo?'fijo-toggle':''} ${d.confirmado!==false?'checked':''}" onclick="toggleConfirmar('${d.id}')" ${d.pagoParcialProgramado?'disabled':''}></button>`:'';
+    const confirmBtn=d.tipo==='ingreso'||d.tipo==='gasto'||d.tipo==='credito'?botonSaldoMovimiento(d):'';
     const cuotaTag=d.cuotas?`<span style="font-size:10px;color:var(--accent2);background:rgba(255,59,212,.1);border:1px solid rgba(255,59,212,.25);border-radius:4px;padding:1px 5px;margin-left:4px;font-family:Arial Black,sans-serif;font-weight:700">${d.cuotaNum}/${d.cuotas}</span>`:'';
     const _fmtFecha = f => { if(!f) return ''; const p=f.split('-'); return p[2]+'/'+p[1]; };
     const _fechaLabel = d.fecha ? ' · '+_fmtFecha(d.fecha) : '';
     const _rubroLabel = d.tipo==='ingreso'||d.esPagoTarjeta ? '' : ` · ${getRubro(d.rubro||'sin_rubro').label}`;
     return `<div class="mov-item balance-selectable ${balanceSelected?'balance-selected':''}" data-balance-select-id="${balanceSelectId}" tabindex="0" aria-selected="${balanceSelected}" ${movContextMenuAttrs(d.id)}>
       <span class="balance-select-check" aria-hidden="true">${balanceSelected?'✓':''}</span>
-      <div class="balance-mov-copy"><div class="mov-nombre">${d.claseProgramada?escapeMovSelectorHtml(d.desc):d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.claseProgramada==='credito'?`💳 Crédito a mi favor${d.persona?' · '+escapeMovSelectorHtml(d.persona):''}${d.pagoParcialProgramado?' · Cobro parcial':''}`:d.claseProgramada==='recurrente'?(d.tipo==='ingreso'?'↻ Ingreso recurrente':'🔴 Gasto recurrente'):d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
+      <div class="balance-mov-copy"><div class="mov-nombre">${d.claseProgramada?escapeMovSelectorHtml(d.desc):d.desc}${usdTag}${cuotaTag||''}</div><div class="mov-meta">${d.claseProgramada==='credito'?`💳 Crédito a mi favor${d.persona?' · '+escapeMovSelectorHtml(d.persona):''}${d.pagoParcialProgramado?' · Cobro parcial':''}`:d.claseProgramada==='recurrente'?(d.tipo==='ingreso'?'🟢 Ingreso recurrente':'🔴 Gasto recurrente'):d.tipo==='ingreso'?(d.esPagoFijo?'📌 Cobro fijo':'💚 Ingreso'):d.esPagoTarjeta?'🟠 Pago tarjeta':d.esPagoFijo?'📌 Pago fijo':d.tipo==='credito'?'🟠 Crédito':'🔴 Gasto'}${_rubroLabel}${_fechaLabel}</div></div>
       <div class="mov-actions-trigger">
         ${confirmBtn}
         <div class="mov-monto ${d.tipo==='ingreso'?'pos':'neg'}">${d.tipo==='ingreso'?'+':'-'}${fmtARS(toARS(d.monto,d.moneda))}</div>
@@ -9093,7 +9472,7 @@ function renderResumen(){
     if(label) label.textContent=grupo?.label||'Semana —';
     if(dates) dates.textContent=grupo?.fechas||'—';
     const saldoGrupo=grupo?getSaldoGrupo(grupo):0;
-    if(saldo){ saldo.textContent=fmtARS(saldoGrupo); saldo.style.color=saldoGrupo>=0?'var(--green)':'var(--red)'; }
+    if(saldo){ saldo.textContent='$'+formatMontoToolValue(Math.round(saldoGrupo*100)/100); saldo.style.color=saldoGrupo>=0?'var(--green)':'var(--red)'; }
     container.innerHTML=grupo?`<div class="balance-week-detail mov-list">${getBodyGrupo(grupo)}</div>`:'<div class="empty">Sin movimientos</div>';
     actualizarSeleccionBalance();
     return;
@@ -9107,7 +9486,7 @@ function renderResumen(){
     const saldoGrupo=getSaldoGrupo(g);
     const saldoColor=saldoGrupo>=0?'var(--green)':'var(--red)';
     const hasContent=g.movs.length||(g.tarjetas?.length);
-    const saldoTxt=hasContent?fmtARS(saldoGrupo):'';
+    const saldoTxt=hasContent?'$'+formatMontoToolValue(Math.round(saldoGrupo*100)/100):'';
     const saldoPct=hasContent?Math.max(4,Math.round(Math.abs(saldoGrupo)/maxSaldo*100)):0;
     html+=`<div class="sem-group ${isOpen?'open':''}" id="semgroup-${g.id}" oncontextmenu="abrirMenuSaldoSemana(event,'${g.id}',this)">
       <div class="sem-header" onclick="toggleSemana('${g.id}')">
@@ -9201,7 +9580,7 @@ function renderInforme(){
       const gas=md.filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&!d.esPagoTarjeta).reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
       const tar=md.filter(d=>d.tipo==='tarjeta').reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
       let pagadoMes=0;
-      tarjetas.forEach(t=>{pagadoMes+=(pagosData[getPagosKey(t.id,m,a)]||[]).reduce((s,p)=>s+p.monto,0);});
+      tarjetas.forEach(t=>{pagadoMes+=totalPagosActivos(pagosData[getPagosKey(t.id,m,a)]);});
       const sal=ing-gas;
       const semanas=getSemanas(m,a);
       let detHTML='';
@@ -9221,7 +9600,7 @@ function renderInforme(){
           const gt=md.filter(d=>d.tipo==='tarjeta'&&d.tarjetaId===t.id);
           if(!gt.length) return;
           const totalT=gt.reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
-          const pagT=(pagosData[getPagosKey(t.id,m,a)]||[]).reduce((s,p)=>s+p.monto,0);
+          const pagT=totalPagosActivos(pagosData[getPagosKey(t.id,m,a)]);
           detHTML+=`<div class="det-tar-item"><span class="det-tar-name">${t.nombre}</span><span><span class="det-tar-val" style="color:var(--accent2)">${fmtARS(totalT)}</span>${pagT>0?`<span style="color:var(--green);font-size:11px;margin-left:6px">✅ ${fmtARS(pagT)}</span>`:''}</span></div>`;
         });
         detHTML+=`</div>`;
@@ -9269,6 +9648,55 @@ function fijoDocRef(id){return doc(db,`usuarios/${currentUser.uid}/movfijos`,id)
 function fijoPagoCol(fijoId){return collection(db,`usuarios/${currentUser.uid}/pagos_fijo/${fijoId}/items`);}
 function fijoPagoDocRef(fijoId,pid){return doc(db,`usuarios/${currentUser.uid}/pagos_fijo/${fijoId}/items`,pid);}
 
+function importeFijoSinAsignar(fijo,pagos){
+  return Math.round(fijo.monto*100)-pagos.reduce((s,p)=>s+Math.round(p.monto*100),0);
+}
+
+window.dividirFijo=id=>{
+  const fijo=fijoData.find(d=>d.id===id);
+  if(!fijo) return;
+  const importe=importeFijoSinAsignar(fijo,fijoPagosData[id]||[]);
+  abrirDivisionMovimiento({...fijo,monto:importe/100},async(primera,segunda)=>{
+    if(!currentUser||visualTestMode) throw Error('Iniciá sesión para guardar');
+    const fijoRef=doc(fijoCol(),id), pagosCol=fijoPagoCol(id), clave='fijo:'+id;
+    if([...divisionesLocales].some(division=>division.has(clave))) throw Error('Este movimiento se está sincronizando.');
+    const partes=[primera,segunda].map(parte=>({parte,movRef:doc(userCol('movimientos')),pagoRef:doc(pagosCol)}));
+    const armarPartes=origen=>{
+      const movimientos=[], pagos=[];
+      for(const {parte,movRef,pagoRef} of partes){
+        const movimiento=datosPagoFijo(id,origen,parte,pagoRef.id);
+        movimientos.push({...movimiento,divisionMovimiento:true,id:movRef.id});
+        pagos.push({...parte,timestamp:movimiento.timestamp,desc:'Pago',movimientoId:movRef.id,id:pagoRef.id});
+      }
+      return new Map([['movimientos',movimientos],[clave,pagos]]);
+    };
+    const locales=[...armarPartes(fijo)].map(([key,filas])=>[key,filas,filas.map(fila=>fila.id)]);
+    await sincronizarDivisionLocal(locales,async()=>{
+      const original=await getDocFromServer(fijoRef);
+      const pagos=await getDocsFromServer(pagosCol);
+      if(!original.exists()||importeFijoSinAsignar(original.data(),pagos.docs.map(d=>d.data()))!==importe) throw Error('El importe disponible cambió. Volvé a abrir la división.');
+      return runTransaction(db,async tx=>{
+        const actual=await tx.get(fijoRef);
+        if(!actual.exists()||actual.data().monto!==original.data().monto||actual.data().revisionPagos!==original.data().revisionPagos) throw Error('El movimiento fijo cambió.');
+        const guardadas=armarPartes(actual.data());
+        guardadas.get('movimientos').forEach(({id,...fila},i)=>tx.set(partes[i].movRef,fila));
+        guardadas.get(clave).forEach(({id,...fila},i)=>tx.set(partes[i].pagoRef,fila));
+        tx.update(fijoRef,{revisionPagos:increment(1)});
+        return guardadas;
+      });
+    },()=>{
+      const {mes,anio,semana}=getPeriodo(new Date(primera.fecha+'T12:00:00'),fijo.subtipo==='me_deben'?'ingreso':'gasto',null);
+      if(mesVista!==mes||anioVista!==anio){
+        mesVista=mes; anioVista=anio;
+        suscribirPagosMesActual();
+      }
+      semanaDashboardVista=null;
+      balanceSemanaVista=String(semana);
+      goTab('resumen');
+    });
+  });
+};
+
 function suscribirFijos(){
   const q2=query(fijoCol(),orderBy('timestamp','desc'));
   fijoListener=onSnapshot(q2,snap=>{
@@ -9285,7 +9713,7 @@ function suscribirPagosFijo(fijoId){
   if(fijoPagosListeners[fijoId]) return;
   const unsub=onSnapshot(fijoPagoCol(fijoId),snap=>{
     if(appCacheHydrated&&snap.metadata.fromCache) return;
-    fijoPagosData[fijoId]=snap.docs.map(d=>({id:d.id,...d.data()}));
+    fijoPagosData[fijoId]=combinarDivisionesLocales('fijo:'+fijoId,snap.docs.map(d=>({id:d.id,...d.data()})));
     if(!snap.metadata.fromCache) guardarAppCacheLocal();
     renderResumen();
     if(document.getElementById('fijoPanel').style.display!=='none') renderFijoDetail();
@@ -9316,7 +9744,7 @@ function renderFijoDetail(){
   if(medeben.length){
     for(const f of medeben){
       const pagos=fijoPagosData[f.id]||[];
-      const totalPag=pagos.reduce((s,p)=>s+p.monto,0);
+      const totalPag=totalPagosActivos(pagos);
       const restante=f.monto-totalPag;
       html+=`<div class="fijo-item">
         <div>
@@ -9325,6 +9753,7 @@ function renderFijoDetail(){
         </div>
         <div style="display:flex;align-items:center;gap:4px">
           <span class="fijo-item-monto" style="color:#00c97a">${fmtARS(restante)}</span>
+          ${importeFijoSinAsignar(f,pagos)>=2?`<button type="button" class="action-btn" onclick="dividirFijo('${f.id}')">✂️ Dividir</button>`:''}
           <button class="action-btn edit" onclick="editarFijo('${f.id}')" title="Editar">✏️</button>
           <button class="action-btn del2" onclick="borrarFijo('${f.id}')" title="Eliminar">✕</button>
         </div>
@@ -9334,7 +9763,7 @@ function renderFijoDetail(){
         html+=`<div style="padding:4px 16px 0">`;
         for(const p of [...pagos].sort((a,b)=>a.timestamp-b.timestamp)){
           const fd=new Date(p.timestamp);
-          html+=`<div class="pago-item"><span>${fd.getDate()}/${fd.getMonth()+1} — ${p.desc||'Pago'}</span><span style="display:flex;align-items:center;gap:8px"><span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPagoFijo('${f.id}','${p.id}')">✕</button></span></div>`;
+          html+=`<div class="pago-item"><span>${fd.getDate()}/${fd.getMonth()+1} — ${p.desc||'Pago'}${p.confirmado===false?' · Pendiente':''}</span><span style="display:flex;align-items:center;gap:8px">${accionesPagoVinculado(p)}<span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPagoFijo('${f.id}','${p.id}')">✕</button></span></div>`;
         }
         html+=`</div>`;
       }
@@ -9350,7 +9779,7 @@ function renderFijoDetail(){
   if(debo.length){
     for(const f of debo){
       const pagos=fijoPagosData[f.id]||[];
-      const totalPag=pagos.reduce((s,p)=>s+p.monto,0);
+      const totalPag=totalPagosActivos(pagos);
       const restante=f.monto-totalPag;
       html+=`<div class="fijo-item">
         <div>
@@ -9359,6 +9788,7 @@ function renderFijoDetail(){
         </div>
         <div style="display:flex;align-items:center;gap:4px">
           <span class="fijo-item-monto" style="color:var(--red)">${fmtARS(restante)}</span>
+          ${importeFijoSinAsignar(f,pagos)>=2?`<button type="button" class="action-btn" onclick="dividirFijo('${f.id}')">✂️ Dividir</button>`:''}
           <button class="action-btn edit" onclick="editarFijo('${f.id}')" title="Editar">✏️</button>
           <button class="action-btn del2" onclick="borrarFijo('${f.id}')" title="Eliminar">✕</button>
         </div>
@@ -9367,7 +9797,7 @@ function renderFijoDetail(){
         html+=`<div style="padding:4px 16px 0">`;
         for(const p of [...pagos].sort((a,b)=>a.timestamp-b.timestamp)){
           const fd=new Date(p.timestamp);
-          html+=`<div class="pago-item"><span>${fd.getDate()}/${fd.getMonth()+1} — ${p.desc||'Pago'}</span><span style="display:flex;align-items:center;gap:8px"><span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPagoFijo('${f.id}','${p.id}')">✕</button></span></div>`;
+          html+=`<div class="pago-item"><span>${fd.getDate()}/${fd.getMonth()+1} — ${p.desc||'Pago'}${p.confirmado===false?' · Pendiente':''}</span><span style="display:flex;align-items:center;gap:8px">${accionesPagoVinculado(p)}<span class="pago-item-monto">${fmtARS(p.monto)}</span><button class="del-btn" style="font-size:13px" onclick="borrarPagoFijo('${f.id}','${p.id}')">✕</button></span></div>`;
         }
         html+=`</div>`;
       }
@@ -9380,40 +9810,53 @@ function renderFijoDetail(){
   el.innerHTML=html;
 }
 
+function datosPagoFijo(fijoId,fijo,parte,pagoId){
+  const fecha=parte.fecha||toISODate(new Date());
+  const dia=parte.fecha?new Date(fecha+'T12:00:00'):new Date();
+  const tipo=fijo.subtipo==='me_deben'?'ingreso':'gasto';
+  return {tipo,desc:(tipo==='ingreso'?'Cobro: ':'Pago: ')+fijo.desc,...parte,
+    ...getPeriodo(dia,tipo,null),moneda:'ARS',timestamp:dia.getTime(),fecha,
+    recordatorio:false,esPagoFijo:true,fijoId,fijoPagoItemId:pagoId};
+}
+
 window.guardarPagoFijo=async(fijoId)=>{
   const input=document.getElementById('fijoPagoInput_'+fijoId);
   const monto=window.parseMontoInput ? window.parseMontoInput(input) : parseFloat(input.value);
   if(!monto||monto<=0) return showToast('⚠️ Ingresá un monto válido',true);
-  const f=fijoData.find(x=>x.id===fijoId);
-  if(!f) return;
   try{
-    await addDoc(fijoPagoCol(fijoId),{monto,timestamp:Date.now(),desc:'Pago'});
-    // Crear movimiento en el tab semanal
-    const hoy=new Date();
-    const p=getPeriodo(hoy,'gasto',null);
-    const fecha=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0')+'-'+String(hoy.getDate()).padStart(2,'0');
-    const esMeDeben = f.subtipo==='me_deben';
-    await addDoc(userCol('movimientos'),{
-      tipo: esMeDeben ? 'ingreso' : 'gasto',
-      desc: (esMeDeben ? 'Cobro: ' : 'Pago: ') + f.desc,
-      monto,
-      mes:p.mes, anio:p.anio, semana:p.semana,
-      moneda:'ARS',
-      timestamp:Date.now(),
-      confirmado:false,
-      fecha,
-      recordatorio:false,
-      esPagoFijo:true,
-      fijoId
+    const fijoRef=doc(fijoCol(),fijoId), pagoRef=doc(fijoPagoCol(fijoId)), movRef=doc(userCol('movimientos'));
+    const original=await getDocFromServer(fijoRef);
+    const pagos=await getDocsFromServer(fijoPagoCol(fijoId));
+    if(!original.exists()) return;
+    if(importeFijoSinAsignar(original.data(),pagos.docs.map(d=>d.data()))<Math.round(monto*100)) throw Error('El importe supera lo que queda sin asignar. Activá las partes pendientes para registrarlas.');
+    await runTransaction(db,async tx=>{
+      const actual=await tx.get(fijoRef);
+      if(!actual.exists()||actual.data().monto!==original.data().monto||actual.data().revisionPagos!==original.data().revisionPagos) throw Error('El movimiento fijo cambió. Volvé a intentar.');
+      const movimiento=datosPagoFijo(fijoId,actual.data(),{monto,confirmado:false},pagoRef.id);
+      tx.set(movRef,movimiento);
+      tx.set(pagoRef,{monto,timestamp:movimiento.timestamp,desc:'Pago',movimientoId:movRef.id});
+      tx.update(fijoRef,{revisionPagos:increment(1)});
     });
     input.value='';
-    showToast(esMeDeben ? '✅ Cobro registrado' : '✅ Pago registrado');
-  }catch(e){showToast('❌ Error al guardar pago',true);}
+    showToast(original.data().subtipo==='me_deben'?'✅ Cobro registrado':'✅ Pago registrado');
+  }catch(e){showToast(e.message||'Error al guardar pago',true);}
 };
 
 window.borrarPagoFijo=async(fijoId,pid)=>{
+  if(filaDividiendose('fijo:'+fijoId,pid)) return showToast('La división todavía se está sincronizando.');
   if(!confirm('¿Borrar este pago?')) return;
-  try{await deleteDoc(fijoPagoDocRef(fijoId,pid));showToast('🗑️ Pago eliminado');}
+  try{
+    const ref=fijoPagoDocRef(fijoId,pid);
+    await runTransaction(db,async tx=>{
+      const pago=await tx.get(ref);
+      if(!pago.exists()) return;
+      const movimientoId=pago.data().movimientoId;
+      tx.delete(ref);
+      if(movimientoId) tx.delete(userDoc('movimientos',movimientoId));
+      tx.update(doc(fijoCol(),fijoId),{revisionPagos:increment(1)});
+    });
+    showToast('🗑️ Pago eliminado');
+  }
   catch(e){showToast('❌ Error',true);}
 };
 
@@ -10364,6 +10807,7 @@ async function obtenerCuotasGrupoDesdeActual(mov) {
 }
 
 async function getCuotasPendientesInfo(mov) {
+  if(mov?.claseProgramada||mov?.divisionMovimiento) return {count:1,ids:[mov.id]};
   const fallbackCount = Math.max(1, (mov.cuotas || 1) - (mov.cuotaNum || 1) + 1);
   if(!mov?.grupoId || !mov?.cuotas || mov.cuotas <= 1){
     return { count: fallbackCount, ids: mov?.id ? [mov.id] : [] };
@@ -10371,6 +10815,7 @@ async function getCuotasPendientesInfo(mov) {
 
   try {
     const docs = await obtenerCuotasGrupoDesdeActual(mov);
+    if(docs.some(d=>d.divisionMovimiento)) return {count:1,ids:[mov.id]};
 
     if(!docs.length){
       return { count: fallbackCount, ids: mov.id ? [mov.id] : [] };
@@ -10418,7 +10863,7 @@ function getFechaDefaultCompartir(mov) {
 }
 
 window.compartirGasto = async id => {
-  const mov = (window._mesMov||[]).find(d=>d.id===id) || (window.data||[]).find(d=>d.id===id);
+  const mov = buscarMovimientoProgramado(id);
   if(!mov) return;
   const emailsRecientes = await getEmailsRecientes();
   const cuotasInfo = await getCuotasPendientesInfo(mov);
@@ -10436,9 +10881,9 @@ window.compartirGasto = async id => {
   ov.id = 'modalCompartir';
   ov.innerHTML = `
     <div class="modal-box">
-      <div class="modal-title" style="margin-bottom:16px">🤝 Compartir gasto</div>
+      <div class="modal-title" style="margin-bottom:16px">🤝 Compartir movimiento</div>
       <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">${escapeMovSelectorHtml(mov.desc)}</div>
-      <div style="font-size:22px;font-weight:800;color:var(--red);margin-bottom:10px">-${fmtARS(montoUnitARS)}</div>
+      <div style="font-size:22px;font-weight:800;color:var(${mov.tipo==='ingreso'?'--green':'--red'});margin-bottom:10px">${mov.tipo==='ingreso'?'+':'−'}${fmtARS(montoUnitARS)}</div>
 
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap">
         <span style="background:rgba(140,100,255,.12);color:var(--blue);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700">${tipoLabel}</span>
@@ -10455,7 +10900,7 @@ window.compartirGasto = async id => {
           <div class="dp-popup" id="compDpPopup" style="display:none"></div>
         </div>
         <input type="hidden" id="compFecha" value="${fechaDefault}">
-        ${mov.cuotas > 1 ? `
+        ${remainingCuotas > 1 ? `
         <label class="share-cuotas-tab" id="shareCuotasTab">
           <input class="share-cuotas-hidden" type="checkbox" id="compartirCuotasCheck" onchange="toggleCompartirCuotas(${montoUnitARS},${remainingCuotas})">
           <span>Compartir cuotas restantes</span>
@@ -10489,10 +10934,15 @@ window.compartirGasto = async id => {
 
       <div class="modal-btns" style="margin-top:16px">
         <button class="modal-btn-cancel" onclick="document.getElementById('modalCompartir').remove()">Cancelar</button>
-        <button class="modal-btn-ok" onclick="enviarGastoCompartido('${id}',${mov.monto},'${mov.desc.replace(/'/g,"\\'")}','${mov.moneda||'ARS'}','${mov.tipo||'gasto'}',document.getElementById('compFecha')?.value||'${fechaDefault}',${mov.cuotas||1},${mov.cuotaNum||1},${mov.montoTotal||mov.monto})">Compartir</button>
+        <button type="button" class="modal-btn-ok">Compartir</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
+  ov.querySelector('.modal-btn-ok').onclick=()=>{
+    const fecha=ov.querySelector('#compFecha').value||fechaDefault;
+    const [cuotas,cuotaNum,montoTotal]=remainingCuotas>1?[mov.cuotas,mov.cuotaNum,mov.montoTotal]:[1,1,mov.monto];
+    enviarGastoCompartido(id,mov.monto,mov.desc,mov.moneda||'ARS',mov.tipo||'gasto',fecha,cuotas||1,cuotaNum||1,montoTotal||mov.monto);
+  };
   if(typeof dpModInit === 'function') dpModInit('comp', fechaDefault || null);
 };
 
@@ -11310,7 +11760,7 @@ function mostrarFormularioDuplicado(mov) {
   if(typeof dpModInit === 'function') dpModInit('cf', fechaDup || null);
 
   const cuotas = parseInt(mov.cuotas, 10);
-  if(cuotas > 1) {
+  if(cuotas > 1&&!mov.claseProgramada&&!mov.divisionMovimiento) {
     cfPopupState.cuotas = cuotas;
   }
 
