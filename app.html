@@ -5986,14 +5986,17 @@ function suscribirMovimientos(){
   // Tapar la pantalla hasta que lleguen los datos reales del usuario
   if(!widgetEntryMode&&!appCacheHydrated) document.getElementById('loadingOverlay').classList.remove('hidden');
   const q=query(userCol('movimientos'),orderBy('timestamp','desc'));
-  movListener=onSnapshot(q,snap=>{
-    if(appCacheHydrated&&snap.metadata.fromCache) return;
+  let habiaEscriturasPendientes=false;
+  movListener=onSnapshot(q,{includeMetadataChanges:true},snap=>{
+    const pendientes=snap.metadata.hasPendingWrites;
+    if(appCacheHydrated&&snap.metadata.fromCache&&!pendientes&&!habiaEscriturasPendientes) return;
+    habiaEscriturasPendientes=pendientes;
     const movimientos=snap.docs.map(d=>({id:d.id,...d.data()}));
     reglasProgramadas=movimientos.filter(d=>d.tipo==='regla_programada');
     data=combinarDivisionesLocales('movimientos',movimientosVigentes(movimientos,reglasProgramadas));
-    if(!snap.metadata.fromCache) guardarAppCacheLocal();
+    if(!snap.metadata.fromCache&&!pendientes) guardarAppCacheLocal();
     document.getElementById('loadingOverlay').classList.add('hidden');
-    setSyncStatus(divisionesLocales.size?'loading':'ok'); renderResumen(); if(notifListener) renderNotifPanel();
+    setSyncStatus(divisionesLocales.size||pendientes?'loading':'ok'); renderResumen(); if(notifListener) renderNotifPanel();
     if(document.getElementById('tab-informe').classList.contains('active')) renderInforme();
     if(tarjetaPanelActiva&&document.getElementById('tarjetasPanel').style.display!=='none') renderTarjetaDetail(tarjetaPanelActiva);
   },err=>{
@@ -7781,6 +7784,15 @@ async function guardarOcurrenciaProgramada(mov,cambios){
   });
 }
 
+function marcarCuotaCreditoFavor(mov,confirmado){
+  if(!currentUser||visualTestMode) throw Error('Iniciá sesión para guardar');
+  const batch=writeBatch(db);
+  // update exige que la cuota exista: una cuota borrada no se vuelve a crear.
+  batch.update(userDoc('movimientos',mov.id),{confirmado});
+  batch.update(userDoc('movimientos',mov.grupoId),{revision:increment(1)});
+  return batch.commit();
+}
+
 async function guardarEdicionRecurrente(mov,cambios,fecha,alcance){
   const fechaEditada=fecha?{fecha,...getPeriodo(new Date(fecha+'T12:00:00'),mov.tipo,null)}:{};
   if(alcance==='sola') return guardarOcurrenciaProgramada(mov,{...cambios,...fechaEditada});
@@ -8038,6 +8050,25 @@ window.guardar=async()=>{
   }catch(e){showToast('❌ Error al guardar',true);setSyncStatus('offline');}
   btn.disabled=false;btn.textContent='Guardar movimiento';
 };
+function actualizarConfirmacionSaldoLocal(id,confirmado){
+  const mesMov=window._mesMov||[];
+  const visible=mesMov.find(d=>d.id===id);
+  const guardado=data.find(d=>d.id===id);
+  if(visible) visible.confirmado=confirmado;
+  if(guardado) guardado.confirmado=confirmado;
+  document.querySelectorAll(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`).forEach(btn=>btn.classList.toggle('checked',confirmado));
+  const saldo=mesMov.reduce((total,mov)=>{
+    if(!mov.confirmado) return total;
+    if(mov.tipo==='ingreso') return total+toARS(mov.monto,mov.moneda);
+    if(mov.tipo==='gasto'||mov.tipo==='credito') return total-toARS(mov.monto,mov.moneda);
+    return total;
+  },0);
+  document.getElementById('sumSal').textContent=fmtARS(saldo);
+  renderProximosMovimientos(mesMov);
+  if((visible||guardado)?.claseProgramada==='credito') renderCreditosFavor();
+}
+
+const cuotasConfirmacionEnCurso=new Set();
 window.toggleConfirmar= async id => {
   if(movimientoDividiendose(id)) return showToast('La división todavía se está sincronizando.');
   const programado=buscarMovimientoProgramado(id);
@@ -8048,6 +8079,23 @@ window.toggleConfirmar= async id => {
   }
   if(programado?.claseProgramada){
     if(programado.pagoParcialProgramado&&!programado.divisionMovimiento) return;
+    if(programado.claseProgramada==='credito'){
+      if(cuotasConfirmacionEnCurso.has(id)) return;
+      const usuario=currentUser?.uid;
+      const anterior=programado.confirmado;
+      const confirmado=!anterior;
+      cuotasConfirmacionEnCurso.add(id);
+      try{
+        actualizarConfirmacionSaldoLocal(id,confirmado);
+        await marcarCuotaCreditoFavor(programado,confirmado);
+      }catch(e){
+        if(currentUser?.uid===usuario){
+          actualizarConfirmacionSaldoLocal(id,anterior);
+          showToast(e.message||'No se pudo actualizar el saldo',true);
+        }
+      }finally{cuotasConfirmacionEnCurso.delete(id);}
+      return;
+    }
     const btn=document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
     if(btn?.disabled) return;
     if(btn) btn.disabled=true;
@@ -8057,23 +8105,10 @@ window.toggleConfirmar= async id => {
     finally{if(btn) btn.disabled=false;}
     return;
   }
-  // 1. Actualizar UI al instante
   const btn = document.querySelector(`.confirm-toggle[onclick="toggleConfirmar('${id}')"]`);
-  if(btn){
-    const nowChecked = btn.classList.toggle('checked');
-    // 2. Actualizar en _mesMov local
-    const mov = (window._mesMov||[]).find(d=>d.id===id);
-    if(mov) mov.confirmado = nowChecked;
-    // Recalcular saldo sin re-render completo
-    const ingC = (window._mesMov||[]).filter(d=>d.tipo==='ingreso'&&d.confirmado).reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
-    const gasC = (window._mesMov||[]).filter(d=>(d.tipo==='gasto'||d.tipo==='credito')&&d.confirmado).reduce((s,d)=>s+toARS(d.monto,d.moneda),0);
-    let totalPag=0;
-    tarjetas.forEach(t=>{totalPag+=totalPagosActivos(pagosData[getPagosKey(t.id,mesVista,anioVista)]);});
-    document.getElementById('sumSal').textContent = fmtARS(ingC - gasC);
-    renderProximosMovimientos(window._mesMov||[]);
-  }
-  // 3. Sincronizar Firebase en segundo plano
-  updateDoc(userDoc('movimientos',id),{confirmado: btn?.classList.contains('checked')??true})
+  const confirmado=!btn?.classList.contains('checked');
+  if(btn) actualizarConfirmacionSaldoLocal(id,confirmado);
+  updateDoc(userDoc('movimientos',id),{confirmado})
     .catch(()=>showToast('❌ Error al sincronizar',true));
 };
 
